@@ -135,8 +135,8 @@ gc()
 # Pre-Normalized Plots
 flowViz.par.set(theme =  trellis.par.get(), reset = TRUE)
 
-dir.create("Figures", showWarnings = FALSE)
-figureDirectory <- paste0(getwd(),"/Figures/")
+dir.create("figures", showWarnings = FALSE)
+figureDirectory <- paste0(getwd(),"/figures/")
 
 gc()
 jpeg(file = paste0(figureDirectory,"densityplot1.jpeg"))
