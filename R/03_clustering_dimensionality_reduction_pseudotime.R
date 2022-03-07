@@ -62,8 +62,7 @@ read.flowdat <- function(dir,path_CSPLR_ST=""){
 # In our example we will read the data which were clustered in Cytosplore (each fcs file is 1 cluster)
 df <- read.flowdat(dir=dirFCS[1],path_CSPLR_ST = pathST)
 gc()
-dir.create("clusteringOutput", showWarnings = FALSE)
-write.csv(df, 'clusteringOutput/df.csv')
+write.csv(df, 'clusteringOutput/rawDf.csv')
 gc()
 # Optional: Set columname 'fileName' to clusters_HSNE:
 #colnames(df)[which(colnames(df)=="fileName")] <- "clusters_HSNE"
@@ -84,12 +83,12 @@ gc()
 
 ## Option B: generate clusters by FlowSOM
 #check colnames, to determine which columns you need for the cluster calculation
-colnames(df[,c(6, 11, 12)])
+colnames(df[,c(18, 23, 24)])
 #run flowsom
 flowsom <- FlowSOM(input = dirFCS,
                 transform = FALSE,
                 scale = FALSE,
-                colsToUse = c(6, 11, 12), #provide the columns for the clustering
+                colsToUse = c(18, 23, 24), #provide the columns for the clustering
                 nClus = 6, #we choose 14, since we also generated 14 clusters by HSNE
                 seed = 100)
 
@@ -100,7 +99,7 @@ levels(clusters_flowsom) <- flowsom$metaclustering
 #add flowsom clusters to dataframe
 df <- cbind(df, clusters_flowsom)
 
-write.csv(df, 'clusteringOutput/df.csv')
+write.csv(df, 'clusteringOutput/flowSomDf.csv')
 rm(flowsom)
 rm(clusters_flowsom)
 gc()
@@ -108,13 +107,13 @@ gc()
 ## Option C: generate clusters by Phenograph (based on Louvain clustering)
 # select the columns for the clustering calculation (usually the numbers are the same as used for the flowsom calculation)
 #the higher the K nearest neighbours, the lower the number of clusters
-phenograph <- Rphenograph(df[,c(6, 11, 12)], k=50)
+phenograph <- Rphenograph(df[,c(18, 23, 24)], k=20)
 clusters_phenograph <- as.factor(phenograph$membership)
 
 #add phenograph clusters to expression data frame
 df <- cbind(df, clusters_phenograph)
 
-write.csv(df, 'clusteringOutput/df.csv')
+write.csv(df, 'clusteringOutput/phenographDf.csv')
 rm(phenograph)
 rm(clusters_phenograph)
 gc()
@@ -132,14 +131,13 @@ gc()
 
 ## Option B: diffusion map (for our example CD4 T cell dataset this will take approximately 2hours)
 # reduce the K, if computational load is too high [it takes approximately 2 hours for the example dataset of 275856 cells]
-dm <- DiffusionMap(df, vars = c("CD95", "CD8", "CD27", "CCR7", "CD45RA",
-                                "CD49b", "CD69", "CD103", "CD3", "CD4"), k=1000,
+dm <- DiffusionMap(df, vars = colnames(df[,c(18, 23, 24)]), k=50,
                    suppress_dpt = TRUE, verbose=TRUE)
 
 # add the diffusion components to the expression data frame (either all by dm@eigenvectors, or a selection by dm$DC1, dm$DC2, etc.)
 df <- cbind(df, DC1=dm$DC1, DC2=dm$DC2, DC3=dm$DC3)
 
-write.csv(df, 'clusteringOutput/df.csv')
+write.csv(df, 'clusteringOutput/diffusionMapDf.csv')
 rm(dm)
 gc()
 
@@ -195,12 +193,12 @@ gc()
 # select the columns for the UMAP calculation
 # check different n_neighbours (controls how UMAP balances local versus global structure in the data) for your UMAP plot
 # check min_dist (controls how tightly UMAP is allowed to pack points together, low values=clumpier embeddings) for your UMAP plot
-umap <- umap(df[,c(7:9, 11, 13:16,18,19)], n_neighbors = 30, min_dist=0.001, verbose=TRUE)
+umap <- umap(df[,c(18, 23, 24)], n_neighbors = 30, min_dist=0.001, verbose=TRUE)
 umap<- as.data.frame(umap)
 colnames(umap) <- c('umap_1', 'umap_2')
 df <- cbind(df,umap)
 
-write.csv(df, 'clusteringOutput/df.csv')
+write.csv(df, 'clusteringOutput/umapDf.csv')
 rm(umap)
 gc()
 
@@ -221,25 +219,76 @@ viz.umap <- function(dat,param.name,limits=NULL){
   p
 }
 
-viz.umap(dat=df,param.name='CD27', limits=c(-0.02,3.17))
-viz.umap(dat=df, param.name="CD45RA")
+# df <- read.csv('clusteringOutput/umapDf.csv')
+
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "FSC.A",".jpeg"))
+viz.umap(dat=df,param.name="FSC.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "SSC.A",".jpeg"))
+viz.umap(dat=df,param.name="SSC.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "GPR32...AF488.A",".jpeg"))
+viz.umap(dat=df,param.name="GPR32...AF488.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "FoxP3.PE.A",".jpeg"))
+viz.umap(dat=df,param.name="FoxP3.PE.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "CD19...PE.CF595.A",".jpeg"))
+viz.umap(dat=df,param.name="CD19...PE.CF595.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "IgD...PerCP.Cy5.5.A",".jpeg"))
+viz.umap(dat=df,param.name="IgD...PerCP.Cy5.5.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "IFNg.PE.Cy7.A",".jpeg"))
+viz.umap(dat=df,param.name="IFNg.PE.Cy7.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "FPRL1...AF647.A",".jpeg"))
+viz.umap(dat=df,param.name="FPRL1...AF647.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "Zombie.NIR.A",".jpeg"))
+viz.umap(dat=df,param.name="Zombie.NIR.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "IL.17...BV421.A",".jpeg"))
+viz.umap(dat=df,param.name="IL.17...BV421.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "CD24...BV605.A",".jpeg"))
+viz.umap(dat=df,param.name="CD24...BV605.A")
+dev.off()
+gc()
+jpeg(file = paste0(figureDirectory,"umap", "CD27...BV650.A",".jpeg"))
+viz.umap(dat=df,param.name="CD27...BV650.A")
+dev.off()
+gc()
+
 
 #visualize and label clusters on umap
+gc()
 label_HSNE_umap <- df%>%group_by(fileName)%>%select(umap_1, umap_2)%>%summarize_all(mean)
 label_flowsom_umap <- df%>%group_by(clusters_flowsom)%>%select(umap_1, umap_2)%>%summarize_all(mean)
 label_pheno_umap <- df%>%group_by(clusters_phenograph)%>%select(umap_1, umap_2)%>%summarize_all(mean)
-
+gc()
 
 gc()
-jpeg(file = paste0(figureDirectory,"umap1.jpeg"))
+jpeg(file = paste0(figureDirectory,"umapFileName.jpeg"))
 ggplot(df, aes(x=umap_1, y=umap_2, color=as.factor(fileName)))+geom_point(size=0.1)+theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor=element_blank())+geom_label_repel(aes(label=fileName), data=label_HSNE_umap)+guides(colour=FALSE)
 dev.off()
 gc()
-jpeg(file = paste0(figureDirectory,"umap2.jpeg"))
+jpeg(file = paste0(figureDirectory,"umapFlowsom.jpeg"))
 ggplot(df, aes(x=umap_1, y=umap_2, color=as.factor(clusters_flowsom)))+geom_point(size=0.1)+theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor=element_blank())+geom_label_repel(aes(label=clusters_flowsom), data=label_flowsom_umap)+guides(colour=FALSE)
 dev.off()
 gc()
-jpeg(file = paste0(figureDirectory,"umap3.jpeg"))
+jpeg(file = paste0(figureDirectory,"umapPhenograph.jpeg"))
 ggplot(df, aes(x=umap_1, y=umap_2, color=as.factor(clusters_phenograph)))+geom_point(size=0.1)+theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor=element_blank())+geom_label_repel(aes(label=clusters_phenograph), data=label_pheno_umap)+guides(colour=FALSE)
 dev.off()
 
@@ -350,4 +399,4 @@ ggplot(pseudotimevaluesexclNA%>%arrange(pseudotime), aes(x=DC1, y=DC2))+geom_poi
 ggplot(pseudotimevaluesexclNA%>%arrange(pseudotime), aes(x=pseudotime, y=lineage)) + geom_jitter(aes(color=clusterID), size=0.1)+theme_bw()+theme(panel.grid.major = element_blank(), panel.grid.minor=element_blank())
 
 ### save final df file  ###
-write.csv(df, 'clusteringOutput/df.csv')
+write.csv(df, 'clusteringOutput/finalDf.csv')
