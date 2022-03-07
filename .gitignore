@@ -4,4 +4,6 @@
 .Ruserdata
 flowCytometryData/dataPPOutput/
 flowCytometryData/figures/
-flowCytometryData/
+flowCytometryData/metadata/
+flowCytometryData/oldFiles/
+flowCytometryData/clusteringOutput/
