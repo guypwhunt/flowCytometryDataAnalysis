@@ -7,8 +7,11 @@ flowCytometryData/figures/
 flowCytometryData/oldFiles/
 flowCytometryData/clusteringOutput/
 Senescence CSV/
-data/monocytes
-data/tCells
-data/senescence
 data/bCells/figures
 data/bCells/dataPPOutput
+data/senescence/dataPPOutput
+data/senescence/figures
+data/monocytes/figures
+data/monocytes/dataPPOutput
+data/tCells/figures
+data/tCells/dataPPOutput
