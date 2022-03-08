@@ -64,6 +64,13 @@ df <- read.flowdat(dir=dirFCS[1],path_CSPLR_ST = pathST)
 gc()
 write.csv(df, 'clusteringOutput/rawDf.csv')
 gc()
+
+df <- df[,14:28]
+
+clinicalData <- read.csv('metadata/metadata.csv')
+
+df <- merge(df, clinicalData, by.x = "fileName", by.y = "ï..id")
+
 # Optional: Set columname 'fileName' to clusters_HSNE:
 #colnames(df)[which(colnames(df)=="fileName")] <- "clusters_HSNE"
 
@@ -83,12 +90,12 @@ gc()
 
 ## Option B: generate clusters by FlowSOM
 #check colnames, to determine which columns you need for the cluster calculation
-colnames(df[,c(18, 23, 24)])
+colnames(df[,c(7, 12, 13)])
 #run flowsom
 flowsom <- FlowSOM(input = dirFCS,
                 transform = FALSE,
                 scale = FALSE,
-                colsToUse = c(18, 23, 24), #provide the columns for the clustering
+                colsToUse = c(7, 12, 13), #provide the columns for the clustering
                 nClus = 6, #we choose 14, since we also generated 14 clusters by HSNE
                 seed = 100)
 
@@ -107,7 +114,7 @@ gc()
 ## Option C: generate clusters by Phenograph (based on Louvain clustering)
 # select the columns for the clustering calculation (usually the numbers are the same as used for the flowsom calculation)
 #the higher the K nearest neighbours, the lower the number of clusters
-phenograph <- Rphenograph(df[,c(18, 23, 24)], k=20)
+phenograph <- Rphenograph(df[,c(7, 12, 13)], k=20)
 clusters_phenograph <- as.factor(phenograph$membership)
 
 #add phenograph clusters to expression data frame
@@ -131,7 +138,7 @@ gc()
 
 ## Option B: diffusion map (for our example CD4 T cell dataset this will take approximately 2hours)
 # reduce the K, if computational load is too high [it takes approximately 2 hours for the example dataset of 275856 cells]
-dm <- DiffusionMap(df, vars = colnames(df[,c(18, 23, 24)]), k=50,
+dm <- DiffusionMap(df, vars = colnames(df[,c(7, 12, 13)]), k=50,
                    suppress_dpt = TRUE, verbose=TRUE)
 
 # add the diffusion components to the expression data frame (either all by dm@eigenvectors, or a selection by dm$DC1, dm$DC2, etc.)
@@ -193,7 +200,7 @@ gc()
 # select the columns for the UMAP calculation
 # check different n_neighbours (controls how UMAP balances local versus global structure in the data) for your UMAP plot
 # check min_dist (controls how tightly UMAP is allowed to pack points together, low values=clumpier embeddings) for your UMAP plot
-umap <- umap(df[,c(18, 23, 24)], n_neighbors = 30, min_dist=0.001, verbose=TRUE)
+umap <- umap(df[,c(7, 12, 13)], n_neighbors = 30, min_dist=0.001, verbose=TRUE)
 umap<- as.data.frame(umap)
 colnames(umap) <- c('umap_1', 'umap_2')
 df <- cbind(df,umap)

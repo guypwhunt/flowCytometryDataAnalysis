@@ -1,8 +1,11 @@
 ## INSTALL REQUIRED PACKAGES ##
 ###############################
-options(install.packages.compile.from.source = "always")
-install.packages(c("stringr","stringi","knitr","roxygen2","BiocManager","dplyr","R.utils","reshape2","ggplot2","uwot","ggrepel","dplyr","ggplot2","scales","reshape2","RColorBrewer","devtools"))
+install.packages(c("tidyverse","stringr","stringi","knitr","roxygen2","BiocManager","dplyr","R.utils","reshape2","ggplot2","uwot","ggrepel","dplyr","ggplot2","scales","reshape2","RColorBrewer","devtools"))
+install.packages(c("locfit", "hdrcde", "rainbow", "fds", "fda", "flowStats", "openCyto", "CytoML"))
 
+BiocManager::install("flowStats")
+BiocManager::install("openCyto")
+BiocManager::install("CytoML")
 BiocManager::install("Biobase")
 BiocManager::install("flowCore")
 BiocManager::install("flowVS")

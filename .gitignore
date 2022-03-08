@@ -4,6 +4,7 @@
 .Ruserdata
 flowCytometryData/dataPPOutput/
 flowCytometryData/figures/
-flowCytometryData/metadata/
 flowCytometryData/oldFiles/
 flowCytometryData/clusteringOutput/
+Senescence CSV/
+data/
