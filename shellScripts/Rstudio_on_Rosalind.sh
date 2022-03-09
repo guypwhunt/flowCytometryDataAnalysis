@@ -6,7 +6,8 @@
 PATH=$R_HOME/bin:$PATH
 
 module load utilities/use.dev
-module load apps/rstudio
+export TMPDIR=/users/k20064105/temp/
+module load apps/rstudio/4.1.0-singularity
 
 export PASSWORD=$(openssl rand -base64 15)
 export IP_ADD=$(hostname -I | awk '{print $1}')
