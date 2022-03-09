@@ -21,6 +21,9 @@ monocytesColumnNames <- c("CD11b","CD14", "Zombie.NIR.A","CD16", "CD11b activate
 
 test <- FALSE
 
+directoryName <- bCellsDirectoryName
+columnNames <- bCellsColumnNames
+
 preprocessing(directoryName, columnNames, test)
 
 convertToDataFrame(directoryName, columnNames)
