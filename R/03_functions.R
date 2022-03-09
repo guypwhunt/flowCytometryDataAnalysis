@@ -26,18 +26,12 @@ preprocessing <- function(directoryName, columnNames, test) {
 
   setwd(paste0("./data/", directoryName))
 
-  rm(list = ls())
-
   # Find file names of .csv files in the current working directory:
   filenames <- list.files(pattern = ".csv")
 
   if (test) {
     filenames <- filenames[1:2]
   }
-
-  df <- read.csv(filenames[1], sep=",", header=TRUE)
-
-  rm(df)
 
   ## Defining a function to read a flow cytrometry file in csv format:
   # Each row is a cell, each column is a parameter. In our experience, the flow cytometers sometimes output duplicate entries (listing the same cell twice), we remove these and report.
@@ -93,7 +87,9 @@ preprocessing <- function(directoryName, columnNames, test) {
   # Choose manual transformation or automated transformation (we prefer manual)
   # Define parameters and cofactors for transformations:
   gc()
+  jpeg(file = "automatedcofactors.jpeg")
   automatedcofactors <- estParamFlowVS(dfs_fs, columnNames) #this may take a while.
+  dev.off()
   gc()
 
   #auto
@@ -262,14 +258,141 @@ preprocessing <- function(directoryName, columnNames, test) {
     plot <- densityplot(~CD27...BV650.A, dfs_fs_t_auto_normfda, main="auto")
     print(plot)
     dev.off()
-  }
-
-  for (name in columnNames) {
+  } else if (directoryName == "senescence") {
     gc()
-    jpeg(file = paste0(figureDirectory,"test",name, ".jpeg"))
-    plot <- densityplot(~ name, dfs_fs_t_auto_normfda, main="auto")
+    jpeg(file = paste0(figureDirectory,"densityPlotGPR32.jpeg"))
+    plot <- densityplot(~GPR32.AF488.A, dfs_fs_t_auto, main="auto")
     print(plot)
     dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotKLRG1.jpeg"))
+    plot <- densityplot(~KLRG1.PE.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCD4.jpeg"))
+    plot <- densityplot(~CD4.PE.CF594.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCD8PerCP.jpeg"))
+    plot <- densityplot(~CD8.PerCP.Cy5.5.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCCR7.jpeg"))
+    plot <- densityplot(~CCR7.PE.Cy7.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotFPRL1.jpeg"))
+    plot <- densityplot(~FPRL1.AF647.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotZombie.jpeg"))
+    plot <- densityplot(~Zombie.NIR.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCD27.jpeg"))
+    plot <- densityplot(~CD27.BV421.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotx.jpeg"))
+    plot <- densityplot(~x.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotPacific.jpeg"))
+    plot <- densityplot(~Pacific.Orange.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCD45RA.jpeg"))
+    plot <- densityplot(~CD45RA.BV605.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCD8BV650.jpeg"))
+    plot <- densityplot(~CD8.BV650.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"densityPlotCD28.jpeg"))
+    plot <- densityplot(~CD28.BV785.A, dfs_fs_t_auto, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+
+    # Normalized Plots
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotGPR32.jpeg"))
+    plot <- densityplot(~GPR32.AF488.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotKLRG1.jpeg"))
+    plot <- densityplot(~KLRG1.PE.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCD4.jpeg"))
+    plot <- densityplot(~CD4.PE.CF594.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCD8PerCP.jpeg"))
+    plot <- densityplot(~CD8.PerCP.Cy5.5.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCCR7.jpeg"))
+    plot <- densityplot(~CCR7.PE.Cy7.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotFPRL1.jpeg"))
+    plot <- densityplot(~FPRL1.AF647.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotZombie.jpeg"))
+    plot <- densityplot(~Zombie.NIR.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCD27.jpeg"))
+    plot <- densityplot(~CD27.BV421.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotx.jpeg"))
+    plot <- densityplot(~x.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotPacific.jpeg"))
+    plot <- densityplot(~Pacific.Orange.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCD45RA.jpeg"))
+    plot <- densityplot(~CD45RA.BV605.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCD8BV650.jpeg"))
+    plot <- densityplot(~CD8.BV650.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
+    jpeg(file = paste0(figureDirectory,"normalisedDensityPlotCD28.jpeg"))
+    plot <- densityplot(~CD28.BV785.A, dfs_fs_t_auto_normfda, main="auto")
+    print(plot)
+    dev.off()
+    gc()
   }
 
   tryCatch({
@@ -279,3 +402,113 @@ preprocessing <- function(directoryName, columnNames, test) {
     setwd("..")
   })
   }
+
+convertToDataFrame <- function(directoryName, columnNames) {
+  workingDirectory <- getwd()
+
+  clinicalData <- read.csv('data/metadata/metadata.csv')
+
+  setwd(paste0("./data/", directoryName))
+
+  dirFCS <- paste0(getwd(), "/dataPPOutput")
+
+  ## Optional: when loading clustered fcs files from cytosplore, provide the directory of the text file 'CSPLR_ST.txt'. Cytosplore exports this file upon running the HSNE. This file contains the decoding of the sample numbers.
+  pathST <- "X:/Users/guypw/OneDrive/Documents/flowCytometryDataAnalysis/HSNE_clusters_CD4/CSPLR_ST.txt"
+
+  ## Defining a function to read multiple fcs files from a directory 'dir' into a single data.frame:
+  # NB: The column in the output named 'fileName' tracks the original file where each cell came from.
+  # Optionally perform remapping of column 'CSPLR_ST' holding cytosplore sample numbers to actual names:
+  read.flowdat <- function(dir,path_CSPLR_ST=""){
+    # Read:
+    filepaths <- list.files(path=dir,pattern = ".fcs", full.names=TRUE)
+    flowset <- read.flowSet(files=filepaths, transformation=FALSE, truncate_max_range = FALSE)
+    # Transform to data frame:
+    x <- as.data.frame(exprs(as(flowset,'flowFrame')),stringsAsFactors=FALSE)
+    # Map column 'Original' to filename (in this case holding clusters of HSNE):
+    filenames <- gsub("[.fcs]","",list.files(path=dir,pattern = ".fcs", full.names=FALSE))
+    names(filenames) <- sort(unique(x$Original))
+    x$fileName <- filenames[as.character(x$Original)]
+    # Remove column 'Original':
+    x <- x[,-which(colnames(x)=="Original")]
+    # Optionally remap Cytosplore sample tags to original filename:
+    if(file.exists(path_CSPLR_ST)){
+      # Read:
+      sampID <- gsub(".fcs","",basename(sapply(strsplit(readLines(path_CSPLR_ST),": "),function(x) x[1])))
+      names(sampID) <- sapply(strsplit(readLines(path_CSPLR_ST),": "),function(x) x[2])
+      x$sampleID <- sampID[as.character(x$CSPLR_ST)]
+    }
+    return(x)
+  }
+
+  ## Read fcs files
+  # In our example we will read the data which were clustered in Cytosplore (each fcs file is 1 cluster)
+  df <- read.flowdat(dir=dirFCS[1],path_CSPLR_ST = pathST)
+  gc()
+  write.csv(df, 'dataPPOutput/rawDf.csv')
+  gc()
+
+  df <- df[,columnNames]
+  gc()
+  write.csv(df, 'dataPPOutput/columnsOfInterestDf.csv')
+  gc()
+
+  df <- merge(df, clinicalData, by.x = "fileName", by.y = "ï..id")
+  df["caseControl"][df["caseControl"] == "Case"] <- 1
+  df["caseControl"][df["caseControl"] == "Control"] <- 0
+
+  df["fastSlow"][df["fastSlow"] == "Fast"] <- 1
+  df["fastSlow"][df["fastSlow"] == "Slow"] <- 0
+  df["fastSlow"][df["fastSlow"] == "N/A"] <- -1
+  gc()
+  gc()
+  write.csv(df, 'dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv')
+  gc()
+
+  tryCatch({
+    setwd(workingDirectory)},
+    error=function(cond) {
+      setwd("..")
+      setwd("..")
+    })
+}
+
+
+multipleRegressionTesting <- function(directoryName, columnNames) {
+  workingDirectory <- getwd()
+
+  setwd(paste0("./data/", directoryName))
+
+  df <- read.csv('dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv')
+
+  # This returns the formula:
+  caseModelFormula <- as.formula(paste("caseControl", paste(columnNames, collapse=" + "), sep=" ~ "))
+
+  progressionModelFormula <- as.formula(paste("fastSlow", paste(columnNames, collapse=" + "), sep=" ~ "))
+
+  caseModel <- lm(caseModelFormula, data = df)
+
+  print(summary(caseModel))
+
+  caseModelCoefficient <-
+    as.data.frame(summary(caseModel)$coefficient)
+  caseModelCoefficient[order(caseModelCoefficient["Pr(>|t|)"]),]
+
+  print(confint(caseModel))
+
+  fastModel <- lm(progressionModelFormula, data = df)
+
+  print(summary(fastModel))
+
+  fastModelCoefficient <-
+    as.data.frame(summary(fastModel)$coefficient)
+  fastModelCoefficient[order(fastModelCoefficient["Pr(>|t|)"]),]
+
+  print(confint(fastModel))
+
+  tryCatch({
+    setwd(workingDirectory)},
+    error=function(cond) {
+      setwd("..")
+      setwd("..")
+    })
+}

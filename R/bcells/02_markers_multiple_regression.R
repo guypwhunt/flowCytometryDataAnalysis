@@ -90,21 +90,21 @@ caseModel <- lm(caseControl ~ FSC.A + SSC.A + GPR32...AF488.A + FoxP3.PE.A +
               FPRL1...AF647.A + Zombie.NIR.A + IL.17...BV421.A +
               CD24...BV605.A + CD27...BV650.A, data = df)
 
-summary(caseModel)
+print(summary(caseModel))
 
 caseModelCoefficient <- as.data.frame(summary(caseModel)$coefficient)
 caseModelCoefficient[order(caseModelCoefficient["Pr(>|t|)"]),]
 
-confint(caseModel)
+print(confint(caseModel))
 
 fastModel <- lm(fastSlow ~ FSC.A + SSC.A + GPR32...AF488.A + FoxP3.PE.A +
                   CD19...PE.CF595.A + IgD...PerCP.Cy5.5.A + IFNg.PE.Cy7.A +
                   FPRL1...AF647.A + Zombie.NIR.A + IL.17...BV421.A +
                   CD24...BV605.A + CD27...BV650.A, data = df)
 
-summary(fastModel)
+print(summary(fastModel))
 
 fastModelCoefficient <- as.data.frame(summary(fastModel)$coefficient)
 fastModelCoefficient[order(fastModelCoefficient["Pr(>|t|)"]),]
 
-confint(fastModel)
+print(confint(fastModel))
