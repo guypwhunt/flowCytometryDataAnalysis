@@ -416,6 +416,8 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
   df <- cbind(df, clusters_flowsom)
 
   write.csv(df, 'clusteringOutput/flowSomDf.csv')
+  try(capture.output(confint(flowsom),
+                     file = "clusteringOutput/flowSom.txt"))
   rm(flowsom)
   rm(clusters_flowsom)
   gc()
@@ -446,6 +448,8 @@ phenographClustering <- function(directoryName, columnNames, knn) {
   df <- cbind(df, clusters_phenograph)
 
   write.csv(df, 'clusteringOutput/phenographDf.csv')
+  try(capture.output(confint(phenograph),
+                     file = "clusteringOutput/phenograph.txt"))
   rm(phenograph)
   rm(clusters_phenograph)
   gc()
@@ -478,6 +482,8 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
   colnames(df)
 
   write.csv(df, 'clusteringOutput/fastPGDf.csv')
+  try(capture.output(confint(fastPGResults),
+                     file = "clusteringOutput/fastPGResults.txt"))
   rm(fastPGResults)
   rm(clusters_fast_pg)
   gc()
@@ -618,6 +624,8 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   workingDirectory <- getwd()
 
   setwd(paste0("./data/", directoryName))
+
+  figureDirectory <- paste0(getwd(),"/figures/")
 
   df <- read.csv('clusteringOutput/diffusionMapDf.csv')
 

@@ -1,7 +1,5 @@
 try(source("R/03_functions.R"))
 
-getwd()
-
 loadlibraries()
 
 senescenceDirectoryName <- "senescence"
