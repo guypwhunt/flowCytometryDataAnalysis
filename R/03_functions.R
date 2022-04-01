@@ -155,6 +155,7 @@ preprocessing <- function(directoryName, columnNames, test) {
   dev.off()
   try(capture.output(automatedcofactors,
                      file = "dataPPOutput/automatedcofactors.txt"))
+
   gc()
 
   #auto
@@ -300,7 +301,10 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   write.csv(df, 'dataPPOutput/columnsOfInterestDf.csv')
   gc()
 
-  df <- merge(df, clinicalData, by.x = "fileName", by.y = "id")
+  df <- tryCatch({merge(df, clinicalData, by.x = "fileName", by.y = "ï..id")},
+                 error=function(x) {
+                   merge(df, clinicalData, by.x = "fileName", by.y = "id")
+                 })
   df["caseControl"][df["caseControl"] == "Case"] <- 1
   df["caseControl"][df["caseControl"] == "Control"] <- 0
 
@@ -362,8 +366,7 @@ multipleRegressionTesting <- function(directoryName, columnNames) {
                      file = "dataPPOutput/coefficientFastModel.txt"))
 
   print(confint(fastModel))
-  try(capture.output(confint(fastModel),
-                     file = "dataPPOutput/confintFastModel.txt"))
+  try(saveRDS(fastModel, file = "dataPPOutput/fastModel.rds"))
 
   rm(fastModel)
   rm(caseModel)
@@ -382,6 +385,54 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
 
   setwd(paste0("./data/", directoryName))
 
+  dirFCS <- paste0(getwd(), "/dataPPOutput")
+
+  ## Optional: when loading clustered fcs files from cytosplore,
+  #provide the directory of the text file 'CSPLR_ST.txt'. Cytosplore exports
+  # this file upon running the HSNE. This file contains the decoding of the
+  # sample numbers.
+  pathST <- "X:/Users/guypw/OneDrive/Documents.txt"
+
+  ## Defining a function to read multiple fcs files from a directory 'dir'
+  # into a single data.frame:
+  # NB: The column in the output named 'fileName' tracks the original file
+  # where each cell came from.
+  # Optionally perform remapping of column 'CSPLR_ST' holding cytosplore
+  # sample numbers to actual names:
+  read.flowdat <- function(dir,path_CSPLR_ST=""){
+    # Read:
+    filepaths <- list.files(path=dir,pattern = ".fcs", full.names=TRUE)
+    flowset <- read.flowSet(files=filepaths[1:2], transformation=FALSE,
+                            truncate_max_range = FALSE)
+    # Transform to data frame:
+    x <- as.data.frame(exprs(as(flowset,'flowFrame')),stringsAsFactors=FALSE)
+    # Map column 'Original' to filename (in this case holding clusters of
+    # HSNE):
+    filenames <- gsub("[.fcs]","",list.files(path=dir,pattern = ".fcs",
+                                             full.names=FALSE))[1:2]
+    names(filenames) <- sort(unique(x$Original))
+    x$fileName <- filenames[as.character(x$Original)]
+    # Remove column 'Original':
+    x <- x[,-which(colnames(x)=="Original")]
+    # Optionally remap Cytosplore sample tags to original filename:
+    if(file.exists(path_CSPLR_ST)){
+      # Read:
+      sampID <- gsub(
+        ".fcs","",basename(sapply(strsplit(readLines(path_CSPLR_ST),": "),
+                                  function(x) x[1])))
+      names(sampID) <- sapply(
+        strsplit(readLines(path_CSPLR_ST),": "),function(x) x[2])
+      x$sampleID <- sampID[as.character(x$CSPLR_ST)]
+    }
+    return(x)
+  }
+
+  ## Read fcs files
+  # In our example we will read the data which were clustered in Cytosplore
+  # (each fcs file is 1 cluster)
+  fcsDf <- read.flowdat(dir=dirFCS[1],path_CSPLR_ST = pathST)
+  gc()
+
   dir.create("clusteringOutput", showWarnings = FALSE)
 
   df <- read.csv('dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv')
@@ -391,7 +442,7 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
   columnIndexes <- c()
 
   for (columnName in columnNames) {
-    index <- grep(columnName, colnames(df))
+    index <- grep(columnName, colnames(fcsDf))
     columnIndexes <- append(columnIndexes, index)
   }
 
@@ -416,8 +467,8 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
   df <- cbind(df, clusters_flowsom)
 
   write.csv(df, 'clusteringOutput/flowSomDf.csv')
-  try(capture.output(confint(flowsom),
-                     file = "clusteringOutput/flowSom.txt"))
+  try(saveRDS(flowsom, file = "dataPPOutput/flowSom.rds"))
+  FlowSOMmary(flowsom, plotFile = "clusteringOutput/FlowSOMmary.pdf")
   rm(flowsom)
   rm(clusters_flowsom)
   gc()
@@ -448,8 +499,7 @@ phenographClustering <- function(directoryName, columnNames, knn) {
   df <- cbind(df, clusters_phenograph)
 
   write.csv(df, 'clusteringOutput/phenographDf.csv')
-  try(capture.output(confint(phenograph),
-                     file = "clusteringOutput/phenograph.txt"))
+  try(saveRDS(phenograph, file = "dataPPOutput/phenograph.rds"))
   rm(phenograph)
   rm(clusters_phenograph)
   gc()
@@ -482,8 +532,7 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
   colnames(df)
 
   write.csv(df, 'clusteringOutput/fastPGDf.csv')
-  try(capture.output(confint(fastPGResults),
-                     file = "clusteringOutput/fastPGResults.txt"))
+  try(saveRDS(fastPGResults, file = "dataPPOutput/fastPGResults.rds"))
   rm(fastPGResults)
   rm(clusters_fast_pg)
   gc()
