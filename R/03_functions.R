@@ -366,7 +366,8 @@ multipleRegressionTesting <- function(directoryName, columnNames) {
                      file = "dataPPOutput/coefficientFastModel.txt"))
 
   print(confint(fastModel))
-  try(saveRDS(fastModel, file = "dataPPOutput/fastModel.rds"))
+  try(capture.output(confint(fastModel),
+                     file = "dataPPOutput/confintFastModel.txt"))
 
   rm(fastModel)
   rm(caseModel)
@@ -467,7 +468,7 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
   df <- cbind(df, clusters_flowsom)
 
   write.csv(df, 'clusteringOutput/flowSomDf.csv')
-  try(saveRDS(flowsom, file = "dataPPOutput/flowSom.rds"))
+  try(saveRDS(flowsom, file = "clusteringOutput/flowSom.rds"))
   FlowSOMmary(flowsom, plotFile = "clusteringOutput/FlowSOMmary.pdf")
   rm(flowsom)
   rm(clusters_flowsom)
@@ -499,7 +500,7 @@ phenographClustering <- function(directoryName, columnNames, knn) {
   df <- cbind(df, clusters_phenograph)
 
   write.csv(df, 'clusteringOutput/phenographDf.csv')
-  try(saveRDS(phenograph, file = "dataPPOutput/phenograph.rds"))
+  try(saveRDS(phenograph, file = "clusteringOutput/phenograph.rds"))
   rm(phenograph)
   rm(clusters_phenograph)
   gc()
@@ -532,7 +533,7 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
   colnames(df)
 
   write.csv(df, 'clusteringOutput/fastPGDf.csv')
-  try(saveRDS(fastPGResults, file = "dataPPOutput/fastPGResults.rds"))
+  try(saveRDS(fastPGResults, file = "clusteringOutput/fastPGResults.rds"))
   rm(fastPGResults)
   rm(clusters_fast_pg)
   gc()
