@@ -15,5 +15,5 @@ columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
 columnNames <- columnNames[columnNames!= "CD19...PE.CF595.A"]
 columnNames <- columnNames[columnNames!= "GPR32...AF488.A"]
 
-numberOfClusters <- 7
+numberOfClusters <- 8
 flowsomClustering(directoryName, columnNames, numberOfClusters, test)

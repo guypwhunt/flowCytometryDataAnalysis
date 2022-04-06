@@ -15,6 +15,8 @@ BiocManager::install("FlowSOM")
 BiocManager::install("slingshot")
 BiocManager::install("flowCore")
 BiocManager::install("SingleCellExperiment")
+BiocManager::install("diffcyt")
+remotes::install_github("igraph/rigraph@master")
 
 library(devtools)
 devtools::install_github("JinmiaoChenLab/cytofkit2")

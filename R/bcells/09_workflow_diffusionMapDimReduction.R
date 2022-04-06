@@ -16,5 +16,5 @@ columnNames <- columnNames[columnNames!= "CD19...PE.CF595.A"]
 columnNames <- columnNames[columnNames!= "GPR32...AF488.A"]
 
 numberOfClusters <- 6
-knn <- 1000
+knn <- 20
 diffusionMapDimReduction(directoryName, columnNames, knn)
