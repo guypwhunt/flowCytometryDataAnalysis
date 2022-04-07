@@ -292,14 +292,14 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
     df <- df[seq_len(nrow(df)/50),]
   }
 
-  write.csv(df, 'dataPPOutput/rawDf.csv')
+  write.csv(df, 'dataPPOutput/rawDf.csv', row.names = FALSE)
   gc()
 
   updatedColumnNames <- append(columnNames,"fileName")
 
   df <- df[,updatedColumnNames]
   gc()
-  write.csv(df, 'dataPPOutput/columnsOfInterestDf.csv')
+  write.csv(df, 'dataPPOutput/columnsOfInterestDf.csv', row.names = FALSE)
   gc()
 
   df <- tryCatch({merge(df, clinicalData, by.x = "fileName", by.y = "ï..id")},
@@ -313,7 +313,7 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   df["fastSlow"][df["fastSlow"] == "Slow"] <- 0
   df["fastSlow"][df["fastSlow"] == "N/A"] <- -1
   gc()
-  write.csv(df, 'dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv')
+  write.csv(df, 'dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv', row.names = FALSE)
   gc()
 
   tryCatch({
@@ -437,7 +437,7 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
 
   dir.create("clusteringOutput", showWarnings = FALSE)
 
-  df <- read.csv('dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv')
+  df <- read.csv('dataPPOutput/columnsOfInterestDf.csv')
 
   dirFCS <- paste0(getwd(), "/dataPPOutput")
 
@@ -468,7 +468,7 @@ flowsomClustering <- function(directoryName, columnNames, numberOfClusters,
   #add flowsom clusters to dataframe
   df <- cbind(df, clusters_flowsom)
 
-  write.csv(df, 'clusteringOutput/flowSomDf.csv')
+  write.csv(df, 'clusteringOutput/flowSomDf.csv', row.names = FALSE)
   try(saveRDS(flowsom, file = "clusteringOutput/flowSom.rds"))
   FlowSOMmary(flowsom, plotFile = "clusteringOutput/FlowSOMmary.pdf")
   rm(flowsom)
@@ -500,7 +500,7 @@ phenographClustering <- function(directoryName, columnNames, knn) {
   #add phenograph clusters to expression data frame
   df <- cbind(df, clusters_phenograph)
 
-  write.csv(df, 'clusteringOutput/phenographDf.csv')
+  write.csv(df, 'clusteringOutput/phenographDf.csv', row.names = FALSE)
   try(saveRDS(phenograph, file = "clusteringOutput/phenograph.rds"))
   rm(phenograph)
   rm(clusters_phenograph)
@@ -533,7 +533,7 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
   df <- cbind(df, clusters_fast_pg)
   colnames(df)
 
-  write.csv(df, 'clusteringOutput/fastPGDf.csv')
+  write.csv(df, 'clusteringOutput/fastPGDf.csv', row.names = FALSE)
   try(saveRDS(fastPGResults, file = "clusteringOutput/fastPGResults.rds"))
   rm(fastPGResults)
   rm(clusters_fast_pg)
@@ -560,7 +560,7 @@ umapDimReduction <- function(directoryName, columnNames, knn) {
   colnames(umap) <- c('umap_1', 'umap_2')
   df <- cbind(df,umap)
 
-  write.csv(df, 'clusteringOutput/umapDf.csv')
+  write.csv(df, 'clusteringOutput/umapDf.csv', row.names = FALSE)
   rm(umap)
   gc()
 
@@ -659,7 +659,7 @@ diffusionMapDimReduction <- function(directoryName, columnNames, knn) {
   # add the diffusion components to the expression data frame (either all by dm@eigenvectors, or a selection by dm$DC1, dm$DC2, etc.)
   df <- cbind(df, DC1=dm$DC1, DC2=dm$DC2, DC3=dm$DC3)
 
-  write.csv(df, 'clusteringOutput/diffusionMapDf.csv')
+  write.csv(df, 'clusteringOutput/diffusionMapDf.csv', row.names = FALSE)
   rm(dm)
   gc()
 
