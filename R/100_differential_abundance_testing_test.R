@@ -51,7 +51,7 @@ cols_func <- setdiff(cols_markers, cols_lineage)
 
 # channel and marker names
 channel_name <- colnames(d_flowSet)
-marker_name <- gsub("//(.*$", "", channel_name)
+marker_name <- gsub("//.*$", "", channel_name)
 
 # marker classes
 # note: using lineage markers for 'cell type', and functional markers for
@@ -84,6 +84,7 @@ contrast <- createContrast(c(0, 1, rep(0, 7)))
 nrow(contrast) == ncol(design)
 
 data.frame(parameters = colnames(design), contrast)
+
 
 ## Differential testing (Option 3: Individual functions)
 # Prepare data
