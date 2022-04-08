@@ -16,5 +16,5 @@ columnNames <- columnNames[columnNames!= "CD19...PE.CF595.A"]
 columnNames <- columnNames[columnNames!= "GPR32...AF488.A"]
 
 numberOfClusters <- 6
-knn <- 20
+knn <- 25
 umapDimReduction(directoryName, columnNames, knn)

@@ -225,7 +225,108 @@ sample_order <- c(seq(2, 16, by = 2), seq(1, 16, by = 2))
 plotHeatmap(out_DS, analysis_type = "DS", sample_order = sample_order)
 
 
-###################
+#############################################
+suppressPackageStartupMessages(library(flowCore))
+suppressPackageStartupMessages(library(diffcyt))
 
+# Read assay data
 df <- read.csv("data/bCells/clusteringOutput/diffusionMapDf.csv")
-df <- df[seq_len(10000),]
+df <- df[order(df[,"fileName"]),]
+head(df)
+
+# Define the marker column names
+markerColumnNames <- c("fileName","GPR32...AF488.A","IgD...PerCP.Cy5.5.A",
+                       "CD24...BV605.A", "CD27...BV650.A")
+#, "sample_id")
+
+minimalDf <- df[,markerColumnNames]
+head(minimalDf)
+
+listOfDfs <- list()
+
+for (file in unique(minimalDf[,"fileName"])){
+  minimalDfExtract <- minimalDf[minimalDf[,"fileName"] == file,]
+  #colnames(minimalDfExtract)[colnames(minimalDfExtract) == "fileName"] <- "sample_id"
+  minimalDfExtract <- minimalDfExtract[ , !(names(minimalDfExtract) %in% c("fileName"))]
+  listOfDfs <- append(listOfDfs, list(minimalDfExtract))
+}
+
+# Read row data
+experimentInfo <- read.csv("data/metadata/metadata.csv")
+experimentInfo <- experimentInfo[order(experimentInfo[,"sample_id"]),]
+experimentInfo[,"group_id"] <- NA
+
+# Create marker information
+markerColumnNames <- c("GPR32...AF488.A","IgD...PerCP.Cy5.5.A",
+                       "CD24...BV605.A", "CD27...BV650.A")
+markerInformation <- data.frame(markerColumnNames)
+markerInformation[,"channel_name"] <- markerColumnNames
+markerInformation[,"marker_name"] <- markerColumnNames
+markerInformation[,"marker_class"] <- c("type","type",
+                                        "type", "type")
+#, "none")
+markerInformation <- markerInformation[,2:ncol(markerInformation)]
+markerInformation
+
+# Transform the input into the correct format
+d_se <- prepareData(listOfDfs, experimentInfo, markerInformation)
+head(assay(d_se))
+rowData(d_se)[,"cluster_id"] <- df[,"clusters_flowsom"]
+
+# Calculate cluster cell counts
+d_counts <- calcCounts(d_se)
+assay(d_counts)
+
+# Calculate cluster medians
+d_medians <- calcMedians(d_se)
+assay(d_medians)
+
+###############################################
+
+
+# Merge assay and row data
+mergedDf <- tryCatch({merge(df, experimentInfo, by.x = "fileName", by.y = "ï..sample_id")},
+                     error=function(x) {
+                       merge(df, experimentInfo, by.x = "fileName", by.y = "sample_id")
+                     })
+
+mergedDf[,"sample_id"] <- as.numeric(factor(mergedDf[,"fileName"]))
+mergedDf[,"fileName"] <- factor(mergedDf[,"fileName"])
+mergedDf[,"clusters_flowsom"] <- factor(mergedDf[,"clusters_flowsom"])
+mergedDf[,"clusters_phenograph"] <- factor(mergedDf[,"clusters_phenograph"])
+mergedDf[,"clusters_fast_pg"] <- factor(mergedDf[,"clusters_fast_pg"])
+mergedDf[,"group_id"] <- factor(NA)
+
+colnames(mergedDf)
+head(mergedDf)
+
+
+markerInformation <- data.frame(markerColumnNames)
+markerInformation[,"channel_name"] <- markerColumnNames
+markerInformation[,"marker_name"] <- markerColumnNames
+markerInformation[,"marker_class"] <- c("type","type",
+                                        "type", "type")
+#, "none")
+markerInformation <- markerInformation[,2:ncol(markerInformation)]
+
+
+# Convert the assay data to SummarizedExperiment
+se <- SummarizedExperiment(mergedDf[,markerColumnNames], colData = markerInformation)
+head(assay(se))
+
+# Add the row data to the SummarizedExperiment
+rowData(se) <- mergedDf[, -which(names(mergedDf) %in% markerColumnNames)]
+
+# Define the sample_id column
+colnames(rowData(se))[colnames(rowData(se)) == "fileName"] <- "sample_id"
+
+rowDataColnames <- colnames(rowData(se))
+
+# Define the cluster_id column
+colnames(rowData(se))[colnames(rowData(se)) == "clusters_flowsom"] <- "cluster_id"
+head(rowData(se))
+
+# Calculate cluster cell counts
+d_counts <- calcCounts(se)
+head(assay(d_counts),10)
+head(rowData(d_counts),10)

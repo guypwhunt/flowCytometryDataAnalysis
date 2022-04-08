@@ -302,9 +302,9 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   write.csv(df, 'dataPPOutput/columnsOfInterestDf.csv', row.names = FALSE)
   gc()
 
-  df <- tryCatch({merge(df, clinicalData, by.x = "fileName", by.y = "ï..id")},
+  df <- tryCatch({merge(df, clinicalData, by.x = "fileName", by.y = "ï..sample_id")},
                  error=function(x) {
-                   merge(df, clinicalData, by.x = "fileName", by.y = "id")
+                   merge(df, clinicalData, by.x = "fileName", by.y = "sample_id")
                  })
   df["caseControl"][df["caseControl"] == "Case"] <- 1
   df["caseControl"][df["caseControl"] == "Control"] <- 0
