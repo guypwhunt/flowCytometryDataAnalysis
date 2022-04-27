@@ -1,7 +1,7 @@
 #!/bin/sh
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH -p shared,brc
-#SBATCH --mem 12G
+#SBATCH --mem 20G
 
 PATH=$R_HOME/bin:$PATH
 

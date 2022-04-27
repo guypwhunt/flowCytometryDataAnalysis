@@ -2,10 +2,8 @@ library(R.utils)
 
 workingDirectory <- getwd()
 
-dataDirectorys <- c("/data/bCells"
-                    ,"/data/monocytes",
-                    "/data/senescence","/data/tCells"
-                    )
+dataDirectorys <- c("/data/bCells","/data/monocytes","/data/senescence",
+                    "/data/tCells")
 
 for (directory in dataDirectorys) {
   try(setwd(paste0(workingDirectory,directory)))
