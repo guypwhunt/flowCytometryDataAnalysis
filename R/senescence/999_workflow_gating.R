@@ -18,8 +18,7 @@ senescenceColumnNames <- c("CD27.BV421.A",
 test <- FALSE
 
 directoryName <- senescenceDirectoryName
-columnNames <- senescenceColumnNames
+columnNames = c("CD8.BV650.A")
+cutoff = c(0)
 
-columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
-
-convertToDataFrame(directoryName, columnNames, test)
+gateMarkers(directoryName, columnNames, cutoff)

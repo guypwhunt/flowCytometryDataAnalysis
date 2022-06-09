@@ -19,6 +19,10 @@ test <- FALSE
 directoryName <- monocytesDirectoryName
 columnNames <- monocytesColumnNames
 
+columnNames <- columnNames[columnNames != "HLA.Dr...BV650.A"]
+columnNames <- columnNames[columnNames != "GPR32...AF488.A"]
+columnNames <- columnNames[columnNames != "FPRL1...AF647.A"]
 columnNames <- columnNames[columnNames != "Zombie.NIR.A"]
 
-convertToDataFrame(directoryName, columnNames, test)
+numberOfClusters <- 6
+flowsomClustering(directoryName, columnNames, numberOfClusters, test)

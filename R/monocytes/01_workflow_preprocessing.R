@@ -1,4 +1,4 @@
-try(source("R/03_functions.R"))
+try(source("R/01_functions.R"))
 
 loadlibraries()
 
@@ -14,9 +14,17 @@ monocytesColumnNames <- c(
   "Zombie.NIR.A"
 )
 
+automatedcofactors <- c(130.957690, 3.820902, 28828.722419, 41.415505,
+                        1194.595206, 10.386289, 32.117761, 932.989806)
+
 test <- FALSE
 
 directoryName <- monocytesDirectoryName
 columnNames <- monocytesColumnNames
+gateColumns <- data.frame (CD14...BV605.A  = c(0),
+                           CD16...PE.CF595.A = c(0))
+gate <- TRUE
+gateTogether <- TRUE
 
-preprocessing(directoryName, columnNames, test)
+preprocessing(directoryName, columnNames, test, gate, gateTogether,
+              gateColumns, automatedcofactors = NULL)

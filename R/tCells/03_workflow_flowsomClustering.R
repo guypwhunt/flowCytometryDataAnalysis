@@ -15,5 +15,12 @@ columnNames <- tCellColumnNames
 
 columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
 columnNames <- columnNames[columnNames!= "CD3.BV605.A"]
+columnNames <- columnNames[columnNames!= "GPR32.AF488.A"]
+columnNames <- columnNames[columnNames!= "FPRL1.AF647.A"]
+#columnNames <- columnNames[columnNames!= "CD25.BV786.A"]
+#columnNames <- columnNames[columnNames!= "CD127.BV510.A"]
+#columnNames <- columnNames[columnNames!= "FoxP3.PE.A"]
 
-convertToDataFrame(directoryName, columnNames, test)
+
+numberOfClusters <- 29
+flowsomClustering(directoryName, columnNames, numberOfClusters, test)

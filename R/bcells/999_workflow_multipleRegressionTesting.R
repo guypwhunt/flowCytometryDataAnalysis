@@ -15,4 +15,4 @@ columnNames <- bCellsColumnNames
 columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
 columnNames <- columnNames[columnNames!= "CD19...PE.CF595.A"]
 
-convertToDataFrame(directoryName, columnNames, test)
+multipleRegressionTesting(directoryName, columnNames)

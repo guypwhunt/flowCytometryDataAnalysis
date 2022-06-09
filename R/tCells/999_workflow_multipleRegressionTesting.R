@@ -16,4 +16,4 @@ columnNames <- tCellColumnNames
 columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
 columnNames <- columnNames[columnNames!= "CD3.BV605.A"]
 
-convertToDataFrame(directoryName, columnNames, test)
+multipleRegressionTesting(directoryName, columnNames)

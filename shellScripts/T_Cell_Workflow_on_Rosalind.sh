@@ -1,7 +1,7 @@
 #!/bin/sh
-#SBATCH --time=20:00:00
+#SBATCH --time=03:00:00
 #SBATCH -p shared,brc
-#SBATCH --mem 200G
+#SBATCH --mem 100G
 
 PATH=$R_HOME/bin:$PATH
 
@@ -11,4 +11,4 @@ module load apps/rstudio/4.1.0-singularity
 
 cd /users/k20064105/flowCytometryDataAnalysis
 
-Rscript R/tCells/01_workflow_preprocessing.R
+Rscript R/tCells/04_workflow_flowsomClustering.R

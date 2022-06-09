@@ -21,4 +21,4 @@ columnNames <- monocytesColumnNames
 
 columnNames <- columnNames[columnNames != "Zombie.NIR.A"]
 
-convertToDataFrame(directoryName, columnNames, test)
+multipleRegressionTesting(directoryName, columnNames)
