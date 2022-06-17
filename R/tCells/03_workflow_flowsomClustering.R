@@ -22,5 +22,5 @@ columnNames <- columnNames[columnNames!= "FPRL1.AF647.A"]
 #columnNames <- columnNames[columnNames!= "FoxP3.PE.A"]
 
 
-numberOfClusters <- 29
+numberOfClusters <- 90
 flowsomClustering(directoryName, columnNames, numberOfClusters, test)

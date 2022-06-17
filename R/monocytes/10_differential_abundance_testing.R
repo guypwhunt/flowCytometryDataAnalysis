@@ -15,4 +15,7 @@ columnNames <- c(
   "FPRL1...AF647.A"
 )
 
-performAllDifferentialAbundanceTests(directoryName, columnNames)
+
+clusterName <- "clusters_flowsom"
+
+performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName)

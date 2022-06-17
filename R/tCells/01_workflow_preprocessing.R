@@ -15,7 +15,7 @@ tCellColumnNames <- c(
   "Zombie.NIR.A",
   "FPRL1.AF647.A"
 )
-automatedcofactors <-
+automatedcofactors_updated <-
   c(
     500,
     15140.92607,
@@ -29,10 +29,15 @@ automatedcofactors <-
     2838.94867
   )
 
+automatedcofactors <- C(3161.24533, 15140.92607,  1634.74308,
+                        605.70310, 49.16272, 2789.74216,
+                        2071.21481, 343.22777, 90.43229, 2838.94867)
+
+
 test <- FALSE
 
 directoryName <- tCellDirectoryName
 columnNames <- tCellColumnNames
 
 preprocessing(directoryName, columnNames, test,
-              automatedcofactors = automatedcofactors)
+              automatedcofactors = NULL)

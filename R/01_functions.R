@@ -1119,7 +1119,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   })
 }
 
-veganOptimalClusters <- function(directoryName, columnNames) {
+veganOptimalClusters <- function(directoryName, columnNames, minClusters, maxClusters) {
   workingDirectory <- getwd()
 
   setwd(paste0("./data/", directoryName))
@@ -1135,15 +1135,17 @@ veganOptimalClusters <- function(directoryName, columnNames) {
     columnIndexes <- append(columnIndexes, index)
   }
 
-  minimalDf <- as.matrix(df[, columnIndexes])
+  minimalDf <- as.matrix(df[#seq_len(nrow(df)/100)
+    , columnIndexes])
+
 
   figureDirectory <- paste0(getwd(), "/figures/")
 
   # https://stackoverflow.com/questions/15376075/cluster-analysis-in-r-determine-the-optimal-number-of-clusters
   fit <-
-    cascadeKM(scale(minimalDf, center = TRUE, scale = TRUE), 1, 10, iter = 1000)
+    cascadeKM(scale(minimalDf, center = TRUE, scale = TRUE), minClusters, maxClusters, iter = 100)
   gc()
-  jpeg(file = paste0(figureDirectory, "vegan1.jpeg"))
+  jpeg(file = paste0(figureDirectory, "vegan", as.character(minClusters), "-", as.character(maxClusters), ".jpeg"))
   par(mar = c(1, 1, 1, 1))
   p <- plot(fit, sortg = TRUE, grpmts.plot = TRUE)
   print(p)
@@ -1157,9 +1159,8 @@ veganOptimalClusters <- function(directoryName, columnNames) {
         calinski.best,
         "\n"),
     file = paste0(
-      "clusteringOutput/veganOptimumClusters.txt",
-      clusterName,
-      columnName ,
+      "clusteringOutput/veganOptimumClusters",
+      as.character(minClusters), "-", as.character(maxClusters),
       ".txt"
     )
   ))
@@ -1198,7 +1199,7 @@ mclustOptimalClusters <- function(directoryName, columnNames) {
   figureDirectory <- paste0(getwd(), "/figures/")
 
   # https://stackoverflow.com/questions/15376075/cluster-analysis-in-r-determine-the-optimal-number-of-clusters
-  d_clust <- Mclust(minimalDf, G=1:20)
+  d_clust <- Mclust(minimalDf, G=1:2)
   m.best <- dim(d_clust$z)[2]
 
   try(capture.output(
@@ -2776,7 +2777,7 @@ differentialAbundanceAnalysis <- function(
   experimentInfo[, "visit"] <-
     as.double(experimentInfo[, "visit"])
   experimentInfo[, "group_id"] <-
-    experimentInfo[, group_id]
+    factor(experimentInfo[, group_id])
 
   mycolors <- c("blue", "red", "black")
   names(mycolors) <- c("DOWN", "UP", "NO")
@@ -2791,6 +2792,10 @@ differentialAbundanceAnalysis <- function(
   # Read csv
   if (clusterName == "clusters_flowsom") {
     df <- read.csv("clusteringOutput/flowSomDf.csv")
+  } else if (clusterName == "clusters_phenograph") {
+    df <- read.csv("clusteringOutput/phenographDf.csv")
+  } else if (clusterName == "clusters_fast_pg") {
+    df <- read.csv("clusteringOutput/fastPGDf.csv")
   }
 
   df <- df[order(df[, "fileName"]),]
@@ -2898,7 +2903,7 @@ differentialAbundanceAnalysis <- function(
   data.frame(parameters = colnames(design), contrast)
 
   # Test for differential abundance (DA) of clusters
-  res_DA <- testDA_edgeR(d_counts, design, contrast)
+  res_DA <- testDA_edgeR(d_counts, design, contrast, min_cells = 0)
 
   # Extract statistics
   res_DA_DT <- as.data.frame(rowData(res_DA))
@@ -2936,7 +2941,7 @@ differentialAbundanceAnalysis <- function(
 
   # Test for differential states (DS) within clusters
   res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
+    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE, min_cells = 0)
 
   # Extract statistics
   res_DS_DT <- as.data.frame(rowData(res_DS))
@@ -2984,9 +2989,8 @@ differentialAbundanceAnalysis <- function(
   gc()
 }
 
-performAllDifferentialAbundanceTests <- function(directoryName, columnNames) {
+performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clusterName) {
   ### Case vs Controls for all visits for clusters
-  clusterName <- "clusters_flowsom"
   samplesContributionToClustersThreshold <- 10
   differentialAbundanceThreshold <- 0.05
   calculateSampleContributionsToClusters <- TRUE
@@ -3093,4 +3097,322 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames) {
   singleCluster <- TRUE
 
   differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster)
+}
+
+recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, bCellClusterNames, monocyteClusterNames, tCellClusterNames, senescentClusterNames, flipFoldChange = TRUE) {
+  directories <- c("bCells", "monocytes", "tCells", "senescence")
+
+  names(fileNames) <- c("allCells", "clusters")
+
+  if (DA) {
+    replicateValue <- 1
+  } else {
+    replicateValue <- 2
+  }
+
+
+  for (directory in directories) {
+    i <- 1
+    for (file in fileNames) {
+      names(file) <- names(fileNames)[i]
+      i <- i +1
+      filePath <- paste0("data/", directory, "/differentialTestingOutputs/", file)
+      df <- read.csv(filePath)
+      df[, "panel"] <- directory
+      if (names(file) == "allCells") {
+        if (directory == "bCells") {
+          df[, "typeOfCells"] <- "B Cells"
+        } else if (directory == "monocytes") {
+          df[, "typeOfCells"] <- "Monocytes"
+        } else if (directory == "tCells") {
+          df[, "typeOfCells"] <- "T Cells"
+        } else if (directory == "senescence") {
+          df[, "typeOfCells"] <- "Senescent T Cells"
+        }
+      } else if (names(file) == "clusters") {
+        if (directory == "bCells") {
+          df[, "typeOfCells"] <- rep(bCellClusterNames, replicateValue)
+        } else if (directory == "monocytes") {
+          df[, "typeOfCells"] <- rep(monocyteClusterNames, replicateValue)
+        } else if (directory == "tCells") {
+          df[, "typeOfCells"] <- rep(tCellClusterNames, replicateValue)
+        } else if (directory == "senescence") {
+          df[, "typeOfCells"] <- rep(senescentClusterNames, replicateValue)
+        }
+      }
+      if (exists("combinedDf")) {
+        combinedDf <- rbind(combinedDf, df)
+      } else {
+        combinedDf <- df
+      }
+    }
+  }
+
+  if (flipFoldChange) {
+    combinedDf[,"logFC"] <- 0-combinedDf[,"logFC"]
+  }
+
+  # Bonferroni P-Value Adjustment
+  combinedDf[, "bonferroni_adjusted_p_val"] <- p.adjust(combinedDf[, "p_val"], method = "bonferroni")
+  combinedDf[, "minus_log_bonferroni_adjusted_p_val"] <- 0-log10(combinedDf[, "bonferroni_adjusted_p_val"])
+
+  # Benjamini and Hochberg P-Value Adjustment
+  combinedDf[, "fdr_adjusted_p_val"] <- p.adjust(combinedDf[, "p_val"], method = "fdr")
+  combinedDf[, "minus_log_fdr_adjusted_p_val"] <- 0-log10(combinedDf[, "fdr_adjusted_p_val"])
+
+  # Update differential expression column
+  combinedDf$bonferroni_diff_expressed <- "NO"
+  combinedDf$bonferroni_diff_expressed[combinedDf[,"logFC"] < 0 & combinedDf[,"bonferroni_adjusted_p_val"] < sigCutOff] <- "DOWN"
+  combinedDf$bonferroni_diff_expressed[combinedDf[,"logFC"] > 0 & combinedDf[,"bonferroni_adjusted_p_val"] < sigCutOff] <- "UP"
+
+  combinedDf$fdr_diff_expressed <- "NO"
+  combinedDf$fdr_diff_expressed[combinedDf[,"logFC"] < 0 & combinedDf[,"fdr_adjusted_p_val"] < sigCutOff] <- "DOWN"
+  combinedDf$fdr_diff_expressed[combinedDf[,"logFC"] > 0 & combinedDf[,"fdr_adjusted_p_val"] < sigCutOff] <- "UP"
+
+  # Update labels
+  combinedDf[,"fdr_label"] <- combinedDf[,"typeOfCells"]
+  combinedDf$fdr_label[is.na(combinedDf[,"logFC"])] <- NA
+  combinedDf$fdr_label[is.na(combinedDf[,"logFC"]) | combinedDf[,"fdr_adjusted_p_val"] > sigCutOff] <- NA
+
+  combinedDf[,"bonferroni_label"] <- combinedDf[,"typeOfCells"]
+  combinedDf$bonferroni_label[is.na(combinedDf[,"logFC"])] <- NA
+  combinedDf$bonferroni_label[is.na(combinedDf[,"logFC"]) | combinedDf[,"bonferroni_adjusted_p_val"] > sigCutOff] <- NA
+
+
+  # Define Colours
+  mycolors <- data.frame(DOWN = "blue",
+                         UP = "red",
+                         NO = "black")
+
+  setwd("data")
+
+  dir.create("pValueAdjustmentsResults", showWarnings = FALSE)
+  dir.create("figures", showWarnings = FALSE)
+  figureDirectory <- paste0(getwd(), "/figures/")
+
+  if (DA) {
+    jpeg(file = paste0(
+      figureDirectory,
+      "fdr",
+      str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
+      ".jpeg"
+    ))
+    par(mar = c(1, 1, 1, 1))
+    p <- ggplot(data = combinedDf,
+                aes(
+                  x = logFC,
+                  y = minus_log_fdr_adjusted_p_val,
+                  col = fdr_diff_expressed,
+                  label = fdr_label
+                )) +
+      geom_point() +
+      theme_minimal() +
+      geom_hline(yintercept = -log10(0.05), col = "red") +
+      geom_hline(yintercept = -log10(0.01), col = "red") +
+      scale_colour_manual(values = mycolors) +
+      geom_text_repel() +
+      ggtitle("Differential Abundance of Clusters") +
+      xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+    print(p)
+    dev.off()
+    gc()
+
+    jpeg(file = paste0(
+      figureDirectory,
+      "bonferroni",
+      str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
+      ".jpeg"
+    ))
+    par(mar = c(1, 1, 1, 1))
+    p <- ggplot(data = combinedDf,
+                aes(
+                  x = logFC,
+                  y = minus_log_bonferroni_adjusted_p_val,
+                  col = bonferroni_diff_expressed,
+                  label = bonferroni_label
+                )) +
+      geom_point() +
+      theme_minimal() +
+      geom_hline(yintercept = -log10(0.05), col = "red") +
+      geom_hline(yintercept = -log10(0.01), col = "red") +
+      scale_colour_manual(values = mycolors) +
+      geom_text_repel() +
+      ggtitle("Differential Abundance of Clusters") +
+      xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+    print(p)
+    dev.off()
+    gc()
+  } else {
+    {
+      # Update marker columsn
+      combinedDf[combinedDf[, "marker_id"]=="GPR32...AF488.A","marker_id"] <- "GPR32"
+      combinedDf[combinedDf[, "marker_id"]=="GPR32.AF488.A","marker_id"] <- "GPR32"
+      combinedDf[combinedDf[, "marker_id"]=="FPRL1...AF647.A","marker_id"] <- "FPRL1"
+      combinedDf[combinedDf[, "marker_id"]=="FPRL1.AF647.A","marker_id"] <- "FPRL1"
+
+      # fdr figures
+      jpeg(file = paste0(
+        figureDirectory,
+        "gpr32",
+        "fdr",
+        str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
+        ".jpeg"
+      ))
+      par(mar = c(1, 1, 1, 1))
+      p <- ggplot(data =
+                    combinedDf[combinedDf[, "marker_id"] == "GPR32",],
+                  aes(
+                    x = logFC,
+                    y = minus_log_fdr_adjusted_p_val,
+                    col = fdr_diff_expressed,
+                    label = fdr_label
+                  )) +
+        geom_point() +
+        theme_minimal() +
+        geom_hline(yintercept = -log10(0.05), col = "red") +
+        geom_hline(yintercept = -log10(0.01), col = "red") +
+        scale_colour_manual(values = mycolors) +
+        geom_text_repel() +
+        ggtitle("Differential States of Clusters") +
+        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+      print(p)
+      dev.off()
+      gc()
+
+      jpeg(file = paste0(
+        figureDirectory,
+        "fprl1",
+        "fdr",
+        str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
+        ".jpeg"
+      ))
+      par(mar = c(1, 1, 1, 1))
+      p <- ggplot(data =
+                    combinedDf[combinedDf[, "marker_id"] == "FPRL1",],
+                  aes(
+                    x = logFC,
+                    y = minus_log_fdr_adjusted_p_val,
+                    col = fdr_diff_expressed,
+                    label = fdr_label
+                  )) +
+        geom_point() +
+        theme_minimal() +
+        geom_hline(yintercept = -log10(0.05), col = "red") +
+        geom_hline(yintercept = -log10(0.01), col = "red") +
+        scale_colour_manual(values = mycolors) +
+        geom_text_repel() +
+        ggtitle("Differential States of Clusters") +
+        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+      print(p)
+      dev.off()
+
+      # bonferroni figures
+      jpeg(file = paste0(
+        figureDirectory,
+        "gpr32",
+        "bonferroni",
+        str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
+        ".jpeg"
+      ))
+      par(mar = c(1, 1, 1, 1))
+      p <- ggplot(data =
+                    combinedDf[combinedDf[, "marker_id"] == "GPR32",],
+                  aes(
+                    x = logFC,
+                    y = minus_log_bonferroni_adjusted_p_val,
+                    col = bonferroni_diff_expressed,
+                    label = bonferroni_label
+                  )) +
+        geom_point() +
+        theme_minimal() +
+        geom_hline(yintercept = -log10(0.05), col = "red") +
+        geom_hline(yintercept = -log10(0.01), col = "red") +
+        scale_colour_manual(values = mycolors) +
+        geom_text_repel() +
+        ggtitle("Differential States of Clusters") +
+        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+      print(p)
+      dev.off()
+      gc()
+
+      jpeg(file = paste0(
+        figureDirectory,
+        "fprl1",
+        "bonferroni",
+        str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
+        ".jpeg"
+      ))
+      par(mar = c(1, 1, 1, 1))
+      p <- ggplot(data =
+                    combinedDf[combinedDf[, "marker_id"] == "FPRL1",],
+                  aes(
+                    x = logFC,
+                    y = minus_log_bonferroni_adjusted_p_val,
+                    col = bonferroni_diff_expressed,
+                    label = bonferroni_label
+                  )) +
+        geom_point() +
+        theme_minimal() +
+        geom_hline(yintercept = -log10(0.05), col = "red") +
+        geom_hline(yintercept = -log10(0.01), col = "red") +
+        scale_colour_manual(values = mycolors) +
+        geom_text_repel() +
+        ggtitle("Differential States of Clusters") +
+        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+      print(p)
+      dev.off()
+
+      gc()
+    }
+  }
+
+  write.csv(combinedDf,
+            paste0(
+              "pValueAdjustmentsResults/",
+              str_replace_all(str_replace_all(
+                str_replace_all(fileNames, " ", ""), ",", ""
+              ),
+              "\\.",
+              "")[1],
+              ".csv"
+            ),
+            row.names = FALSE)
+
+  setwd("..")
+}
+
+defineFlowSomCellPopulations <- function(directory, queries) {
+  fSOM <- readRDS(paste0("data/", directory,"/clusteringOutput/flowSom.rds"))
+
+  cellTypes <- factor(rep("Unlabeled", fSOM$map$nNodes),
+                      levels=c("Unlabeled", unique(names(queries))))
+
+  i <- 1
+
+  for (query in queries) {
+    query_res <- QueryStarPlot(fSOM, query, equalNodeSize = TRUE, plot = FALSE)
+
+    cellTypes[query_res$selected] <- names(queries[i])
+    i <- i +1
+  }
+
+  flowsom_cell_populations <- as.factor(fSOM$map$mapping[, 1])
+  levels(flowsom_cell_populations) <- cellTypes
+
+  df <- read.csv(paste0("data/", directory,'/clusteringOutput/flowSomDf.csv'))
+  df <- cbind(df, flowsom_cell_populations)
+
+  for (cluster in unique(df[,"clusters_flowsom"])) {
+    cell_population <- unique(df[df[,"clusters_flowsom"] == cluster,]$flowsom_cell_populations)
+    cell_population <- cell_population[cell_population != "Unlabeled"]
+
+    if (length(cell_population) == 1) {
+      df[df[,"clusters_flowsom"] == cluster,"flowsom_cell_populations_updated"] <- as.character(cell_population)
+    } else {
+      df[df[,"clusters_flowsom"] == cluster,"flowsom_cell_populations_updated"] <- df[df[,"clusters_flowsom"] == cluster,"flowsom_cell_populations"]
+    }
+  }
+
+  write.csv(df, paste0("data/", directory, '/clusteringOutput/flowSomDf.csv'), row.names = FALSE)
+  try(saveRDS(fSOM, file = paste0("data/", directory,"/clusteringOutput/flowSom_cell_populations.rds")))
 }

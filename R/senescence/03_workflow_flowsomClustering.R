@@ -20,13 +20,10 @@ test <- FALSE
 directoryName <- senescenceDirectoryName
 columnNames <- senescenceColumnNames
 
-columnNames <- columnNames[columnNames!= "CD8.PerCP.Cy5.5.A"]
 columnNames <- columnNames[columnNames!= "CD8.BV650.A"]
-columnNames <- columnNames[columnNames!= "CD4.PE.CF594.A"]
-columnNames <- columnNames[columnNames!= "CD45RA.BV605.A"]
 columnNames <- columnNames[columnNames!= "GPR32.AF488.A"]
 columnNames <- columnNames[columnNames!= "FPRL1.AF647.A"]
 columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
 
-numberOfClusters <- 24
+numberOfClusters <- 90
 flowsomClustering(directoryName, columnNames, numberOfClusters, test)
