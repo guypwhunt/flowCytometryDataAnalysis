@@ -1,22 +1,22 @@
 installlibraries <- function() {
-  ## INSTALL REQUIRED PACKAGES ##
+    ## INSTALL REQUIRED PACKAGES ##
   ###############################
   install.packages(c("tidyverse","stringr","stringi","knitr","roxygen2","BiocManager","dplyr","R.utils","reshape2","ggplot2","uwot","ggrepel","dplyr","ggplot2","scales","reshape2","RColorBrewer","devtools"))
   install.packages(c("stringr","locfit", "hdrcde", "rainbow", "fds", "fda", "flowStats", "openCyto", "CytoML"))
   remotes::install_github("igraph/rigraph@master")
 
-  BiocManager::install("flowStats")
-  BiocManager::install("openCyto")
-  BiocManager::install("CytoML")
-  BiocManager::install("Biobase")
-  BiocManager::install("flowCore")
-  BiocManager::install("flowVS")
-  BiocManager::install("flowStats")
-  BiocManager::install("FlowSOM")
-  BiocManager::install("slingshot")
-  BiocManager::install("flowCore")
-  BiocManager::install("SingleCellExperiment")
-  BiocManager::install("diffcyt")
+  BiocManager::install(c("flowStats",
+  "openCyto",
+  "CytoML",
+  "Biobase",
+  "flowCore",
+  "flowVS",
+  "flowStats",
+  "FlowSOM",
+  "slingshot",
+  "flowCore",
+  "SingleCellExperiment",
+  "diffcyt"))
   remotes::install_github("igraph/rigraph@master")
 
   library(devtools)
@@ -24,6 +24,8 @@ installlibraries <- function() {
   devtools::install_github('flying-sheep/knn.covertree')
   devtools::install_github('theislab/destiny')
   devtools::install_github('sararselitsky/FastPG')
+
+  install.packages(c("factoextra", "NbClust", "apcluster"))
 
   gc()
 }
@@ -276,6 +278,8 @@ preprocessing <- function(directoryName,
   flowViz.par.set(theme =  trellis.par.get(), reset = TRUE)
 
   figureDirectory <- paste0(getwd(), "/figures/")
+
+  # columnName <- columnNames[1]
 
   for (columnName in columnNames) {
     gc()
@@ -625,14 +629,17 @@ flowsomClustering <-
 
     # Get metaclustering per cell
     clusters_flowsom <- as.factor(flowsom$map$mapping[, 1])
-    levels(clusters_flowsom) <- flowsom$metaclustering
+    meta_clusters_flowsom <- as.factor(flowsom$map$mapping[, 1])
+    levels(meta_clusters_flowsom) <- flowsom$metaclustering
 
     if (test) {
       clusters_flowsom <- clusters_flowsom[seq_len(nrow(df))]
+      meta_clusters_flowsom <- meta_clusters_flowsom[seq_len(nrow(df))]
     }
 
     #add flowsom clusters to dataframe
     df <- cbind(df, clusters_flowsom)
+    df <- cbind(df, meta_clusters_flowsom)
 
     write.csv(df, 'clusteringOutput/flowSomDf.csv', row.names = FALSE)
     try(saveRDS(flowsom, file = "clusteringOutput/flowSom.rds"))
@@ -3400,7 +3407,7 @@ defineFlowSomCellPopulations <- function(directory, queries) {
   levels(flowsom_cell_populations) <- cellTypes
 
   df <- read.csv(paste0("data/", directory,'/clusteringOutput/flowSomDf.csv'))
-  df <- cbind(df, flowsom_cell_populations)
+  df[,"flowsom_cell_populations"] <- flowsom_cell_populations
 
   for (cluster in unique(df[,"clusters_flowsom"])) {
     cell_population <- unique(df[df[,"clusters_flowsom"] == cluster,]$flowsom_cell_populations)
@@ -3414,5 +3421,4 @@ defineFlowSomCellPopulations <- function(directory, queries) {
   }
 
   write.csv(df, paste0("data/", directory, '/clusteringOutput/flowSomDf.csv'), row.names = FALSE)
-  try(saveRDS(fSOM, file = paste0("data/", directory,"/clusteringOutput/flowSom_cell_populations.rds")))
 }
