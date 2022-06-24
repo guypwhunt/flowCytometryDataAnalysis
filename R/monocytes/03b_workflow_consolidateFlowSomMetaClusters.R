@@ -24,8 +24,7 @@ columnNames <- columnNames[columnNames != "GPR32...AF488.A"]
 columnNames <- columnNames[columnNames != "FPRL1...AF647.A"]
 columnNames <- columnNames[columnNames != "Zombie.NIR.A"]
 
+clusterName <- "meta_clusters_flowsom"
 numberOfClusters <- seq(3,12)
 
-for (number in numberOfClusters) {
-  flowsomClustering(directoryName, columnNames, number , test)
-}
+consolidateFlowSomClusters(directoryName, columnNames, clusterName, numberOfClusters)

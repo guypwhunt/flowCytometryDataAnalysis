@@ -1,22 +1,22 @@
 installlibraries <- function() {
-    ## INSTALL REQUIRED PACKAGES ##
+  ## INSTALL REQUIRED PACKAGES ##
   ###############################
   install.packages(c("tidyverse","stringr","stringi","knitr","roxygen2","BiocManager","dplyr","R.utils","reshape2","ggplot2","uwot","ggrepel","dplyr","ggplot2","scales","reshape2","RColorBrewer","devtools"))
   install.packages(c("stringr","locfit", "hdrcde", "rainbow", "fds", "fda", "flowStats", "openCyto", "CytoML"))
   remotes::install_github("igraph/rigraph@master")
 
   BiocManager::install(c("flowStats",
-  "openCyto",
-  "CytoML",
-  "Biobase",
-  "flowCore",
-  "flowVS",
-  "flowStats",
-  "FlowSOM",
-  "slingshot",
-  "flowCore",
-  "SingleCellExperiment",
-  "diffcyt"))
+                         "openCyto",
+                         "CytoML",
+                         "Biobase",
+                         "flowCore",
+                         "flowVS",
+                         "flowStats",
+                         "FlowSOM",
+                         "slingshot",
+                         "flowCore",
+                         "SingleCellExperiment",
+                         "diffcyt"))
   remotes::install_github("igraph/rigraph@master")
 
   library(devtools)
@@ -115,7 +115,7 @@ preprocessing <- function(directoryName,
                           gateTogether = FALSE,
                           gateColumns = NULL,
                           automatedcofactors = NULL
-                          ) {
+) {
   workingDirectory <- getwd()
 
   setwd(paste0("./data/", directoryName))
@@ -441,7 +441,7 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
 
   df <- tryCatch({
     merge(df, clinicalData, by.x = "fileName",
-          by.y = "ï..patient_id")
+          by.y = "Ã¯..patient_id")
   }, error = function(x) {
     merge(df, clinicalData,
           by.x = "fileName", by.y = "patient_id")
@@ -641,9 +641,9 @@ flowsomClustering <-
     df <- cbind(df, clusters_flowsom)
     df <- cbind(df, meta_clusters_flowsom)
 
-    write.csv(df, 'clusteringOutput/flowSomDf.csv', row.names = FALSE)
-    try(saveRDS(flowsom, file = "clusteringOutput/flowSom.rds"))
-    FlowSOMmary(flowsom, plotFile = "clusteringOutput/FlowSOMmary.pdf")
+    write.csv(df, paste0('clusteringOutput/flowSomDf', numberOfClusters , '.csv'), row.names = FALSE)
+    try(saveRDS(flowsom, file = paste0("clusteringOutput/flowSom", numberOfClusters, ".rds")))
+    FlowSOMmary(flowsom, plotFile = paste0("clusteringOutput/FlowSOMmary",numberOfClusters, ".pdf"))
     rm(flowsom)
     rm(clusters_flowsom)
     gc()
@@ -760,7 +760,7 @@ phenographClustering <- function(directoryName, columnNames, knn) {
 
   dir.create("clusteringOutput", showWarnings = FALSE)
 
-  df <- read.csv('clusteringOutput/flowSomDf.csv')
+  df <- read.csv('dataPPOutput/columnsOfInterestDf.csv')
 
   gc()
 
@@ -792,7 +792,7 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
 
   dir.create("clusteringOutput", showWarnings = FALSE)
 
-  df <- read.csv('clusteringOutput/phenographDf.csv')
+  df <- read.csv('dataPPOutput/columnsOfInterestDf.csv')
 
   gc()
 
@@ -2413,9 +2413,9 @@ differentialAbundanceTesting <- function(directoryName,
                                      "bulbarVsLimbOnsetVisitOneOneClusterDifferentialAbundanceOfClusters.jpeg")
 
   differentialAbundanceVolcanoPlot(res_DA_DT,
-                                figureDirectory,
-                                mycolors,
-                                "bulbarVsLimbOnsetVisitOneOneClusterDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
+                                   figureDirectory,
+                                   mycolors,
+                                   "bulbarVsLimbOnsetVisitOneOneClusterDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
 
   # display table of results for top DA clusters
   topTable(res_DA, format_vals = TRUE)
@@ -2503,9 +2503,9 @@ differentialStatesVolcanoPlot <- function(res_DS_DT,
 }
 
 differentialAbundanceVolcanoPlot <- function(res_DS_DT,
-                                          figureDirectory,
-                                          mycolors,
-                                          figureTitle) {
+                                             figureDirectory,
+                                             mycolors,
+                                             figureTitle) {
   gc()
   jpeg(
     file = paste0(
@@ -2531,8 +2531,8 @@ differentialAbundanceVolcanoPlot <- function(res_DS_DT,
 }
 
 differentialStatesManhattanPlot <- function(res_DS_DT,
-                                          figureDirectory,
-                                          figureTitle) {
+                                            figureDirectory,
+                                            figureTitle) {
   gc()
   jpeg(file = paste0(figureDirectory,
                      figureTitle))
@@ -2548,8 +2548,8 @@ differentialStatesManhattanPlot <- function(res_DS_DT,
 }
 
 differentialAbundanceManhattanPlot <- function(res_DA_DT,
-                                            figureDirectory,
-                                            figureTitle) {
+                                               figureDirectory,
+                                               figureTitle) {
   gc()
   jpeg(file = paste0(figureDirectory,
                      figureTitle))
@@ -2584,7 +2584,7 @@ differentialStatesSaveResults <- function(res_DS_DT,
 }
 
 gateMarkers <- function(directoryName, columnNames = NULL,
-                                cutoff = NULL) {
+                        cutoff = NULL) {
   workingDirectory <- getwd()
 
   setwd(paste0("./data/", directoryName))
@@ -2611,7 +2611,7 @@ gateMarkers <- function(directoryName, columnNames = NULL,
 }
 
 gateTwoMarkersCombined <- function(directoryName, columnNames = NULL,
-                                cutoff = NULL) {
+                                   cutoff = NULL) {
   workingDirectory <- getwd()
 
   setwd(paste0("./data/", directoryName))
@@ -2679,7 +2679,7 @@ differentialAbundanceAnalysis <- function(
   cases,
   covariants,
   singleCluster
-  ) {
+) {
 
   concatinatedVisits <- toString(visits)
 
@@ -2755,7 +2755,7 @@ differentialAbundanceAnalysis <- function(
     experimentInfo[which(experimentInfo[, "sample_id"]=="BLT00274-05", arr.ind=TRUE), "sample_id"] <- "BLT00274-5"
     experimentInfo[which(experimentInfo[, "sample_id"]=="BLT000286-4", arr.ind=TRUE), "sample_id"] <- "BLT00286-4"
     experimentInfo[which(experimentInfo[, "sample_id"]=="BLT00297_2", arr.ind=TRUE), "sample_id"] <- "BLT00297-2"
-    }
+  }
 
 
   experimentInfo <-
@@ -3421,4 +3421,124 @@ defineFlowSomCellPopulations <- function(directory, queries) {
   }
 
   write.csv(df, paste0("data/", directory, '/clusteringOutput/flowSomDf.csv'), row.names = FALSE)
+}
+
+calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cutoff) {
+  if (clusterName == "clusters_flowsom" | clusterName == "meta_clusters_flowsom") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/flowSomDf.csv"))
+  } else if (clusterName == "clusters_phenograph") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/phenographDf.csv"))
+  } else if (clusterName == "clusters_fast_pg") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/fastPGDf.csv"))
+  }
+
+
+  columnNamesMedian <- paste0(columnNames, "_median")
+  columnNamesPositive <- paste0(columnNames, "_positive")
+
+  results <- data.frame(matrix(ncol = 2*length(columnNamesMedian)+2, nrow = 0))
+
+  ####
+
+  for (cluster in unique(df[,clusterName])) {
+    new_row <- c(cluster)
+
+    df2 <- df[df[,clusterName] == cluster,]
+
+    for (column in columnNames) {
+      clusterMedian <- median(df2[,column])
+
+      new_row <- append(new_row, clusterMedian)
+    }
+
+    new_row <- append(new_row, replicate(length(colnames(results)) - length(new_row), NA))
+
+    results <- rbind(new_row, results)
+  }
+
+  colnames(results) <- c(clusterName, columnNamesMedian, columnNamesPositive, "cell_population")
+
+  i <- 1
+
+  for (column in columnNamesMedian) {
+    results[, columnNamesPositive[i]] <- results[, columnNamesMedian[1]] > 0
+    i <- i + 1
+  }
+
+  write.csv(results, paste0("data/", directoryName, "/clusteringOutput/", clusterName, "CellPopulations.csv"), row.names = FALSE)
+}
+
+
+calculateVarianceWithinClusters <- function(directoryName, columnNames, clusterName, numberOfClusters = NA) {
+  if (clusterName == "meta_clusters_flowsom") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/flowSomDf", numberOfClusters, ".csv"))
+  } else if (clusterName == "clusters_flowsom") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/flowSomDf.csv"))
+  } else if (clusterName == "clusters_phenograph") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/phenographDf.csv"))
+  } else if (clusterName == "clusters_fast_pg") {
+    df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/fastPGDf.csv"))
+  }
+
+  df <- df[, c(columnNames, clusterName)]
+
+  #Function to calculate the total within-cluster variance for a model of k-classes
+  #df is a dataframe expected to contain only the columns used for clustering and a column indicating the allocated cluster (titled "clusters_flowsom")
+
+  calcVar <- function(df2){
+
+    #Compute total variance across all clusters and predictor variables
+    totvar <- df2 %>%
+      group_by_at(clusterName) %>%                                 #Split clusters
+      dplyr::summarise(across(everything(), ~ var(.))) %>%      #Identify variance for each variable by cluster
+      ungroup() %>%                                             #Remove grouping by cluster
+      select(-paste(clusterName)) %>%                             #drop cluster identifying column
+      sum()                                                     #sum all variances
+
+    return(totvar)
+
+  }
+
+  frame <- list()
+  for (cluster in unique(df[, clusterName])) {
+    clusterDf <- df[df[, clusterName] == cluster,]
+    frame <- append(frame, list(clusterDf))
+  }
+
+  #Apply calcVar across a list of data.frames which individually detail each cluster allocation
+  clustVar <- sapply(frame,calcVar)
+
+  saveRDS(clustVar, paste0("data/", directoryName, "/clusteringOutput/", clusterName, numberOfClusters,"flowSomDf.rds"))
+
+  figureDirectory <- paste0("data/", directoryName, "/figures/")
+
+  jpeg(file = paste0(
+    figureDirectory, "elbowPlot", clusterName, numberOfClusters, ".jpeg"
+  ))
+  #Plot the elbow plot across variances from clustVar
+  elbow_plot <- ggplot(data.frame(clustVar),aes(x=as.factor(1:length(clustVar)), y=clustVar,group=1))+
+    geom_point()+
+    geom_line()+
+    xlab("Number of clusters")+
+    ylab("Sum of within-cluster variance")+
+    theme_bw()
+  try(print(elbow_plot))
+  dev.off()
+}
+
+consolidateFlowSomClusters <- function(directoryName, columnNames, clusterName, numberOfClusters) {
+  df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/", "flowSomDf", numberOfClusters[1],".csv"))
+
+  df <- df[, c(columnNames)]
+
+  for (number in numberOfClusters) {
+    x <- read.csv(paste0("data/", directoryName, "/clusteringOutput/", "flowSomDf", number,".csv"))
+
+    x <- list(x[, clusterName])
+    names(x) <- paste0(clusterName, number)
+
+    df <- cbind(df, x)
+  }
+
+  write.csv(df, paste0("data/", directoryName, "/clusteringOutput/", "flowSomDfAllMetaClusters.csv"))
 }

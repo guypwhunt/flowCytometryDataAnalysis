@@ -17,5 +17,9 @@ columnNames <- columnNames[columnNames!= "CD19...PE.CF595.A"]
 columnNames <- columnNames[columnNames!= "GPR32...AF488.A"]
 columnNames <- columnNames[columnNames!= "FPRL1...AF647.A"]
 
-numberOfClusters <- 8
-flowsomClustering(directoryName, columnNames, numberOfClusters, test)
+numberOfClusters <- seq(3,15)
+
+for (number in numberOfClusters) {
+  flowsomClustering(directoryName, columnNames, number , test)
+}
+
