@@ -615,6 +615,8 @@ flowsomClustering <-
       columnIndexes <- append(columnIndexes, index)
     }
 
+    seed <- 3
+
     #run flowsom
     flowsom <- FlowSOM(
       input = dirFCS,
@@ -624,7 +626,7 @@ flowsomClustering <-
       #provide the columns for the
       # clustering
       nClus = numberOfClusters,
-      seed = 100
+      seed = seed
     )
 
     # Get metaclustering per cell
@@ -765,7 +767,11 @@ phenographClustering <- function(directoryName, columnNames, knn) {
   gc()
 
   phenograph <- Rphenograph(df[, columnNames], k = knn)
-  clusters_phenograph <- as.factor(phenograph$membership)
+  clusters_phenograph <- tryCatch({as.factor(phenograph$membership)},
+                              error = function(e) {
+                                # return a safeError if a parsing error occurs
+                                return(phenograph$membership)
+                              })
 
   #add phenograph clusters to expression data frame
   df <- cbind(df, clusters_phenograph)
@@ -796,14 +802,16 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
 
   gc()
 
-  fastPGResults <-
-    FastPG::fastCluster(as.matrix(df[, columnNames]), knn, 4)
-  clusters_fast_pg <- as.factor(fastPGResults$communities)
+  fastPGResults <- FastPG::fastCluster(as.matrix(df[, columnNames]), knn, 4)
+  clusters_fast_pg <- tryCatch({as.factor(fastPGResults$communities)},
+                              error = function(e) {
+                                # return a safeError if a parsing error occurs
+                                return(fastPGResults$communities)
+                              })
 
 
   #add clusters to expression data frame
   df <- cbind(df, clusters_fast_pg)
-  colnames(df)
 
   write.csv(df, 'clusteringOutput/fastPGDf.csv', row.names = FALSE)
   try(saveRDS(fastPGResults, file = "clusteringOutput/fastPGResults.rds"))
@@ -825,7 +833,20 @@ umapDimReduction <- function(directoryName, columnNames, knn) {
 
   setwd(paste0("./data/", directoryName))
 
-  df <- read.csv('clusteringOutput/fastPGDf.csv')
+  flowSomDf <- read.csv('clusteringOutput/flowSomDf.csv' , nrows = 200000
+                        )
+  phenographDf <- read.csv('clusteringOutput/phenographDf.csv' , nrows = 200000
+                           )
+  fastPgDf <- read.csv('clusteringOutput/fastPGDf.csv' , nrows = 200000
+                       )
+
+  df <- flowSomDf
+  df[, "clusters_phenograph"] <- phenographDf[, "clusters_phenograph"]
+  df[, "clusters_fast_pg"] <- fastPgDf[, "clusters_fast_pg"]
+
+  randomNumbers <- sample(seq(nrow(df)), 100000, replace = FALSE)
+
+  df <- df[randomNumbers, ]
 
   umap <- umap(df[, columnNames],
                n_neighbors = knn,
@@ -898,13 +919,33 @@ visuliseUmap <- function(directoryName, columnNames) {
     gc()
   }
 
+  metaFlowSomcellPopulations <- read.csv('clusteringOutput/meta_clusters_flowsomCellPopulations.csv')
+  colnames(metaFlowSomcellPopulations)[length(colnames(metaFlowSomcellPopulations))] <- "meta_flowsom_cell_population"
+  df <- merge(x=df,y=metaFlowSomcellPopulations[, c("meta_clusters_flowsom", "meta_flowsom_cell_population")],by.x="meta_clusters_flowsom", by.y = "meta_clusters_flowsom",all.x=TRUE)
+
+  flowSomcellPopulations <- read.csv('clusteringOutput/clusters_flowsomCellPopulations.csv')
+  colnames(flowSomcellPopulations)[length(colnames(flowSomcellPopulations))] <- "flowsom_cell_population"
+  df <- merge(x=df,y=flowSomcellPopulations[, c("clusters_flowsom", "flowsom_cell_population")],by.x="clusters_flowsom", by.y = "clusters_flowsom",all.x=TRUE)
+
+  fastPgcellPopulations <- read.csv('clusteringOutput/clusters_fast_pgCellPopulations.csv')
+  colnames(fastPgcellPopulations)[length(colnames(fastPgcellPopulations))] <- "fastpg_cell_population"
+  df <- merge(x=df,y=fastPgcellPopulations[, c("clusters_fast_pg", "fastpg_cell_population")],by.x="clusters_fast_pg", by.y = "clusters_fast_pg",all.x=TRUE)
+
+  phenographcellPopulations <- read.csv('clusteringOutput/clusters_phenographCellPopulations.csv')
+  colnames(phenographcellPopulations)[length(colnames(phenographcellPopulations))] <- "phenograph_cell_population"
+  df <- merge(x=df,y=phenographcellPopulations[, c("clusters_phenograph", "phenograph_cell_population")],by.x="clusters_phenograph", by.y = "clusters_phenograph",all.x=TRUE)
+
+
+
   #visualize and label clusters on umap
   gc()
-  label_flowsom_umap <- df %>% group_by(clusters_flowsom) %>%
+  label_flowsom_umap <- df %>% group_by(flowsom_cell_population) %>%
     select(umap_1, umap_2) %>% summarize_all(mean)
-  label_pheno_umap <- df %>% group_by(clusters_phenograph) %>%
+  label_meta_flowsom_umap <- df %>% group_by(meta_flowsom_cell_population) %>%
     select(umap_1, umap_2) %>% summarize_all(mean)
-  label_fastpg_umap <- df %>% group_by(clusters_fast_pg) %>%
+  label_pheno_umap <- df %>% group_by(phenograph_cell_population) %>%
+    select(umap_1, umap_2) %>% summarize_all(mean)
+  label_fastpg_umap <- df %>% group_by(fastpg_cell_population) %>%
     select(umap_1, umap_2) %>% summarize_all(mean)
 
   gc()
@@ -913,10 +954,23 @@ visuliseUmap <- function(directoryName, columnNames) {
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
-      color = as.factor(clusters_flowsom)
+      color = as.factor(flowsom_cell_population)
     )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = clusters_flowsom), data =
-                                                                                                              label_flowsom_umap)#+guides(colour=FALSE)
+                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = flowsom_cell_population), data =
+                                                                                                              label_flowsom_umap)  + guides(fill=guide_legend(title="Cell Populations"))
+  try(print(plot))
+  dev.off()
+  gc()
+  gc()
+  jpeg(file = paste0(figureDirectory, "umapMetaFlowsom.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = umap_1,
+      y = umap_2,
+      color = as.factor(meta_flowsom_cell_population)
+    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
+                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = meta_flowsom_cell_population), data =
+                                                                                                              label_meta_flowsom_umap) + guides(fill=guide_legend(title="Cell Populations"))
   try(print(plot))
   dev.off()
   gc()
@@ -925,10 +979,10 @@ visuliseUmap <- function(directoryName, columnNames) {
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
-      color = as.factor(clusters_phenograph)
+      color = as.factor(phenograph_cell_population)
     )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = clusters_phenograph), data =
-                                                                                                              label_pheno_umap)#+guides(colour=FALSE)
+                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = phenograph_cell_population), data =
+                                                                                                              label_pheno_umap)  + guides(fill=guide_legend(title="Cell Populations"))
   try(print(plot))
   dev.off()
   gc()
@@ -937,10 +991,10 @@ visuliseUmap <- function(directoryName, columnNames) {
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
-      color = as.factor(clusters_fast_pg)
+      color = as.factor(fastpg_cell_population)
     )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = clusters_fast_pg), data =
-                                                                                                              label_fastpg_umap)#+guides(colour=FALSE)
+                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = fastpg_cell_population), data =
+                                                                                                              label_fastpg_umap) + guides(fill=guide_legend(title="Cell Populations"))
   try(print(plot))
   dev.off()
 
@@ -3432,13 +3486,10 @@ calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cut
     df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/fastPGDf.csv"))
   }
 
-
   columnNamesMedian <- paste0(columnNames, "_median")
   columnNamesPositive <- paste0(columnNames, "_positive")
 
   results <- data.frame(matrix(ncol = 2*length(columnNamesMedian)+2, nrow = 0))
-
-  ####
 
   for (cluster in unique(df[,clusterName])) {
     new_row <- c(cluster)
@@ -3461,11 +3512,59 @@ calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cut
   i <- 1
 
   for (column in columnNamesMedian) {
-    results[, columnNamesPositive[i]] <- results[, columnNamesMedian[1]] > 0
+    results[, columnNamesPositive[i]] <- results[, columnNamesMedian[i]] > cutoff[i]
     i <- i + 1
   }
 
+  cellPopulationMarkers <- read.csv(paste0("data/metadata/", directoryName, ".csv"))
+
+  cellPopulationMarkers <- cellPopulationMarkers[, c("name", columnNamesPositive)]
+
+  if (directoryName == "bCells") {
+    for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+      results[
+        results[,clusterName] %in% filter(results, IgD...PerCP.Cy5.5.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "IgD...PerCP.Cy5.5.A_positive"] &
+                                               CD24...BV605.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD24...BV605.A_positive"] &
+                                               CD27...BV650.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27...BV650.A_positive"]
+        )[, clusterName], "cell_population"] <- cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+    }
+  } else if (directoryName == "monocytes") {
+    for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+      results[
+        results[,clusterName] %in% filter(results, CD11b...17BV421.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b...17BV421.A_positive"] &
+                                               CD11b.activated...PE.Cy7.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b.activated...PE.Cy7.A_positive"] &
+                                               CD14...BV605.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD14...BV605.A_positive"] &
+                                               CD16...PE.CF595.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD16...PE.CF595.A_positive"]
+        )[, clusterName], "cell_population"] <- cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+    }
+  } else if (directoryName == "tCells") {
+    for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+      results[
+        results[,clusterName] %in% filter(results, CD127.BV510.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD127.BV510.A_positive"] &
+                                               CD8.BV650.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8.BV650.A_positive"] &
+                                               CD25.BV786.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD25.BV786.A_positive"] &
+                                               FoxP3.PE.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "FoxP3.PE.A_positive"] &
+                                               CD45RO.PE.CF595.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RO.PE.CF595.A_positive"] &
+                                               CD4.PerCP.Cy5.5.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4.PerCP.Cy5.5.A_positive"]
+        )[, clusterName], "cell_population"] <- cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+    }
+  } else if (directoryName == "senescence") {
+    for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+      results[
+        results[,clusterName] %in% filter(results, CD27.BV421.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27.BV421.A_positive"] &
+                                               CD45RA.BV605.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RA.BV605.A_positive"] &
+                                               CD28.BV785.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD28.BV785.A_positive"] &
+                                               KLRG1.PE.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "KLRG1.PE.A_positive"] &
+                                               CD4.PE.CF594.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4.PE.CF594.A_positive"] &
+                                               CCR7.PE.Cy7.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CCR7.PE.Cy7.A_positive"] &
+                                               CD8.PerCP.Cy5.5.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8.PerCP.Cy5.5.A_positive"]
+        )[, clusterName], "cell_population"] <- cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+    }
+  }
+
   write.csv(results, paste0("data/", directoryName, "/clusteringOutput/", clusterName, "CellPopulations.csv"), row.names = FALSE)
+
+  write.csv(results[is.na(results$cell_population),columnNamesPositive], paste0("data/", directoryName, "/clusteringOutput/", clusterName, "UnknownCellPopulations.csv"), row.names = FALSE)
 }
 
 
@@ -3540,5 +3639,75 @@ consolidateFlowSomClusters <- function(directoryName, columnNames, clusterName, 
     df <- cbind(df, x)
   }
 
-  write.csv(df, paste0("data/", directoryName, "/clusteringOutput/", "flowSomDfAllMetaClusters.csv"))
+  write.csv(df, paste0("data/", directoryName, "/clusteringOutput/", "flowSomDfAllMetaClusters.csv"), row.names=FALSE)
+}
+
+elbowPlot <- function(directoryName, columnNames, numberOfClusters) {
+  df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/", "flowSomDfAllMetaClusters.csv")
+                 #, nrows = 100000
+  )
+
+  head(df)
+
+  data <- df[, columnNames]
+  data[, "ID"] <- row.names(data)
+  data <- data[, c("ID", columnNames)]
+  head(data)
+
+  clust <- df[, !colnames(df) %in% columnNames]
+  colnames(clust) <- numberOfClusters
+  clustColnames <- colnames(clust)
+  clust[, "ID"] <- row.names(clust)
+  clust[, "1"] <- 1
+  clust <- clust[, c("ID", "1", clustColnames)]
+  head(clust)
+
+  calcVar <- function(clust,data,clust_ID){
+
+    clust_wIDs<- data.frame(clust_ID,clust) #Recombine the clust_ID and clust vectors into a dataframe
+    colnames(clust_wIDs) <- c("ID","clust") #Rename to appropriate names
+
+    colnames(data)[1] <- "ID"               #Rename first column of main dataset to be "ID", since this will be matched within left-join
+
+
+    #Join the cluster assignments to the main dataset by the ID index
+    df <- data %>%
+      left_join(clust_wIDs, by="ID")
+
+    #Compute total variance across all clusters and predictor variables
+    totvar <- df %>%
+      select(-ID) %>%                                           #Drop the ID column
+      group_by(clust) %>%                                       #group by clusters
+      dplyr::summarise(across(everything(), ~ var(.))) %>%      #Identify variance for each variable by cluster
+      ungroup() %>%                                             #Remove grouping by cluster
+      select(-clust)                                       #drop cluster identifying column
+
+    totvar <- sum(totvar^2) #square and sum all variance
+
+    return(totvar)                                              #Return total within-cluster variances for this clustering solution
+
+  }
+
+  #clust_ID <- clust[1]
+  #clust <- clust[2]
+
+  clustVar <- sapply(clust[-1],calcVar,data=data,clust_ID=clust[1])
+
+  #Generate factor variable indicating the x-axis labels from column names from clustering data
+  #Factor ensures correct ordering
+  xlevs <- factor(colnames(clust[-1]),levels=colnames(clust[-1]))
+
+  #Plot the elbow plot across variances from clustVar
+  elbow_plot <- ggplot(data.frame(clustVar),aes(x=xlevs, y=clustVar,group=1))+
+    geom_point()+
+    geom_line()+
+    xlab("Number of clusters")+
+    ylab("Sum of squared within-cluster variance")+
+    theme_bw()+
+    theme(axis.text.x = element_text(angle = 45,vjust = 0.5, hjust=1)) #Orient x axis label to allow for longer names, hjust=1 is right aligned, vjust is center aligned
+
+  ggsave(plot=elbow_plot,
+         filename = paste0("data/", directoryName,"/figures/Elbow_plot.pdf"),
+         units="mm",width=200,height=150,
+         device=cairo_pdf)
 }

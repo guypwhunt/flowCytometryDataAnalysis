@@ -25,6 +25,5 @@ columnNames <- columnNames[columnNames!= "GPR32.AF488.A"]
 columnNames <- columnNames[columnNames!= "FPRL1.AF647.A"]
 columnNames <- columnNames[columnNames!= "Zombie.NIR.A"]
 
-numberOfClusters <- 6
 knn <- 50
 phenographClustering(directoryName, columnNames, knn)

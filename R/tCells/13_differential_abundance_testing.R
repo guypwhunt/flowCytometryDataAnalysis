@@ -4,15 +4,16 @@ try(source("R/01_functions.R"))
 loadlibraries()
 
 # variables
-directoryName <- "tCells"
+directoryName <- "senescence"
 columnNames <- c(
   "fileName",
-  "CD127.BV510.A",
+  "CD27.BV421.A",
+  "CD45RA.BV605.A",
+  "CD28.BV785.A",
+  "KLRG1.PE.A",
+  "CD4.PE.CF594.A",
   "CD8.BV650.A",
-  "CD25.BV786.A",
-  "FoxP3.PE.A",
-  "CD45RO.PE.CF595.A",
-  "CD4.PerCP.Cy5.5.A",
+  "CCR7.PE.Cy7.A",
   "GPR32.AF488.A",
   "FPRL1.AF647.A"
 )
