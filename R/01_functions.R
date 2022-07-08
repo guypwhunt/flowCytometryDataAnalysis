@@ -615,7 +615,7 @@ flowsomClustering <-
       columnIndexes <- append(columnIndexes, index)
     }
 
-    seed <- 3
+    seed <- 8
 
     #run flowsom
     flowsom <- FlowSOM(
@@ -833,11 +833,11 @@ umapDimReduction <- function(directoryName, columnNames, knn) {
 
   setwd(paste0("./data/", directoryName))
 
-  flowSomDf <- read.csv('clusteringOutput/flowSomDf.csv' , nrows = 200000
+  flowSomDf <- read.csv('clusteringOutput/flowSomDf.csv' #, nrows = 200000
                         )
-  phenographDf <- read.csv('clusteringOutput/phenographDf.csv' , nrows = 200000
+  phenographDf <- read.csv('clusteringOutput/phenographDf.csv' #, nrows = 200000
                            )
-  fastPgDf <- read.csv('clusteringOutput/fastPGDf.csv' , nrows = 200000
+  fastPgDf <- read.csv('clusteringOutput/fastPGDf.csv' #, nrows = 200000
                        )
 
   df <- flowSomDf
@@ -949,60 +949,129 @@ visuliseUmap <- function(directoryName, columnNames) {
     select(umap_1, umap_2) %>% summarize_all(mean)
 
   gc()
-  jpeg(file = paste0(figureDirectory, "umapFlowsom.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapFlowsomCellPopulations.jpeg"))
   plot <-
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
       color = as.factor(flowsom_cell_population)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = flowsom_cell_population), data =
-                                                                                                              label_flowsom_umap)  + guides(fill=guide_legend(title="Cell Populations"))
+    )) + geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = flowsom_cell_population), data = label_flowsom_umap)
+
   try(print(plot))
   dev.off()
   gc()
   gc()
-  jpeg(file = paste0(figureDirectory, "umapMetaFlowsom.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomCellPopulations.jpeg"))
   plot <-
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
       color = as.factor(meta_flowsom_cell_population)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = meta_flowsom_cell_population), data =
-                                                                                                              label_meta_flowsom_umap) + guides(fill=guide_legend(title="Cell Populations"))
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = meta_flowsom_cell_population), data = label_meta_flowsom_umap)
   try(print(plot))
   dev.off()
   gc()
-  jpeg(file = paste0(figureDirectory, "umapPhenograph.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapPhenographCellPopulations.jpeg"))
   plot <-
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
       color = as.factor(phenograph_cell_population)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = phenograph_cell_population), data =
-                                                                                                              label_pheno_umap)  + guides(fill=guide_legend(title="Cell Populations"))
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = phenograph_cell_population), data = label_pheno_umap)
   try(print(plot))
   dev.off()
   gc()
-  jpeg(file = paste0(figureDirectory, "umapFastPG.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapFastPGCellPopulations.jpeg"))
   plot <-
     ggplot(df, aes(
       x = umap_1,
       y = umap_2,
-      color = as.factor(fastpg_cell_population)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = fastpg_cell_population), data =
-                                                                                                              label_fastpg_umap) + guides(fill=guide_legend(title="Cell Populations"))
+      color = as.factor(fastpg_cell_population))) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = fastpg_cell_population), data = label_fastpg_umap)
+
   try(print(plot))
   dev.off()
 
+  label_flowsom_umap <- df %>% group_by(clusters_flowsom) %>%
+    select(umap_1, umap_2) %>% summarize_all(mean)
+  label_meta_flowsom_umap <- df %>% group_by(meta_clusters_flowsom) %>%
+    select(umap_1, umap_2) %>% summarize_all(mean)
+  label_pheno_umap <- df %>% group_by(clusters_phenograph) %>%
+    select(umap_1, umap_2) %>% summarize_all(mean)
+  label_fastpg_umap <- df %>% group_by(clusters_fast_pg) %>%
+    select(umap_1, umap_2) %>% summarize_all(mean)
 
-  rm(label_flowsom_umap)
-  rm(label_pheno_umap)
   gc()
+  jpeg(file = paste0(figureDirectory, "umapFlowsomClusters.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = umap_1,
+      y = umap_2,
+      color = as.factor(clusters_flowsom))) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = clusters_flowsom), data = label_flowsom_umap)
 
+  try(print(plot))
+  dev.off()
+  gc()
+  gc()
+  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomClusters.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = umap_1,
+      y = umap_2,
+      color = as.factor(meta_clusters_flowsom)
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = meta_clusters_flowsom), data = label_meta_flowsom_umap)
+  try(print(plot))
+  dev.off()
+  gc()
+  jpeg(file = paste0(figureDirectory, "umapPhenographClusters.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = umap_1,
+      y = umap_2,
+      color = as.factor(clusters_phenograph)
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = clusters_phenograph), data = label_pheno_umap)
+  try(print(plot))
+  dev.off()
+  gc()
+  jpeg(file = paste0(figureDirectory, "umapFastPGClusters.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = umap_1,
+      y = umap_2,
+      color = as.factor(clusters_fast_pg))) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = clusters_fast_pg), data = label_fastpg_umap)
+
+  try(print(plot))
+  dev.off()
 
   tryCatch({
     setwd(workingDirectory)
@@ -1019,18 +1088,21 @@ diffusionMapDimReduction <-
 
     setwd(paste0("./data/", directoryName))
 
-    df <- read.csv('clusteringOutput/umapDf.csv')
+    flowSomDf <- read.csv('clusteringOutput/flowSomDf.csv' #, nrows = 200000
+    )
+    phenographDf <- read.csv('clusteringOutput/phenographDf.csv' #, nrows = 200000
+    )
+    fastPgDf <- read.csv('clusteringOutput/fastPGDf.csv' #, nrows = 200000
+    )
 
-    try(rm(
-      list = c(
-        "caseModel",
-        "caseModelCoefficient",
-        "clinicalData",
-        "fastModel",
-        "fastPGResults",
-        "plot"
-      )
-    ))
+    df <- flowSomDf
+    df[, "clusters_phenograph"] <- phenographDf[, "clusters_phenograph"]
+    df[, "clusters_fast_pg"] <- fastPgDf[, "clusters_fast_pg"]
+
+    randomNumbers <- sample(seq(nrow(df)), 100000, replace = FALSE)
+
+    df <- df[randomNumbers, ]
+
     gc()
 
     # reduce the K, if computational load is too high [it takes approximately 2 hours for the example dataset of 275856 cells]
@@ -1113,61 +1185,156 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
     gc()
   }
 
-  #visualize and label clusters on diffusion map
-  #first we need to determine the positions of the cluster labels, based on the DC coordinates
+  metaFlowSomcellPopulations <- read.csv('clusteringOutput/meta_clusters_flowsomCellPopulations.csv')
+  colnames(metaFlowSomcellPopulations)[length(colnames(metaFlowSomcellPopulations))] <- "meta_flowsom_cell_population"
+  df <- merge(x=df,y=metaFlowSomcellPopulations[, c("meta_clusters_flowsom", "meta_flowsom_cell_population")],by.x="meta_clusters_flowsom", by.y = "meta_clusters_flowsom",all.x=TRUE)
+
+  flowSomcellPopulations <- read.csv('clusteringOutput/clusters_flowsomCellPopulations.csv')
+  colnames(flowSomcellPopulations)[length(colnames(flowSomcellPopulations))] <- "flowsom_cell_population"
+  df <- merge(x=df,y=flowSomcellPopulations[, c("clusters_flowsom", "flowsom_cell_population")],by.x="clusters_flowsom", by.y = "clusters_flowsom",all.x=TRUE)
+
+  fastPgcellPopulations <- read.csv('clusteringOutput/clusters_fast_pgCellPopulations.csv')
+  colnames(fastPgcellPopulations)[length(colnames(fastPgcellPopulations))] <- "fastpg_cell_population"
+  df <- merge(x=df,y=fastPgcellPopulations[, c("clusters_fast_pg", "fastpg_cell_population")],by.x="clusters_fast_pg", by.y = "clusters_fast_pg",all.x=TRUE)
+
+  phenographcellPopulations <- read.csv('clusteringOutput/clusters_phenographCellPopulations.csv')
+  colnames(phenographcellPopulations)[length(colnames(phenographcellPopulations))] <- "phenograph_cell_population"
+  df <- merge(x=df,y=phenographcellPopulations[, c("clusters_phenograph", "phenograph_cell_population")],by.x="clusters_phenograph", by.y = "clusters_phenograph",all.x=TRUE)
+
+
+  #visualize and label clusters on umap
+  gc()
+  label_flowsom_dm <- df %>% group_by(flowsom_cell_population) %>%
+    select(DC1, DC2) %>% summarize_all(mean)
+  label_meta_flowsom_dm <- df %>% group_by(meta_flowsom_cell_population) %>%
+    select(DC1, DC2) %>% summarize_all(mean)
+  label_pheno_dm <- df %>% group_by(phenograph_cell_population) %>%
+    select(DC1, DC2) %>% summarize_all(mean)
+  label_fastpg_dm <- df %>% group_by(fastpg_cell_population) %>%
+    select(DC1, DC2) %>% summarize_all(mean)
+
+  gc()
+  jpeg(file = paste0(figureDirectory, "diffusionMapFlowsomCellPopulations.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = DC1,
+      y = DC2,
+      color = as.factor(flowsom_cell_population)
+    )) + geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = flowsom_cell_population), data = label_flowsom_dm)
+  try(print(plot))
+  dev.off()
+  gc()
+  gc()
+  jpeg(file = paste0(figureDirectory, "diffusionMapMetaFlowsomCellPopulations.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = DC1,
+      y = DC2,
+      color = as.factor(meta_flowsom_cell_population)
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = meta_flowsom_cell_population), data = label_meta_flowsom_dm)
+  try(print(plot))
+  dev.off()
+  gc()
+  jpeg(file = paste0(figureDirectory, "diffusionMapPhenographCellPopulations.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = DC1,
+      y = DC2,
+      color = as.factor(phenograph_cell_population)
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = phenograph_cell_population), data = label_pheno_dm)
+  try(print(plot))
+  dev.off()
+  gc()
+  jpeg(file = paste0(figureDirectory, "diffusionMapFastPGCellPopulations.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = DC1,
+      y = DC2,
+      color = as.factor(fastpg_cell_population))) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = fastpg_cell_population), data = label_fastpg_dm)
+
+  try(print(plot))
+  dev.off()
+
   label_flowsom_dm <- df %>% group_by(clusters_flowsom) %>%
+    select(DC1, DC2) %>% summarize_all(mean)
+  label_meta_flowsom_dm <- df %>% group_by(meta_clusters_flowsom) %>%
     select(DC1, DC2) %>% summarize_all(mean)
   label_pheno_dm <- df %>% group_by(clusters_phenograph) %>%
     select(DC1, DC2) %>% summarize_all(mean)
   label_fastpg_dm <- df %>% group_by(clusters_fast_pg) %>%
     select(DC1, DC2) %>% summarize_all(mean)
 
-  figureDirectory <- paste0(getwd(), "/figures/")
-
   gc()
-  jpeg(file = paste0(figureDirectory, "diffusionMapFlowsom.jpeg"))
+  jpeg(file = paste0(figureDirectory, "diffusionMapFlowsomClusters.jpeg"))
   plot <-
     ggplot(df, aes(
       x = DC1,
       y = DC2,
-      color = as.factor(clusters_flowsom)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = clusters_flowsom), data =
-                                                                                                              label_flowsom_dm)#+guides(colour=FALSE)
-  print(plot)
+      color = as.factor(clusters_flowsom))) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = clusters_flowsom), data = label_flowsom_dm)
+
+  try(print(plot))
   dev.off()
   gc()
-  jpeg(file = paste0(figureDirectory, "diffusionMapPhenograph.jpeg"))
+  gc()
+  jpeg(file = paste0(figureDirectory, "diffusionMapMetaFlowsomClusters.jpeg"))
+  plot <-
+    ggplot(df, aes(
+      x = DC1,
+      y = DC2,
+      color = as.factor(meta_clusters_flowsom)
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = meta_clusters_flowsom), data = label_meta_flowsom_dm)
+  try(print(plot))
+  dev.off()
+  gc()
+  jpeg(file = paste0(figureDirectory, "diffusionMapPhenographClusters.jpeg"))
   plot <-
     ggplot(df, aes(
       x = DC1,
       y = DC2,
       color = as.factor(clusters_phenograph)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = clusters_phenograph), data =
-                                                                                                              label_pheno_dm)#+guides(colour=FALSE)
-  print(plot)
+    )) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = clusters_phenograph), data = label_pheno_dm)
+  try(print(plot))
   dev.off()
   gc()
-  jpeg(file = paste0(figureDirectory, "diffusionMapFastPG.jpeg"))
+  jpeg(file = paste0(figureDirectory, "diffusionMapFastPGClusters.jpeg"))
   plot <-
     ggplot(df, aes(
       x = DC1,
       y = DC2,
-      color = as.factor(clusters_fast_pg)
-    )) + geom_point(size = 0.1) + theme_bw() + theme(panel.grid.major = element_blank(),
-                                                     panel.grid.minor = element_blank()) + geom_label_repel(aes(label = clusters_fast_pg), data =
-                                                                                                              label_fastpg_dm)#+guides(colour=FALSE)
-  print(plot)
+      color = as.factor(clusters_fast_pg))) +
+    geom_point(size = 0.1) +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "None") +
+    geom_label_repel(aes(label = clusters_fast_pg), data = label_fastpg_dm)
+  try(print(plot))
   dev.off()
-  gc()
-
-  rm(list = c(
-    "label_flowsom_dm",
-    "label_pheno_dm",
-    "label_fastpg_dm",
-    "plot"
-  ))
 
   gc()
 
@@ -1608,7 +1775,7 @@ differentialAbundanceTesting <- function(directoryName,
   d_se <-
     prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
   head(assay(d_se))
-  rowData(d_se)[, "cluster_id"] <- visitOneDf[, "clusters_flowsom"]
+  rowData(d_se)[, "cluster_id"] <- visitOneDf[, "cell_population"]
 
   # Calculate cluster cell counts
   d_counts <- calcCounts(d_se)
@@ -1919,7 +2086,7 @@ differentialAbundanceTesting <- function(directoryName,
     prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
   head(assay(d_se))
   rowData(d_se)[, "cluster_id"] <-
-    visitOneDf[, "clusters_flowsom"]
+    visitOneDf[, "cell_population"]
 
   # Calculate cluster cell counts
   d_counts <- calcCounts(d_se)
@@ -2237,7 +2404,7 @@ differentialAbundanceTesting <- function(directoryName,
   d_se <-
     prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
   rowData(d_se)[, "cluster_id"] <-
-    visitOneDf[, "clusters_flowsom"]
+    visitOneDf[, "cell_population"]
 
   # Calculate cluster cell counts
   d_counts <- calcCounts(d_se)
@@ -2811,7 +2978,6 @@ differentialAbundanceAnalysis <- function(
     experimentInfo[which(experimentInfo[, "sample_id"]=="BLT00297_2", arr.ind=TRUE), "sample_id"] <- "BLT00297-2"
   }
 
-
   experimentInfo <-
     experimentInfo[order(experimentInfo[, "sample_id"]),]
   experimentInfo <-
@@ -2853,6 +3019,8 @@ differentialAbundanceAnalysis <- function(
   # Read csv
   if (clusterName == "clusters_flowsom") {
     df <- read.csv("clusteringOutput/flowSomDf.csv")
+  } else if (clusterName == "meta_clusters_flowsom") {
+    df <- read.csv("clusteringOutput/flowSomDf.csv")
   } else if (clusterName == "clusters_phenograph") {
     df <- read.csv("clusteringOutput/phenographDf.csv")
   } else if (clusterName == "clusters_fast_pg") {
@@ -2867,9 +3035,8 @@ differentialAbundanceAnalysis <- function(
   # Filter df for samples
   experimentInfo <- experimentInfo[experimentInfo[, "sample_id"] %in% df[, "fileName"], ]
 
-
   # Extract only the relevant columns
-  minimalDf <- df[, columnNames]
+  minimalDf <- df[, c(columnNames)]
 
   # split the dataframe into a dataframe for each file
   listOfDfs <- list()
@@ -2917,7 +3084,7 @@ differentialAbundanceAnalysis <- function(
       row.names(t_percentage_counts_df)
 
     colnames(t_percentage_counts_df) <-
-      paste0("cluster", colnames(t_percentage_counts_df))
+      colnames(t_percentage_counts_df)
 
     for (columnName in colnames(t_percentage_counts_df)) {
       gc()
@@ -2928,7 +3095,7 @@ differentialAbundanceAnalysis <- function(
       par(mar = c(1, 1, 1, 1))
 
       p <-
-        ggplot(data = t_percentage_counts_df, aes_string(x = "clusterrownames", y = columnName)) +
+        ggplot(data = t_percentage_counts_df, aes_string(x = "rownames", y = shQuote(columnName))) +
         geom_bar(stat = "identity") +
         theme(axis.text.x = element_text(angle = 90)) +
         xlab("Patient Sample") + ylab("Percentage") + ggtitle(columnName)
@@ -3010,7 +3177,7 @@ differentialAbundanceAnalysis <- function(
   # Add - log10(adjusted P-value)
   res_DS_DT[, "minus_log_p_adj"] <- 0 - log10(res_DS_DT[, "p_adj"])
   res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
+    paste0(res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
   res_DS_DT[, "diff_expressed"] <- "NO"
   # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
   res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 &
@@ -3054,7 +3221,7 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   ### Case vs Controls for all visits for clusters
   samplesContributionToClustersThreshold <- 10
   differentialAbundanceThreshold <- 0.05
-  calculateSampleContributionsToClusters <- TRUE
+  calculateSampleContributionsToClusters <- FALSE
   group_id <- "caseControl"
   visits <- c(1,2,3)
   cases <- c("Case", "Control")
@@ -3160,20 +3327,22 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster)
 }
 
-recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, bCellClusterNames, monocyteClusterNames, tCellClusterNames, senescentClusterNames, flipFoldChange = TRUE) {
+recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, flipFoldChange = TRUE) {
   directories <- c("bCells", "monocytes", "tCells", "senescence")
 
-  names(fileNames) <- c("allCells", "clusters")
-
-  if (DA) {
-    replicateValue <- 1
-  } else {
-    replicateValue <- 2
-  }
-
+  names(fileNames) <- c("allCells", "cellPopulations")
 
   for (directory in directories) {
     i <- 1
+    if (clusterName == "clusters_flowsom") {
+      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/clusters_flowsomCellPopulations.csv"))
+    } else if (clusterName == "meta_clusters_flowsom") {
+      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/meta_clusters_flowsomCellPopulations.csv"))
+    } else if (clusterName == "clusters_phenograph") {
+      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/clusters_phenographCellPopulations.csv"))
+    } else if (clusterName == "clusters_fast_pg") {
+      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/clusters_fast_pgCellPopulations.csv"))
+    }
     for (file in fileNames) {
       names(file) <- names(fileNames)[i]
       i <- i +1
@@ -3190,16 +3359,9 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, bCellClusterN
         } else if (directory == "senescence") {
           df[, "typeOfCells"] <- "Senescent T Cells"
         }
-      } else if (names(file) == "clusters") {
-        if (directory == "bCells") {
-          df[, "typeOfCells"] <- rep(bCellClusterNames, replicateValue)
-        } else if (directory == "monocytes") {
-          df[, "typeOfCells"] <- rep(monocyteClusterNames, replicateValue)
-        } else if (directory == "tCells") {
-          df[, "typeOfCells"] <- rep(tCellClusterNames, replicateValue)
-        } else if (directory == "senescence") {
-          df[, "typeOfCells"] <- rep(senescentClusterNames, replicateValue)
-        }
+      } else if (names(file) == "cellPopulations") {
+        df <- merge(df, cellPopulations[, c(colnames(cellPopulations)[1], "cell_population")], by.x = "cluster_id", by.y = colnames(cellPopulations)[1])
+        colnames(df)[ncol(df)] <- "typeOfCells"
       }
       if (exists("combinedDf")) {
         combinedDf <- rbind(combinedDf, df)
@@ -3304,7 +3466,6 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, bCellClusterN
     dev.off()
     gc()
   } else {
-    {
       # Update marker columsn
       combinedDf[combinedDf[, "marker_id"]=="GPR32...AF488.A","marker_id"] <- "GPR32"
       combinedDf[combinedDf[, "marker_id"]=="GPR32.AF488.A","marker_id"] <- "GPR32"
@@ -3424,8 +3585,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, bCellClusterN
       dev.off()
 
       gc()
-    }
-  }
+      }
 
   write.csv(combinedDf,
             paste0(

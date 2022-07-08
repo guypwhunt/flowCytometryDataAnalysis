@@ -12,6 +12,6 @@ columnNames <- c("fileName", "CD127.BV510.A", "CD8.BV650.A",
 
 
 
-clusterName <- "clusters_flowsom"
+clusterName <- "clusters_phenograph"
 
 performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName)
