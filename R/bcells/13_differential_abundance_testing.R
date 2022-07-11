@@ -15,6 +15,18 @@ columnNames <-
     "FPRL1...AF647.A"
   )
 
-clusterName <- "clusters_flowsom"
+markersOrCells <- c("Clusters", "CellPopulations", "Markers")
 
-performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName)
+clusterNames <-
+  c(
+    "clusters_flowsom",
+    "clusters_phenograph",
+    "clusters_fast_pg",
+    "meta_clusters_flowsom"
+  )
+
+for (clusterName in clusterNames) {
+  for (markersOrCell in markersOrCells) {
+    performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName, markersOrCell)
+  }
+}

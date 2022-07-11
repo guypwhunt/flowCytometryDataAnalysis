@@ -6,12 +6,29 @@ loadlibraries()
 # variables
 directoryName <- "tCells"
 
-columnNames <- c("fileName", "CD127.BV510.A", "CD8.BV650.A",
-                      "CD25.BV786.A", "FoxP3.PE.A", "CD45RO.PE.CF595.A",
-                      "CD4.PerCP.Cy5.5.A", "GPR32.AF488.A", "FPRL1.AF647.A")
+columnNames <- c(
+  "fileName",
+  "CD127.BV510.A",
+  "CD8.BV650.A",
+  "CD25.BV786.A",
+  "FoxP3.PE.A",
+  "CD45RO.PE.CF595.A",
+  "CD4.PerCP.Cy5.5.A",
+  "GPR32.AF488.A",
+  "FPRL1.AF647.A"
+)
 
+markersOrCells <- c("Clusters", "CellPopulations", "Markers")
 
-
-clusterName <- "clusters_flowsom"
-
-performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName)
+clusterNames <-
+  c(
+    "clusters_flowsom",
+    "clusters_phenograph",
+    "clusters_fast_pg",
+    "meta_clusters_flowsom"
+  )
+for (clusterName in clusterNames) {
+  for (markersOrCell in markersOrCells) {
+    performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName, markersOrCell)
+  }
+}
