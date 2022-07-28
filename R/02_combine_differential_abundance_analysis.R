@@ -13,8 +13,32 @@ clusterNames <-
 
 markersOrCells <- c("Clusters", "CellPopulations", "Markers")
 
-for (clusterName in clusterNames) {
-  for (markersOrCell in markersOrCells) {
+n.cores <- 4
+my.cluster <- parallel::makeCluster(
+  n.cores
+  )
+doParallel::registerDoParallel(cl = my.cluster)
+foreach::getDoParRegistered()
+foreach::getDoParWorkers()
+
+
+foreach(clusterName = clusterNames) %dopar% {
+  try(source("R/01_functions.R"))
+
+  loadlibraries()
+
+  n.cores <- 4
+  my.cluster <- parallel::makeCluster(
+    n.cores
+  )
+  doParallel::registerDoParallel(cl = my.cluster)
+
+  foreach(markersOrCell = markersOrCells) %dopar% {
+    try(source("R/01_functions.R"))
+
+    loadlibraries()
+
+
     DA <- FALSE
 
 
@@ -27,8 +51,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomvisitVisits1, 3AllCellsDifferentialStatesStatistics.csv",
-        paste0("clusters_flowsomvisitVisits1, 3", markersOrCell, "DifferentialStatesStatistics.csv")
+        paste0(clusterName, "visitVisits1, 3AllCellsDifferentialStatesStatistics.csv"),
+        paste0(clusterName, "visitVisits1, 3", markersOrCell, "DifferentialStatesStatistics.csv")
       )
 
     recalculatePValueAdjustments(DA,
@@ -42,8 +66,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomvisitVisits1, 2AllCellsDifferentialStatesStatistics.csv",
-        paste0("clusters_flowsomvisitVisits1, 2", markersOrCell, "DifferentialStatesStatistics.csv")
+        paste0(clusterName, "visitVisits1, 2AllCellsDifferentialStatesStatistics.csv"),
+        paste0(clusterName, "visitVisits1, 2", markersOrCell, "DifferentialStatesStatistics.csv")
       )
 
 
@@ -57,8 +81,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsombulbarLimbVisits1AllCellsDifferentialStatesStatistics.csv",
-        paste0("clusters_flowsombulbarLimbVisits1", markersOrCell, "DifferentialStatesStatistics.csv")
+        paste0(clusterName, "bulbarLimbVisits1AllCellsDifferentialStatesStatistics.csv"),
+        paste0(clusterName, "bulbarLimbVisits1", markersOrCell, "DifferentialStatesStatistics.csv")
       )
 
 
@@ -67,8 +91,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomfastSlowVisits1AllCellsDifferentialStatesStatistics.csv",
-        paste0("clusters_flowsomfastSlowVisits1", markersOrCell, "DifferentialStatesStatistics.csv")
+        paste0(clusterName, "fastSlowVisits1AllCellsDifferentialStatesStatistics.csv"),
+        paste0(clusterName, "fastSlowVisits1", markersOrCell, "DifferentialStatesStatistics.csv")
       )
 
 
@@ -77,8 +101,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomcaseControlVisits1AllCellsDifferentialStatesStatistics.csv",
-        paste0("clusters_flowsomcaseControlVisits1", markersOrCell, "DifferentialStatesStatistics.csv")
+        paste0(clusterName, "caseControlVisits1AllCellsDifferentialStatesStatistics.csv"),
+        paste0(clusterName, "caseControlVisits1", markersOrCell, "DifferentialStatesStatistics.csv")
       )
 
 
@@ -87,8 +111,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomcaseControlVisits1, 2, 3AllCellsDifferentialStatesStatistics.csv",
-        paste0("clusters_flowsomcaseControlVisits1, 2, 3", markersOrCell, "DifferentialStatesStatistics.csv")
+        paste0(clusterName, "caseControlVisits1, 2, 3AllCellsDifferentialStatesStatistics.csv"),
+        paste0(clusterName, "caseControlVisits1, 2, 3", markersOrCell, "DifferentialStatesStatistics.csv")
       )
 
     ##################
@@ -101,8 +125,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomvisitVisits1, 3AllCellsDifferentialAbundanceStatistics.csv",
-        paste0("clusters_flowsomvisitVisits1, 3", markersOrCell, "DifferentialAbundanceStatistics.csv")
+        paste0(clusterName, "visitVisits1, 3AllCellsDifferentialAbundanceStatistics.csv"),
+        paste0(clusterName, "visitVisits1, 3", markersOrCell, "DifferentialAbundanceStatistics.csv")
       )
 
 
@@ -116,8 +140,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomvisitVisits1, 2AllCellsDifferentialAbundanceStatistics.csv",
-        paste0("clusters_flowsomvisitVisits1, 2", markersOrCell, "DifferentialAbundanceStatistics.csv")
+        paste0(clusterName, "visitVisits1, 2AllCellsDifferentialAbundanceStatistics.csv"),
+        paste0(clusterName, "visitVisits1, 2", markersOrCell, "DifferentialAbundanceStatistics.csv")
       )
 
 
@@ -131,8 +155,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsombulbarLimbVisits1AllCellsDifferentialAbundanceStatistics.csv",
-        paste0("clusters_flowsombulbarLimbVisits1", markersOrCell, "DifferentialAbundanceStatistics.csv")
+        paste0(clusterName, "bulbarLimbVisits1AllCellsDifferentialAbundanceStatistics.csv"),
+        paste0(clusterName, "bulbarLimbVisits1", markersOrCell, "DifferentialAbundanceStatistics.csv")
       )
 
 
@@ -141,8 +165,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomfastSlowVisits1AllCellsDifferentialAbundanceStatistics.csv",
-        paste0("clusters_flowsomfastSlowVisits1", markersOrCell, "DifferentialAbundanceStatistics.csv")
+        paste0(clusterName, "fastSlowVisits1AllCellsDifferentialAbundanceStatistics.csv"),
+        paste0(clusterName, "fastSlowVisits1", markersOrCell, "DifferentialAbundanceStatistics.csv")
       )
 
 
@@ -151,8 +175,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomcaseControlVisits1AllCellsDifferentialAbundanceStatistics.csv",
-        paste0("clusters_flowsomcaseControlVisits1", markersOrCell, "DifferentialAbundanceStatistics.csv")
+        paste0(clusterName, "caseControlVisits1AllCellsDifferentialAbundanceStatistics.csv"),
+        paste0(clusterName, "caseControlVisits1", markersOrCell, "DifferentialAbundanceStatistics.csv")
       )
 
 
@@ -161,8 +185,8 @@ for (clusterName in clusterNames) {
     # Define Directories and files
     fileNames <-
       c(
-        "clusters_flowsomcaseControlVisits1, 2, 3AllCellsDifferentialAbundanceStatistics.csv",
-        paste0("clusters_flowsomcaseControlVisits1, 2, 3", markersOrCell, "DifferentialAbundanceStatistics.csv")
+        paste0(clusterName, "caseControlVisits1, 2, 3AllCellsDifferentialAbundanceStatistics.csv"),
+        paste0(clusterName, "caseControlVisits1, 2, 3", markersOrCell, "DifferentialAbundanceStatistics.csv")
       )
 
     recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)

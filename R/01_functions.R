@@ -26,11 +26,21 @@ installlibraries <- function() {
   devtools::install_github('sararselitsky/FastPG')
 
   install.packages(c("factoextra", "NbClust", "apcluster"))
+  install.packages(c("foreach", "doParallel", "ranger", "palmerpenguins", "kableExtra"))
+  install.packages("doSNOW")
+  install.packages("doParallel") 
+  install.packages("doMPI")
 
   gc()
 }
 
 loadlibraries <- function() {
+  library(foreach)
+  library(doParallel)
+  library(ranger)
+  library(palmerpenguins)
+  library(kableExtra)
+  library(parallel)
   library(R.utils)
   library(stringr)
   library(flowCore)
@@ -3417,22 +3427,13 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
 }
 
-recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, markersOrCells, flipFoldChange = TRUE) {
+recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, markersOrCell, flipFoldChange = TRUE) {
   directories <- c("bCells", "monocytes", "tCells", "senescence")
 
   names(fileNames) <- c("allCells", "cellPopulations")
 
   for (directory in directories) {
     i <- 1
-    if (clusterName == "clusters_flowsom") {
-      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/clusters_flowsom", markersOrCells, ".csv"))
-    } else if (clusterName == "meta_clusters_flowsom") {
-      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/meta_clusters_flowsom", markersOrCells, ".csv"))
-    } else if (clusterName == "clusters_phenograph") {
-      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/clusters_phenograph", markersOrCells, ".csv"))
-    } else if (clusterName == "clusters_fast_pg") {
-      cellPopulations <- read.csv(paste0("data/",directory, "/clusteringOutput/clusters_fast_pg", markersOrCells, ".csv"))
-    }
     for (file in fileNames) {
       names(file) <- names(fileNames)[i]
       i <- i +1
@@ -3449,10 +3450,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
         } else if (directory == "senescence") {
           df[, "typeOfCells"] <- "Senescent T Cells"
         }
-      } else if (markersOrCells == "Clusters") {
-        df <- merge(df, cellPopulations[, c(colnames(cellPopulations)[1], "cell_population")], by.x = "cluster_id", by.y = colnames(cellPopulations)[1])
-        colnames(df)[ncol(df)] <- "typeOfCells"
-      } else if (markersOrCells != "Clusters") {
+      } else {
         df[ , "typeOfCells"] <- df[, "cluster_id"]
       }
       if (exists("combinedDf")) {
@@ -3510,7 +3508,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
       figureDirectory,
       "fdr",
       str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
-      markersOrCells,
+      markersOrCell,
       ".jpeg"
     ))
     par(mar = c(1, 1, 1, 1))
@@ -3537,7 +3535,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
       figureDirectory,
       "bonferroni",
       str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
-      markersOrCells,
+      markersOrCell,
       ".jpeg"
     ))
     par(mar = c(1, 1, 1, 1))
@@ -3572,7 +3570,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
         "gpr32",
         "fdr",
         str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
-        markersOrCells,
+        markersOrCell,
         ".jpeg"
       ))
       par(mar = c(1, 1, 1, 1))
@@ -3601,7 +3599,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
         "fprl1",
         "fdr",
         str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
-        markersOrCells,
+        markersOrCell,
         ".jpeg"
       ))
       par(mar = c(1, 1, 1, 1))
@@ -3630,7 +3628,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
         "gpr32",
         "bonferroni",
         str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
-        markersOrCells,
+        markersOrCell,
         ".jpeg"
       ))
       par(mar = c(1, 1, 1, 1))
@@ -3659,7 +3657,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
         "fprl1",
         "bonferroni",
         str_replace_all(str_replace_all(str_replace_all(fileNames, " ", ""), ",", ""), "\\.", "")[1],
-        markersOrCells,
+        markersOrCell,
         ".jpeg"
       ))
       par(mar = c(1, 1, 1, 1))
@@ -3693,7 +3691,7 @@ recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, 
               ),
               "\\.",
               "")[1],
-              markersOrCells,
+              markersOrCell,
               ".csv"
             ),
             row.names = FALSE)

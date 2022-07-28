@@ -27,8 +27,31 @@ clusterNames <-
     "clusters_fast_pg",
     "meta_clusters_flowsom"
   )
-for (clusterName in clusterNames) {
-  for (markersOrCell in markersOrCells) {
+
+n.cores <- 4
+my.cluster <- parallel::makeCluster(
+  n.cores
+  )
+doParallel::registerDoParallel(cl = my.cluster)
+foreach::getDoParRegistered()
+foreach::getDoParWorkers()
+
+
+foreach(clusterName = clusterNames) %dopar% {
+  try(source("R/01_functions.R"))
+
+  loadlibraries()
+
+  n.cores <- 4
+  my.cluster <- parallel::makeCluster(
+    n.cores
+  )
+  doParallel::registerDoParallel(cl = my.cluster)
+
+  foreach(markersOrCell = markersOrCells) %dopar% {
+    try(source("R/01_functions.R"))
+
+    loadlibraries()
     performAllDifferentialAbundanceTests(directoryName, columnNames, clusterName, markersOrCell)
   }
 }
