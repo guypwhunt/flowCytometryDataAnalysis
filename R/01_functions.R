@@ -28,7 +28,7 @@ installlibraries <- function() {
   install.packages(c("factoextra", "NbClust", "apcluster"))
   install.packages(c("foreach", "doParallel", "ranger", "palmerpenguins", "kableExtra"))
   install.packages("doSNOW")
-  install.packages("doParallel") 
+  install.packages("doParallel")
   install.packages("doMPI")
 
   gc()
@@ -1614,1180 +1614,6 @@ apclusterOptimalClusters <- function(directoryName, columnNames) {
 }
 
 
-differentialAbundanceTesting <- function(directoryName,
-                                         columnNames,
-                                         clusterName,
-                                         samplesContributionToClustersThreshold,
-                                         differentialAbundanceThreshold) {
-  # Read experiment data
-  experimentInfo <- read.csv("data/metadata/metadata.csv")
-  experimentInfo <-
-    experimentInfo[order(experimentInfo[, "sample_id"]), ]
-  experimentInfo[, "group_id"] <- NA
-
-  mycolors <- c("blue", "red", "black")
-  names(mycolors) <- c("DOWN", "UP", "NO")
-
-  workingDirectory <- getwd()
-
-  setwd(paste0("./data/", directoryName))
-
-  dir.create("differentialTestingOutputs", showWarnings = FALSE)
-
-  # Read csv
-  df <- read.csv("clusteringOutput/flowSomDf.csv")
-  df <- df[order(df[, "fileName"]), ]
-
-  # Identify the number of cells from a sample
-  nrow(df[df[, "fileName"] == "BLT00243", ])
-
-  # Extract only the relevant columns
-  minimalDf <- df[, columnNames]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(minimalDf[, "fileName"])) {
-    minimalDfExtract <- minimalDf[minimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <- append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Create marker information
-  markerColumnNames <- columnNames[columnNames != "fileName"]
-  markerInformation <- data.frame(markerColumnNames)
-  markerInformation[, "channel_name"] <- markerColumnNames
-  markerInformation[, "marker_name"] <- markerColumnNames
-  markerInformation[, "marker_class"] <-
-    rep("type", length(markerColumnNames))
-  markerInformation <- markerInformation[, 2:ncol(markerInformation)]
-
-  # Transform the input into the correct format
-  d_se <- prepareData(listOfDfs, experimentInfo, markerInformation)
-  rowData(d_se)[, "cluster_id"] <- df[, clusterName]
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  experimentInfo[experimentInfo[, "sample_id"] %in% rownames(as.data.frame(y)),]
-
-  # Transform the cluster cell counts into a plotable format
-  counts_df <- assay(d_counts)
-  percentage_counts_df <- (counts_df / rowSums(counts_df)) * 100
-  t_percentage_counts_df <- t(percentage_counts_df)
-  t_percentage_counts_df <- as.data.frame(t_percentage_counts_df)
-  colnames(t_percentage_counts_df) <-
-    rowData(d_counts)[, "cluster_id"]
-  t_percentage_counts_df[, "rownames"] <-
-    row.names(t_percentage_counts_df)
-
-  colnames(t_percentage_counts_df) <- paste0("cluster", colnames(t_percentage_counts_df))
-
-  figureDirectory <- paste0(getwd(), "/figures/")
-  for (columnName in colnames(t_percentage_counts_df)) {
-    gc()
-    jpeg(file = paste0(
-      figureDirectory,
-      paste0("sampleContributionTo", clusterName, columnName , ".jpeg")
-    ))
-    par(mar = c(1, 1, 1, 1))
-
-    p <-
-      ggplot(data = t_percentage_counts_df, aes_string(x = "clusterrownames", y = columnName)) +
-      geom_bar(stat = "identity") +
-      theme(axis.text.x = element_text(angle = 90)) +
-      xlab("Patient Sample") + ylab("Percentage") + ggtitle(columnName)
-    print(p)
-    dev.off()
-    gc()
-
-    try(capture.output(
-      row.names(t_percentage_counts_df[which(t_percentage_counts_df[, columnName] >=
-                                               samplesContributionToClustersThreshold), ]),
-      file = paste0(
-        "differentialTestingOutputs/caseVsControlAllVisitsSampleContributionTo",
-        clusterName,
-        columnName ,
-        ".txt"
-      )
-    ))
-  }
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  experimentInfo[, "group_id"] <-
-    factor(experimentInfo[, "caseControl"])
-  experimentInfo[, "patient_id"] <-
-    factor(experimentInfo[, "patient_id"])
-  experimentInfo[, "sample_id"] <-
-    factor(experimentInfo[, "sample_id"])
-  design <-
-    createDesignMatrix(experimentInfo, cols_design = c("group_id"))
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <- createContrast(c(0, 1))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <- testDA_edgeR(d_counts, design, contrast)
-
-  # Extract statistics
-  res_DA_DT <- as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <- 0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "caseVsControlAllVisitsDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "caseVsControlAllVisitsDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <- as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <- 0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "caseVsControlAllVisitsDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "caseVsControlAllVisitsDifferentialStates.jpeg")
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "caseVsControlAllVisits")
-  # Experiment
-  ################################
-  'rowRanges(d_counts)
-  assay(d_counts)
-  colnames(colData(d_counts))
-  metadata(d_counts)
-  rownames(rowData(d_counts))
-  ################################
-  ################################
-  rowRanges(d_se)
-  assay(d_se)
-  colnames(colData(d_se))
-  metadata(d_se)
-  rowData(d_se)
-  ################################
-  ################################
-  rowRanges(d_medians)
-  assay(d_medians)
-  colnames(colData(d_medians))
-  metadata(d_medians)
-  rowData(d_medians)
-  ################################
-  ################################
-  rowRanges(res_DA)
-  assay(res_DA)
-  colData(res_DA)
-  metadata(res_DA)
-  # This contains the stats
-  rowData(res_DA)
-  ################################
-  ################################
-  rowRanges(res_DS)
-  assay(res_DS)
-  colData(res_DS)
-  metadata(res_DS)
-  # This contains the stats
-  rowData(res_DS)'
-  ################################
-
-
-  ############################################
-  # Visit 1 Case vs Control
-  ### Updated to just visit 1 ###
-  visitOneExperimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] == 1, ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[order(visitOneExperimentInfo[, "sample_id"]), ]
-
-  visitOneMinimalDf <- minimalDf[minimalDf[, "fileName"] %in%
-                                   visitOneExperimentInfo[, "sample_id"], ]
-  visitOneMinimalDf <-
-    visitOneMinimalDf[order(visitOneMinimalDf[, "fileName"]), ]
-
-  visitOneDf <- df[df[, "fileName"] %in%
-                     visitOneExperimentInfo[, "sample_id"], ]
-  visitOneDf <- visitOneDf[order(visitOneDf[, "fileName"]), ]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(visitOneMinimalDf[, "fileName"])) {
-    minimalDfExtract <-
-      visitOneMinimalDf[visitOneMinimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <- append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Transform the input into the correct format
-  d_se <-
-    prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
-  head(assay(d_se))
-  rowData(d_se)[, "cluster_id"] <- visitOneDf[, "cell_population"]
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-  assay(d_medians)
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  visitOneExperimentInfo[, "group_id"] <-
-    factor(visitOneExperimentInfo[, "caseControl"])
-  visitOneExperimentInfo[, "patient_id"] <-
-    factor(visitOneExperimentInfo[, "patient_id"])
-  visitOneExperimentInfo[, "sample_id"] <-
-    factor(visitOneExperimentInfo[, "sample_id"])
-  visitOneExperimentInfo[, "gender"] <-
-    factor(visitOneExperimentInfo[, "gender"])
-  visitOneExperimentInfo[, "ageAtVisit"] <-
-    factor(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "ageAtVisitDouble"] <-
-    as.double(visitOneExperimentInfo[, "ageAtVisit"])
-
-  head(visitOneExperimentInfo)
-  design <- createDesignMatrix(visitOneExperimentInfo,
-                               cols_design = c("group_id"
-                                               , "gender", "ageAtVisitDouble"))
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <- createContrast(c(0, 1, 0, 0))
-  #, rep(0, 89))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <-
-    testDA_edgeR(d_counts, design, contrast)
-
-  rowRanges(res_DA)
-  assay(res_DA)
-  colData(res_DA)
-  metadata(res_DA)
-  # This contains the stats
-  rowData(res_DA)
-
-  # Extract statistics
-  res_DA_DT <-
-    as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "caseVsControlVisitOneDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "caseVsControlVisitOneDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <-
-    as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "caseVsControlVisitOneDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "caseVsControlVisitOneOneClusterDifferentialStates.jpeg")
-
-  # display table of results for top DS cluster-marker combinations
-  resultsTable <-
-    topTable(res_DS, format_vals = TRUE)
-  as.data.frame(resultsTable)
-
-  # calculate number of significant detected DS cluster-marker combinations at
-  # 10% false discovery rate (FDR)
-  table(topTable(res_DS, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "caseVsControlVisitOne")
-  ############################################
-  ############################################
-  # Visit 1 Case vs Control
-  ### Updated to just visit 1 and just 1 cluster ###
-  visitOneExperimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] == 1, ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[order(visitOneExperimentInfo[, "sample_id"]), ]
-
-  visitOneMinimalDf <- minimalDf[minimalDf[, "fileName"] %in%
-                                   visitOneExperimentInfo[, "sample_id"], ]
-  visitOneMinimalDf <-
-    visitOneMinimalDf[order(visitOneMinimalDf[, "fileName"]), ]
-
-  visitOneDf <- df[df[, "fileName"] %in%
-                     visitOneExperimentInfo[, "sample_id"], ]
-  visitOneDf <- visitOneDf[order(visitOneDf[, "fileName"]), ]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(visitOneMinimalDf[, "fileName"])) {
-    minimalDfExtract <-
-      visitOneMinimalDf[visitOneMinimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <- append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Transform the input into the correct format
-  d_se <-
-    prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
-  head(assay(d_se))
-  rowData(d_se)[, "cluster_id"] <- 1
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-  assay(d_medians)
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  visitOneExperimentInfo[, "group_id"] <-
-    factor(visitOneExperimentInfo[, "caseControl"])
-  visitOneExperimentInfo[, "patient_id"] <-
-    factor(visitOneExperimentInfo[, "patient_id"])
-  visitOneExperimentInfo[, "sample_id"] <-
-    factor(visitOneExperimentInfo[, "sample_id"])
-  visitOneExperimentInfo[, "gender"] <-
-    factor(visitOneExperimentInfo[, "gender"])
-  visitOneExperimentInfo[, "ageAtVisit"] <-
-    factor(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "ageAtVisitDouble"] <-
-    as.double(visitOneExperimentInfo[, "ageAtVisit"])
-
-  head(visitOneExperimentInfo)
-  design <- createDesignMatrix(visitOneExperimentInfo,
-                               cols_design = c("group_id"
-                                               , "gender", "ageAtVisitDouble"))
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <- createContrast(c(0, 1, 0, 0))
-  #, rep(0, 89))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <-
-    testDA_edgeR(d_counts, design, contrast)
-
-  # Extract statistics
-  res_DA_DT <-
-    as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "caseVsControlVisitOneOneClusterDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "caseVsControlVisitOneOneClusterDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <-
-    as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "caseVsControlVisitOneOneClusterDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "caseVsControlVisitOneOneClusterDifferentialStates.jpeg")
-
-  # display table of results for top DS cluster-marker combinations
-  resultsTable <-
-    topTable(res_DS, format_vals = TRUE)
-  as.data.frame(resultsTable)
-
-  # calculate number of significant detected DS cluster-marker combinations at
-  # 10% false discovery rate (FDR)
-  table(topTable(res_DS, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "caseVsControlVisitOneOneCluster")
-
-  ############################################
-  # Visit 1 Fast vs Slow Progression
-  ### Updated to just visit 1 ###
-  visitOneExperimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] == 1, ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[visitOneExperimentInfo[, "caseControl"] == "Case", ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[order(visitOneExperimentInfo[, "sample_id"]), ]
-  head(visitOneExperimentInfo)
-
-  visitOneMinimalDf <-
-    minimalDf[minimalDf[, "fileName"] %in%
-                visitOneExperimentInfo[, "sample_id"], ]
-  visitOneMinimalDf <-
-    visitOneMinimalDf[order(visitOneMinimalDf[, "fileName"]), ]
-
-  visitOneDf <- df[df[, "fileName"] %in%
-                     visitOneExperimentInfo[, "sample_id"], ]
-  visitOneDf <-
-    visitOneDf[order(visitOneDf[, "fileName"]), ]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(visitOneMinimalDf[, "fileName"])) {
-    minimalDfExtract <-
-      visitOneMinimalDf[visitOneMinimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <-
-      append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Transform the input into the correct format
-  d_se <-
-    prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
-  head(assay(d_se))
-  rowData(d_se)[, "cluster_id"] <-
-    visitOneDf[, "cell_population"]
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-  assay(d_medians)
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  visitOneExperimentInfo[, "group_id"] <-
-    factor(visitOneExperimentInfo[, "fastSlow"])
-  visitOneExperimentInfo[, "patient_id"] <-
-    factor(visitOneExperimentInfo[, "patient_id"])
-  visitOneExperimentInfo[, "sample_id"] <-
-    factor(visitOneExperimentInfo[, "sample_id"])
-  visitOneExperimentInfo[, "gender"] <-
-    factor(visitOneExperimentInfo[, "gender"])
-  visitOneExperimentInfo[, "ageAtVisit"] <-
-    factor(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "ageAtVisitDouble"] <-
-    as.double(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "bulbarLimb"] <-
-    factor(visitOneExperimentInfo[, "bulbarLimb"])
-
-  head(visitOneExperimentInfo)
-  design <- createDesignMatrix(
-    visitOneExperimentInfo,
-    cols_design = c("group_id"
-                    , "gender", "ageAtVisitDouble",
-                    "bulbarLimb")
-  )
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <-
-    createContrast(c(0, 1, 0, 0, 0))
-  #, rep(0, 89))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <-
-    testDA_edgeR(d_counts, design, contrast)
-
-  # Extract statistics
-  res_DA_DT <-
-    as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "fastVsSlowVisitOneDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "fastVsSlowVisitOneDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <-
-    as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "fastVsSlowVisitOneDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "fastVsSlowVisitOneDifferentialStates.jpeg")
-
-  # display table of results for top DS cluster-marker combinations
-  resultsTable <-
-    topTable(res_DS, format_vals = TRUE)
-  as.data.frame(resultsTable)
-
-  # calculate number of significant detected DS cluster-marker combinations at
-  # 10% false discovery rate (FDR)
-  table(topTable(res_DS, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "fastVsSlowVisitOne")
-
-  ############################################
-  # Visit 1 Fast vs Slow Progression
-  ### Updated to just visit 1 and 1 cluster ###
-  visitOneExperimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] == 1, ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[visitOneExperimentInfo[, "caseControl"] == "Case", ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[order(visitOneExperimentInfo[, "sample_id"]), ]
-  head(visitOneExperimentInfo)
-
-  visitOneMinimalDf <-
-    minimalDf[minimalDf[, "fileName"] %in%
-                visitOneExperimentInfo[, "sample_id"], ]
-  visitOneMinimalDf <-
-    visitOneMinimalDf[order(visitOneMinimalDf[, "fileName"]), ]
-
-  visitOneDf <- df[df[, "fileName"] %in%
-                     visitOneExperimentInfo[, "sample_id"], ]
-  visitOneDf <-
-    visitOneDf[order(visitOneDf[, "fileName"]), ]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(visitOneMinimalDf[, "fileName"])) {
-    minimalDfExtract <-
-      visitOneMinimalDf[visitOneMinimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <-
-      append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Transform the input into the correct format
-  d_se <-
-    prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
-  head(assay(d_se))
-  rowData(d_se)[, "cluster_id"] <- 1
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-  assay(d_medians)
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  visitOneExperimentInfo[, "group_id"] <-
-    factor(visitOneExperimentInfo[, "fastSlow"])
-  visitOneExperimentInfo[, "patient_id"] <-
-    factor(visitOneExperimentInfo[, "patient_id"])
-  visitOneExperimentInfo[, "sample_id"] <-
-    factor(visitOneExperimentInfo[, "sample_id"])
-  visitOneExperimentInfo[, "gender"] <-
-    factor(visitOneExperimentInfo[, "gender"])
-  visitOneExperimentInfo[, "ageAtVisit"] <-
-    factor(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "ageAtVisitDouble"] <-
-    as.double(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "bulbarLimb"] <-
-    factor(visitOneExperimentInfo[, "bulbarLimb"])
-
-  head(visitOneExperimentInfo)
-  design <- createDesignMatrix(
-    visitOneExperimentInfo,
-    cols_design = c("group_id"
-                    , "gender", "ageAtVisitDouble",
-                    "bulbarLimb")
-  )
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <-
-    createContrast(c(0, 1, 0, 0, 0))
-  #, rep(0, 89))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <-
-    testDA_edgeR(d_counts, design, contrast)
-
-  # Extract statistics
-  res_DA_DT <-
-    as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "fastVsSlowVisitOneOneClusterDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "fastVsSlowVisitOneOneClusterDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <-
-    as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "fastVsSlowVisitOneOneClusterDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "fastVsSlowVisitOneOneClusterDifferentialStates.jpeg")
-
-  # display table of results for top DS cluster-marker combinations
-  resultsTable <-
-    topTable(res_DS, format_vals = TRUE)
-  as.data.frame(resultsTable)
-
-  # calculate number of significant detected DS cluster-marker combinations at
-  # 10% false discovery rate (FDR)
-  table(topTable(res_DS, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "fastVsSlowVisitOneOneCluster")
-
-  ############################################
-  # Visit 1 Bulbar vs Limb Site of Onset
-  ### Updated to just visit 1 ###
-  visitOneExperimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] == 1, ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[visitOneExperimentInfo[, "caseControl"] == "Case", ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[order(visitOneExperimentInfo[, "sample_id"]), ]
-  head(visitOneExperimentInfo)
-
-  visitOneMinimalDf <-
-    minimalDf[minimalDf[, "fileName"] %in%
-                visitOneExperimentInfo[, "sample_id"], ]
-  visitOneMinimalDf <-
-    visitOneMinimalDf[order(visitOneMinimalDf[, "fileName"]), ]
-
-  visitOneDf <- df[df[, "fileName"] %in%
-                     visitOneExperimentInfo[, "sample_id"], ]
-  visitOneDf <-
-    visitOneDf[order(visitOneDf[, "fileName"]), ]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(visitOneMinimalDf[, "fileName"])) {
-    minimalDfExtract <-
-      visitOneMinimalDf[visitOneMinimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <-
-      append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Transform the input into the correct format
-  d_se <-
-    prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
-  rowData(d_se)[, "cluster_id"] <-
-    visitOneDf[, "cell_population"]
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-  assay(d_medians)
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  head(visitOneExperimentInfo)
-  visitOneExperimentInfo[, "group_id"] <-
-    factor(visitOneExperimentInfo[, "bulbarLimb"])
-  visitOneExperimentInfo[, "patient_id"] <-
-    factor(visitOneExperimentInfo[, "patient_id"])
-  visitOneExperimentInfo[, "sample_id"] <-
-    factor(visitOneExperimentInfo[, "sample_id"])
-  visitOneExperimentInfo[, "gender"] <-
-    factor(visitOneExperimentInfo[, "gender"])
-  visitOneExperimentInfo[, "ageAtVisit"] <-
-    factor(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "ageAtVisitDouble"] <-
-    as.double(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "fastSlow"] <-
-    factor(visitOneExperimentInfo[, "fastSlow"])
-
-  head(visitOneExperimentInfo)
-  design <- createDesignMatrix(
-    visitOneExperimentInfo,
-    cols_design = c("group_id"
-                    , "gender", "ageAtVisitDouble",
-                    "fastSlow")
-  )
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <-
-    createContrast(c(0, 1, 0, 0, 0))
-  #, rep(0, 89))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <-
-    testDA_edgeR(d_counts, design, contrast)
-
-  # Extract statistics
-  res_DA_DT <-
-    as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "bulbarVsLimbVisitOneDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "bulbarVsLimbVisitOneDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <-
-    as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "bulbarVsLimbVisitOneDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "bulbarVsLimbVisitOneDifferentialStates.jpeg")
-
-  # display table of results for top DS cluster-marker combinations
-  resultsTable <-
-    topTable(res_DS, format_vals = TRUE)
-  as.data.frame(resultsTable)
-
-  # calculate number of significant detected DS cluster-marker combinations at
-  # 10% false discovery rate (FDR)
-  table(topTable(res_DS, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "bulbarVsLimbOnsetOne")
-
-  ############################################
-  # Visit 1 Bulbar Vs Limb Onset
-  ### Updated to just visit 1 and 1 cluster ###
-  visitOneExperimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] == 1, ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[visitOneExperimentInfo[, "caseControl"] == "Case", ]
-  visitOneExperimentInfo <-
-    visitOneExperimentInfo[order(visitOneExperimentInfo[, "sample_id"]), ]
-  head(visitOneExperimentInfo)
-
-  visitOneMinimalDf <-
-    minimalDf[minimalDf[, "fileName"] %in%
-                visitOneExperimentInfo[, "sample_id"], ]
-  visitOneMinimalDf <-
-    visitOneMinimalDf[order(visitOneMinimalDf[, "fileName"]), ]
-
-  visitOneDf <- df[df[, "fileName"] %in%
-                     visitOneExperimentInfo[, "sample_id"], ]
-  visitOneDf <-
-    visitOneDf[order(visitOneDf[, "fileName"]), ]
-
-  # split the dataframe into a dataframe for each file
-  listOfDfs <- list()
-  for (file in unique(visitOneMinimalDf[, "fileName"])) {
-    minimalDfExtract <-
-      visitOneMinimalDf[visitOneMinimalDf[, "fileName"] == file, ]
-    minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
-    listOfDfs <-
-      append(listOfDfs, list(minimalDfExtract))
-  }
-
-  # Transform the input into the correct format
-  d_se <-
-    prepareData(listOfDfs, visitOneExperimentInfo, markerInformation)
-  head(assay(d_se))
-  rowData(d_se)[, "cluster_id"] <- 1
-
-  # Calculate cluster cell counts
-  d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-
-  # Calculate cluster medians
-  d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
-  assay(d_medians)
-
-  # Create design matrix
-  # note: selecting columns containing group IDs and patient IDs (for an
-  # unpaired dataset, only group IDs would be included)
-  # Updates to case vs control
-  visitOneExperimentInfo[, "group_id"] <-
-    factor(visitOneExperimentInfo[, "bulbarLimb"])
-  visitOneExperimentInfo[, "patient_id"] <-
-    factor(visitOneExperimentInfo[, "patient_id"])
-  visitOneExperimentInfo[, "sample_id"] <-
-    factor(visitOneExperimentInfo[, "sample_id"])
-  visitOneExperimentInfo[, "gender"] <-
-    factor(visitOneExperimentInfo[, "gender"])
-  visitOneExperimentInfo[, "ageAtVisit"] <-
-    factor(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "ageAtVisitDouble"] <-
-    as.double(visitOneExperimentInfo[, "ageAtVisit"])
-  visitOneExperimentInfo[, "fastSlow"] <-
-    factor(visitOneExperimentInfo[, "fastSlow"])
-
-  head(visitOneExperimentInfo)
-  design <- createDesignMatrix(
-    visitOneExperimentInfo,
-    cols_design = c("group_id"
-                    , "gender", "ageAtVisitDouble",
-                    "fastSlow")
-  )
-
-  # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <-
-    createContrast(c(0, 1, 0, 0, 0))
-  #, rep(0, 89))
-
-  # Check that design matches control
-  nrow(contrast) == ncol(design)
-  data.frame(parameters = colnames(design), contrast)
-
-  # Test for differential abundance (DA) of clusters
-  res_DA <-
-    testDA_edgeR(d_counts, design, contrast)
-
-  # Extract statistics
-  res_DA_DT <-
-    as.data.frame(rowData(res_DA))
-
-  # Add - log10(adjusted P-value)
-  res_DA_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DA_DT[, "p_adj"])
-  res_DA_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC > 0 & res_DA_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DA_DT$diff_expressed[res_DA_DT$logFC < 0 & res_DA_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialAbundanceManhattanPlot(res_DA_DT,
-                                     figureDirectory,
-                                     "bulbarVsLimbOnsetVisitOneOneClusterDifferentialAbundanceOfClusters.jpeg")
-
-  differentialAbundanceVolcanoPlot(res_DA_DT,
-                                   figureDirectory,
-                                   mycolors,
-                                   "bulbarVsLimbOnsetVisitOneOneClusterDifferentialAbundanceOfClustersVolcanoPlot.jpeg")
-
-  # display table of results for top DA clusters
-  topTable(res_DA, format_vals = TRUE)
-
-  # calculate number of significant detected DA clusters at 10% false discovery
-  # rate (FDR)
-  table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  # Test for differential states (DS) within clusters
-  metadata(d_medians)$id_state_markers <-
-    c(TRUE, rep(FALSE, 3), TRUE)
-  res_DS <-
-    testDS_limma(d_counts, d_medians, design, contrast, plot = FALSE)
-
-  # Extract statistics
-  res_DS_DT <-
-    as.data.frame(rowData(res_DS))
-
-  # Add - log10(adjusted P-value)
-  res_DS_DT[, "minus_log_p_adj"] <-
-    0 - log10(res_DS_DT[, "p_adj"])
-  res_DS_DT[, "id"] <-
-    paste0("cluster ", res_DS_DT[, "cluster_id"], " " , res_DS_DT[, "marker_id"])
-  res_DS_DT[, "diff_expressed"] <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC > 0 & res_DS_DT$p_adj < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  res_DS_DT$diff_expressed[res_DS_DT$logFC < 0 & res_DS_DT$p_adj < 0.05] <- "DOWN"
-
-  differentialStatesVolcanoPlot(res_DS_DT, figureDirectory, mycolors,
-                                "bulbarVsLimbOnsetVisitOneOneClusterDifferentialStatesVolcanoPlot.jpeg")
-
-  differentialStatesManhattanPlot(res_DS_DT, figureDirectory,
-                                  "bulbarVsLimbOnsetVisitOneOneClusterDifferentialStates.jpeg")
-
-  # display table of results for top DS cluster-marker combinations
-  resultsTable <-
-    topTable(res_DS, format_vals = TRUE)
-  as.data.frame(resultsTable)
-
-  # calculate number of significant detected DS cluster-marker combinations at
-  # 10% false discovery rate (FDR)
-  table(topTable(res_DS, all = TRUE)$p_adj <= differentialAbundanceThreshold)
-
-  differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
-                                "bulbarVsLimbOnsetVisitOneOneCluster")
-
-  tryCatch({
-    setwd(workingDirectory)
-  },
-  error = function(cond) {
-    setwd("..")
-    setwd("..")
-  })
-
-  gc()
-}
-
 differentialStatesVolcanoPlot <- function(res_DS_DT,
                                           figureDirectory,
                                           mycolors,
@@ -2993,7 +1819,7 @@ differentialAbundanceAnalysis <- function(
   cases,
   covariants,
   singleCluster,
-  markersOrCells
+  markersOrCell
 ) {
 
   concatinatedVisits <- toString(visits)
@@ -3001,9 +1827,9 @@ differentialAbundanceAnalysis <- function(
   # Read experiment data
   experimentInfo <- read.csv("data/metadata/metadata.csv")
 
-  if (markersOrCells != "Clusters") {
-    cellPopulationMarkers <- read.csv(paste0("data/", directoryName, "/clusteringOutput/", clusterName, markersOrCells, ".csv"))
-    }
+  if (markersOrCell != "Clusters") {
+    cellPopulationMarkers <- read.csv(paste0("data/", directoryName, "/clusteringOutput/", clusterName, markersOrCell, ".csv"))
+  }
 
   if (directoryName == "monocytes") {
     experimentInfo[which(experimentInfo[, "sample_id"]=="BAS_057_02", arr.ind=TRUE), "sample_id"] <- "BAS057_02"
@@ -3089,10 +1915,12 @@ differentialAbundanceAnalysis <- function(
     factor(experimentInfo[, "sample_id"])
   experimentInfo[, "gender"] <-
     factor(experimentInfo[, "gender"])
-  experimentInfo[, "ageAtVisit"] <-
-    factor(experimentInfo[, "ageAtVisit"])
+  experimentInfo[, "ethnicity"] <-
+    factor(experimentInfo[, "ethnicity"])
   experimentInfo[, "ageAtVisitDouble"] <-
     as.double(experimentInfo[, "ageAtVisit"])
+  experimentInfo[, "timeFromVisit1InDaysDouble"] <-
+    as.double(experimentInfo[, "timeFromVisit1InDays"])
   experimentInfo[, "fastSlow"] <-
     factor(experimentInfo[, "fastSlow"])
   experimentInfo[, "bulbarLimb"] <-
@@ -3103,6 +1931,8 @@ differentialAbundanceAnalysis <- function(
     as.double(experimentInfo[, "visit"])
   experimentInfo[, "group_id"] <-
     factor(experimentInfo[, group_id])
+  experimentInfo[, "patient_id"] <-
+    factor(experimentInfo[, "patient_id"])
 
   mycolors <- c("blue", "red", "black")
   names(mycolors) <- c("DOWN", "UP", "NO")
@@ -3130,7 +1960,7 @@ differentialAbundanceAnalysis <- function(
   # Filter df for samples
   df <- df[df[, "fileName"] %in% experimentInfo[, "sample_id"],]
 
-  if (markersOrCells != "Clusters") {
+  if (markersOrCell != "Clusters") {
     df <- merge(df, cellPopulationMarkers[,c(clusterName, "cell_population")], by = clusterName, all.x = TRUE)
     }
 
@@ -3164,12 +1994,12 @@ differentialAbundanceAnalysis <- function(
   if (singleCluster) {
     rowData(d_se)[, "cluster_id"] <- 1
     clusterType <- "AllCells"
-  } else if (markersOrCells != "Clusters") {
+  } else if (markersOrCell != "Clusters") {
     rowData(d_se)[, "cluster_id"] <- df[, "cell_population"]
-    clusterType <- markersOrCells
+    clusterType <- markersOrCell
   } else {
     rowData(d_se)[, "cluster_id"] <- df[, clusterName]
-    clusterType <- markersOrCells
+    clusterType <- markersOrCell
   }
 
   # Calculate cluster cell counts
@@ -3229,12 +2059,13 @@ differentialAbundanceAnalysis <- function(
     createDesignMatrix(experimentInfo, cols_design = c("group_id", covariants))
 
   # Create contrast (the 1 indicates the columns in the design to test)
-  contrast <- createContrast(c(0, 1, rep(0, length(covariants))))
+  contrast <- createContrast(c(0, 1, rep(0, ncol(design)-2)))
 
   # Check that design matches control
   nrow(contrast) == ncol(design)
   data.frame(parameters = colnames(design), contrast)
 
+  ### Check this with ethnicity etc
   # Test for differential abundance (DA) of clusters
   res_DA <- testDA_edgeR(d_counts, design, contrast, min_cells = 0)
 
@@ -3322,7 +2153,7 @@ differentialAbundanceAnalysis <- function(
   gc()
 }
 
-performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clusterName, markersOrCells) {
+performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clusterName, markersOrCell) {
   ### Case vs Controls for all visits for clusters
   samplesContributionToClustersThreshold <- 10
   differentialAbundanceThreshold <- 0.05
@@ -3330,16 +2161,17 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "caseControl"
   visits <- c(1,2,3)
   cases <- c("Case", "Control")
-  covariants <- c("ageAtVisitDouble", "gender")
+  covariants <- c("ageAtVisit", "gender", "timeFromVisit1InDays" #, "ethnicity"
+                  )
   singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Case vs Controls for all visits for all cells
   calculateSampleContributionsToClusters <- FALSE
   singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Case vs Controls for first visit for clusters
   samplesContributionToClustersThreshold <- 10
@@ -3348,15 +2180,16 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "caseControl"
   visits <- c(1)
   cases <- c("Case", "Control")
-  covariants <- c("ageAtVisitDouble", "gender")
+  covariants <- c("ageAtVisit", "gender", #"ethnicity"
+                  )
   singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Case vs Controls for first visit for all cells
   singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Fast vs Slow for first visit for clusters
   samplesContributionToClustersThreshold <- 10
@@ -3365,15 +2198,15 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "fastSlow"
   visits <- c(1)
   cases <- c("Case")
-  covariants <- c("ageAtVisitDouble", "gender", "bulbarLimb")
+  covariants <- c("ageAtVisit", "gender", "bulbarLimb", "ethnicity")
   singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Fast vs Slow for first visit for all cells
   singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Bulbar vs Limb for first visit for clusters
   samplesContributionToClustersThreshold <- 10
@@ -3382,15 +2215,15 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "bulbarLimb"
   visits <- c(1)
   cases <- c("Case")
-  covariants <- c("ageAtVisitDouble", "gender", "fastSlow")
+  covariants <- c("ageAtVisit", "gender", "fastSlow", "ethnicity")
   singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Bulbar vs Limb for first visit for all cells
   singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Visit 1 vs Visit 2 for visit 1 & 2 for clusters
   samplesContributionToClustersThreshold <- 10
@@ -3399,15 +2232,16 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "visit"
   visits <- c(1,2)
   cases <- c("Case")
-  covariants <- c("ageAtVisitDouble", "gender", "fastSlow", "bulbarLimb")
+  covariants <- c("patient_id", "timeFromVisit1InDays")
+  # covariants <- c("ageAtVisit", "gender", "fastSlow", "bulbarLimb", "timeFromVisit1InDays", "ethnicity")
   singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Visit 1 vs Visit 2 for visit 1 & 2 for all cells
   singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Visit 1 vs Visit 3 for visit 1 & 3 for clusters
   samplesContributionToClustersThreshold <- 10
@@ -3416,15 +2250,16 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "visit"
   visits <- c(1,3)
   cases <- c("Case")
-  covariants <- c("ageAtVisitDouble", "gender", "fastSlow", "bulbarLimb")
+  covariants <- c("patient_id", "timeFromVisit1InDays")
+  # covariants <- c("ageAtVisit", "gender", "fastSlow", "bulbarLimb", "timeFromVisit1InDays", "ethnicity")
   singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Visit 1 vs Visit 3 for visit 1 & 3 for all cells
   singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCells)
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 }
 
 recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, markersOrCell, flipFoldChange = TRUE) {
@@ -3734,7 +2569,7 @@ defineFlowSomCellPopulations <- function(directory, queries) {
   write.csv(df, paste0("data/", directory, '/clusteringOutput/flowSomDf.csv'), row.names = FALSE)
 }
 
-calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cutoff, markersOrCells = "CellPopulations") {
+calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cutoff, markersOrCell = "CellPopulations") {
   if (clusterName == "clusters_flowsom" | clusterName == "meta_clusters_flowsom") {
     df <- read.csv(paste0("data/", directoryName, "/clusteringOutput/flowSomDf.csv"))
   } else if (clusterName == "clusters_phenograph") {
@@ -3773,9 +2608,9 @@ calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cut
     i <- i + 1
   }
 
-  if (markersOrCells == "CellPopulations") {
+  if (markersOrCell == "CellPopulations") {
     cellPopulationMarkers <- read.csv(paste0("data/metadata/", directoryName, ".csv"))
-  } else if (markersOrCells == "Markers") {
+  } else if (markersOrCell == "Markers") {
     cellPopulationMarkers <- read.csv(paste0("data/metadata/", directoryName, "Markers.csv"))
   }
 
@@ -3823,9 +2658,9 @@ calculateClusterMarkers <- function(directoryName, clusterName, columnNames, cut
     }
   }
 
-  write.csv(results, paste0("data/", directoryName, "/clusteringOutput/", clusterName, markersOrCells, ".csv"), row.names = FALSE)
+  write.csv(results, paste0("data/", directoryName, "/clusteringOutput/", clusterName, markersOrCell, ".csv"), row.names = FALSE)
 
-  write.csv(results[is.na(results$cell_population),columnNamesPositive], paste0("data/", directoryName, "/clusteringOutput/", clusterName, "Unknown", markersOrCells, ".csv"), row.names = FALSE)
+  write.csv(results[is.na(results$cell_population),columnNamesPositive], paste0("data/", directoryName, "/clusteringOutput/", clusterName, "Unknown", markersOrCell, ".csv"), row.names = FALSE)
 }
 
 
