@@ -268,13 +268,13 @@ foreach(clusterName = clusterNames) %dopar% {
       c(
         paste0(
           clusterName,
-          "visitVisits1, 2, 3AllCellsDifferentialStatesStatistics.csv"
+          "visitVisits1, 2, 3AllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
           "visitVisits1, 2, 3",
           markersOrCell,
-          "DifferentialStatesStatistics.csv"
+          "DifferentialAbundanceStatistics.csv"
         )
       )
 
