@@ -25,6 +25,9 @@ clusterNames <-
     "meta_clusters_flowsom"
   )
 
+# clusterName <- clusterNames[1]
+# markersOrCell <- markersOrCells[3]
+
 n.cores <- 4
 my.cluster <- parallel::makeCluster(
   n.cores

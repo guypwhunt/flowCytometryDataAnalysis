@@ -1819,7 +1819,8 @@ differentialAbundanceAnalysis <- function(
   cases,
   covariants,
   singleCluster,
-  markersOrCell
+  markersOrCell,
+  progression = ""
 ) {
 
   concatinatedVisits <- toString(visits)
@@ -1904,10 +1905,17 @@ differentialAbundanceAnalysis <- function(
 
   experimentInfo <-
     experimentInfo[order(experimentInfo[, "sample_id"]),]
+  experimentInfo <- experimentInfo[experimentInfo[, "patient_id"] %in%
+    experimentInfo[experimentInfo[, "visit"] == max(visits), "patient_id"], ]
   experimentInfo <-
     experimentInfo[experimentInfo[, "visit"] %in% visits,]
   experimentInfo <-
     experimentInfo[experimentInfo[, "caseControl"] %in% cases,]
+  if (progression != "") {
+    experimentInfo <-
+      experimentInfo[experimentInfo[, "fastSlow"] == progression |
+                       experimentInfo[, "caseControl"] == "Control",]
+  }
   experimentInfo[, "group_id"] <- NA
   experimentInfo[, "patient_id"] <-
     factor(experimentInfo[, "patient_id"])
@@ -1915,6 +1923,8 @@ differentialAbundanceAnalysis <- function(
     factor(experimentInfo[, "sample_id"])
   experimentInfo[, "gender"] <-
     factor(experimentInfo[, "gender"])
+  experimentInfo[is.na(experimentInfo[, "ethnicity"]), "ethnicity"] <-
+    "caucasian"
   experimentInfo[, "ethnicity"] <-
     factor(experimentInfo[, "ethnicity"])
   experimentInfo[, "ageAtVisitDouble"] <-
@@ -2085,14 +2095,14 @@ differentialAbundanceAnalysis <- function(
   differentialAbundanceManhattanPlot(
     res_DA_DT,
     figureDirectory,
-    paste0(clusterName, group_id, "Visits", concatinatedVisits, clusterType, "DifferentialAbundanceManhattanPlot.jpeg")
+    paste0(clusterName, group_id, "Visits", concatinatedVisits, progression, clusterType, "DifferentialAbundanceManhattanPlot.jpeg")
   )
 
   differentialAbundanceVolcanoPlot(
     res_DA_DT,
     figureDirectory,
     mycolors,
-    paste0(clusterName, group_id, "Visits", concatinatedVisits, clusterType,
+    paste0(clusterName, group_id, "Visits", concatinatedVisits, progression, clusterType,
            "DifferentialAbundanceVolcanoPlot.jpeg")
   )
 
@@ -2126,20 +2136,21 @@ differentialAbundanceAnalysis <- function(
     res_DS_DT,
     figureDirectory,
     mycolors,
-    paste0(clusterName, group_id, "Visits", concatinatedVisits, clusterType,
+    paste0(clusterName, group_id, "Visits", concatinatedVisits, progression, clusterType,
            "DifferentialStatesVolcanoPlot.jpeg")
   )
 
   differentialStatesManhattanPlot(
     res_DS_DT,
     figureDirectory,
-    paste0(clusterName, group_id, "Visits", concatinatedVisits, clusterType,
+    paste0(clusterName, group_id, "Visits", concatinatedVisits, progression, clusterType,
            "DifferentialStatesManhattanPlot.jpeg")
   )
 
   differentialStatesSaveResults(res_DS_DT, res_DS, res_DA_DT, res_DA,
                                 paste0(clusterName, group_id, "Visits",
-                                       concatinatedVisits, clusterType)
+                                       concatinatedVisits, progression,
+                                       clusterType)
   )
 
   tryCatch({
@@ -2155,23 +2166,23 @@ differentialAbundanceAnalysis <- function(
 
 performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clusterName, markersOrCell) {
   ### Case vs Controls for all visits for clusters
-  samplesContributionToClustersThreshold <- 10
-  differentialAbundanceThreshold <- 0.05
-  calculateSampleContributionsToClusters <- FALSE
-  group_id <- "caseControl"
-  visits <- c(1,2,3)
-  cases <- c("Case", "Control")
-  covariants <- c("ageAtVisit", "gender", "timeFromVisit1InDays" #, "ethnicity"
-                  )
-  singleCluster <- FALSE
+  #samplesContributionToClustersThreshold <- 10
+  #differentialAbundanceThreshold <- 0.05
+  #calculateSampleContributionsToClusters <- FALSE
+  #group_id <- "caseControl"
+  #visits <- c(1,2,3)
+  #cases <- c("Case", "Control")
+  #covariants <- c("ageAtVisit", "gender", "timeFromVisit1InDays" #, "ethnicity"
+  #                )
+  #singleCluster <- FALSE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+  #differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
-  ### Case vs Controls for all visits for all cells
-  calculateSampleContributionsToClusters <- FALSE
-  singleCluster <- TRUE
+  #### Case vs Controls for all visits for all cells
+  #calculateSampleContributionsToClusters <- FALSE
+  #singleCluster <- TRUE
 
-  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+  #differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
 
   ### Case vs Controls for first visit for clusters
   samplesContributionToClustersThreshold <- 10
@@ -2180,7 +2191,7 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   group_id <- "caseControl"
   visits <- c(1)
   cases <- c("Case", "Control")
-  covariants <- c("ageAtVisit", "gender", #"ethnicity"
+  covariants <- c("ageAtVisit", "gender", "ethnicity"
                   )
   singleCluster <- FALSE
 
@@ -2190,6 +2201,45 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   singleCluster <- TRUE
 
   differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+
+  ### Fast Progression vs Controls for first visit for clusters
+  samplesContributionToClustersThreshold <- 10
+  differentialAbundanceThreshold <- 0.05
+  calculateSampleContributionsToClusters <- FALSE
+  group_id <- "caseControl"
+  visits <- c(1)
+  cases <- c("Case", "Control")
+  covariants <- c("ageAtVisit", "gender", "ethnicity"
+  )
+  singleCluster <- FALSE
+  progression <- "Fast"
+
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+
+  ### Fast Progression vs Controls for first visit for all cells
+  singleCluster <- TRUE
+
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+
+  ### Slow Progression vs Controls for first visit for clusters
+  samplesContributionToClustersThreshold <- 10
+  differentialAbundanceThreshold <- 0.05
+  calculateSampleContributionsToClusters <- FALSE
+  group_id <- "caseControl"
+  visits <- c(1)
+  cases <- c("Case", "Control")
+  covariants <- c("ageAtVisit", "gender", "ethnicity"
+  )
+  singleCluster <- FALSE
+  progression <- "Slow"
+
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+
+  ### Slow Progression vs Controls for first visit for all cells
+  singleCluster <- TRUE
+
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+
 
   ### Fast vs Slow for first visit for clusters
   samplesContributionToClustersThreshold <- 10
@@ -2260,6 +2310,25 @@ performAllDifferentialAbundanceTests <- function(directoryName, columnNames, clu
   singleCluster <- TRUE
 
   differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+
+  ### Visit 1 vs Visits 2 and 3 for visit 1, 2 3 for clusters
+  samplesContributionToClustersThreshold <- 10
+  differentialAbundanceThreshold <- 0.05
+  calculateSampleContributionsToClusters <- FALSE
+  group_id <- "visit"
+  visits <- c(1,2,3)
+  cases <- c("Case")
+  covariants <- c("patient_id", "timeFromVisit1InDays")
+  # covariants <- c("ageAtVisit", "gender", "fastSlow", "bulbarLimb", "timeFromVisit1InDays", "ethnicity")
+  singleCluster <- FALSE
+
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+
+  ### Visit 1 vs Visits 2 and 3 for visit 1, 2 3 for all cells
+  singleCluster <- TRUE
+
+  differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+
 }
 
 recalculatePValueAdjustments <- function(DA, sigCutOff, fileNames, clusterName, markersOrCell, flipFoldChange = TRUE) {
