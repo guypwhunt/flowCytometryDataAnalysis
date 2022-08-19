@@ -1,0 +1,399 @@
+library(limma)
+library(umap)
+
+ex <-
+  read.csv("data/lipidomics/expressionDataRaw.csv", row.names = 1)
+
+ex <- ex[names(sort(sapply(ex, max, na.rm = T), decreasing = T))]
+
+minValue <- min(ex, na.rm = T)
+
+compensatedEx <- ex - (minValue - 1)
+
+write.csv(compensatedEx,
+          "data/lipidomics/compensatedExpressionDataRawAllSamples.csv")
+
+outliers <- c("FE7", "FL7", "FL10", "FE10")
+outliers <-
+  append(
+    outliers,
+    c(
+      "H10",
+      "H3",
+      "H1",
+      "H9",
+      "H8",
+      "H4",
+      "H5",
+      "H2",
+      "H6",
+      "FE10",
+      "FE5",
+      "FL10",
+      "FL5",
+      "SE5",
+      "SL5"
+    )
+  )
+
+ex <- ex[,-which(names(ex) %in% outliers)]
+
+minValue <- min(ex, na.rm = T)
+
+ex <- ex - (minValue - 1)
+
+write.csv(
+  ex,
+  "data/lipidomics/compensatedExpressionDataRawOutliersAndDuplicatesRemoved.csv"
+)
+
+ex <- log2(ex)
+
+ex <- normalizeBetweenArrays(ex) # normalize data
+
+write.csv(
+  ex,
+  "data/lipidomics/normalisedLogTransformedCompensatedExpressionDataRawOutliersAndDuplicatesRemoved.csv"
+)
+
+clinical <-
+  read.csv("data/lipidomics/clinicalData.csv", row.names = 1)
+
+clinical <- clinical[-which(rownames(clinical) %in% outliers),]
+
+clinical <- clinical[order(row.names(clinical)),]
+ex <- ex[, order(colnames(ex))]
+
+ex <- ex[complete.cases(ex),]
+
+clinical <- clinical[which(rownames(clinical) %in% colnames(ex)),]
+
+colnames(ex) == row.names(clinical)
+
+clinical$Patient.ID <- clinical$Patient.ID
+clinical$caseControlExperiment <- clinical$caseControlExperiment
+clinical$sightOnsetExperiment <- clinical$sightOnsetExperiment
+clinical$progressionExperiment <- clinical$progressionExperiment
+clinical$fastSlow <- clinical$fastSlow
+clinical$siteOfOnset  <- clinical$siteOfOnset
+clinical$ethnicity <- clinical$ethnicity
+clinical$gender <- clinical$gender
+clinical$statinUse <- clinical$statinUse
+
+
+performDifferentialExpression <-
+  function(ex, design, cont.matrix, experimentName) {
+    # put this in a function
+
+    # calculate precision weights and show plot of mean-variance trend
+    v <- vooma(ex, design, plot = TRUE)
+    # OR weights by group
+    # v <- voomaByGroup(gset, group=groups, design, plot=T, cex=0.1, pch=".", col=1:nlevels(gs))
+
+    fit  <- lmFit(v)
+
+    #fit <- lmFit(ex, design)  # fit linear model
+
+    fit2 <- contrasts.fit(fit, cont.matrix)
+
+    # compute statistics and table of top significant genes
+    fit2 <- eBayes(fit2, 0.01)
+
+    # Visualize and quality control test results.
+    # Build histogram of P-values for all genes. Normal test
+    # assumption is that most genes are not differentially expressed.
+    tT2 <- topTable(fit2,
+                    adjust = "fdr",
+                    sort.by = "B",
+                    number = Inf)
+
+    write.csv(tT2,
+              "data/lipidomics/Results/differentialExpressionProgressionResults.csv")
+
+    figureDirectory <- "data/lipidomics/Results/"
+
+    par(mar = c(1, 1, 1, 1))
+
+    jpeg(file = paste0(figureDirectory,
+                       "histogram",
+                       experimentName,
+                       ".jpeg"))
+
+    hist(
+      tT2$adj.P.Val,
+      col = "grey",
+      border = "white",
+      xlab = "P-adj",
+      ylab = "Number of genes",
+      main = "P-adj value distribution"
+    )
+
+    dev.off()
+    gc()
+
+    # summarize test results as "up", "down" or "not expressed"
+    dT <- decideTests(fit2, adjust.method = "fdr", p.value = 0.05)
+
+
+    jpeg(file = paste0(figureDirectory,
+                       "qqPlot",
+                       experimentName,
+                       ".jpeg"))
+
+    # create Q-Q plot for t-statistic
+    t.good <- which(!is.na(fit2$F)) # filter out bad probes
+    qqt(fit2$t[t.good], fit2$df.total[t.good], main = "Moderated t statistic")
+    abline(0, 1)
+
+    dev.off()
+
+
+    # volcano plot (log P-value vs log fold change)
+    colnames(fit2) # list contrast names
+    ct <- 1        # choose contrast of interest
+
+    for (n in seq(ncol(fit2))) {
+      jpeg(file = paste0(
+        figureDirectory,
+        "volcanoPlot",
+        colnames(fit2)[n],
+        experimentName,
+        ".jpeg"
+      ))
+      volcanoplot(
+        fit2,
+        coef = n,
+        main = colnames(fit2)[n],
+        pch = 20,
+        highlight = length(which(dT[, n] != 0)),
+        names = rep('+', nrow(fit2))
+      )
+      dev.off()
+
+      jpeg(
+        file = paste0(
+          figureDirectory,
+          "meanDifferencePlot",
+          colnames(fit2)[n],
+          experimentName,
+          ".jpeg"
+        )
+      )
+      # MD plot (log fold change vs mean log expression)
+      # highlight statistically significant (p-adj < 0.05) probes
+      plotMD(
+        fit2,
+        column = n,
+        status = dT[, n],
+        legend = F,
+        pch = 20,
+        cex = 1
+      )
+      abline(h = 0)
+      dev.off()
+
+      tT <- topTable(
+        fit2,
+        adjust = "fdr",
+        sort.by = "P",
+        number = 10,
+        coef = n
+      )
+
+      write.csv(tT, paste0(figureDirectory, experimentName, colnames(fit2)[n], ".csv"))
+
+      significantResults <- tT[tT$adj.P.Val < 0.05,]
+
+      if (nrow(significantResults) > 0) {
+        print(colnames(fit2)[n])
+        print(significantResults)
+      }
+    }}
+
+### Case vs Control Experiment
+clinical$group <- clinical$caseControlExperiment
+experimentName <- "CaseVsControl"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  ,
+  clinical
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  ControlVsEarly = groupControl - groupEarly,
+  ControlVsLate =groupControl - groupLate,
+  EarlyVsControl = groupEarly - groupControl,
+  LateVsControl = groupLate - groupControl,
+  levels = design
+)
+
+performDifferentialExpression(ex, design, cont.matrix, experimentName)
+
+# No Controls
+experimentName <- "EarlyVsLate"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  + timeFromEarlySampleInDays #timeFromOnsetToVisitInDays
+
+  + siteOfOnset
+  + fastSlow
+  ,
+  clinical[clinical$group != "Control", ]
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  EarlyVsLate = groupEarly - groupLate,
+  LateVsEarly = groupLate - groupEarly,
+  levels = design
+)
+
+performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])], design, cont.matrix, experimentName)
+
+
+### Progression Experiment
+clinical$group <- clinical$progressionExperiment
+experimentName <- "ProgressionVsControl"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  ,
+  clinical
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  ControlVsSlowLate =   groupControl - groupSlowLate,
+  ControlVsSlowEarly = groupControl - groupSlowEarly,
+  ControlVsFastEarly = groupControl - groupFastEarly,
+  ControlVsFastLate = groupControl - groupFastLate,
+  SlowLateVsControl = groupSlowLate - groupControl,
+  FastEarlyVsControl = groupFastEarly - groupControl,
+  SlowEarlyVsControl = groupSlowEarly - groupControl,
+  FastLateVsControl =groupFastLate - groupControl,
+  levels = design
+)
+
+performDifferentialExpression(ex, design, cont.matrix, experimentName)
+
+experimentName <- "FastVsSlow"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  + timeFromEarlySampleInDays #timeFromOnsetToVisitInDays
+  + siteOfOnset
+  ,
+  clinical[clinical$group != "Control", ]
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  SlowLateVsFastLate = groupSlowLate - groupFastLate,
+  SlowLateVsFastEarly = groupSlowLate - groupFastEarly,
+  SlowLateVsSlowEarly = groupSlowLate - groupSlowEarly,
+  SlowEarlyVsFastLate = groupSlowEarly - groupFastLate,
+  SlowEarlyVsSlowLate = groupSlowEarly - groupSlowLate,
+  SlowEarlyVsFastEarly = groupSlowEarly - groupFastEarly,
+  FastLateVsFastEarly = groupFastLate - groupFastEarly,
+  FastLateVsSlowEarly = groupFastLate - groupSlowEarly,
+  FastLateVsSlowLate = groupFastLate - groupSlowLate,
+  FastEarlyVsFastLate = groupFastEarly - groupFastLate,
+  FastEarlyVsSlowLate = groupFastEarly - groupSlowLate,
+  FastEarlyVsSlowEarly = groupFastEarly - groupSlowEarly,
+  levels = design
+)
+
+performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])], design, cont.matrix, experimentName)
+
+### Site of Onset Experiment
+clinical$group <- clinical$sightOnsetExperiment
+experimentName <- "SightOfOnsetVsControl"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse,
+  clinical
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  ControlVsBulbarLate =   groupControl - groupBulbarLate,
+  ControlVsBulbarEarly =   groupControl - groupBulbarEarly,
+  ControlVsLimbLate =   groupControl - groupLimbLate,
+  ControlVsLimbEarly =   groupControl - groupLimbEarly,
+  BulbarLateVsControl =   groupBulbarLate - groupControl,
+  BulbarEarlyVsControl =   groupBulbarEarly - groupControl,
+  LimbLateVsControl =   groupLimbLate - groupControl,
+  LimbEarlyVsControl =   groupLimbEarly - groupControl,
+  levels = design
+)
+
+performDifferentialExpression(ex, design, cont.matrix, experimentName)
+
+experimentName <- "BulbarVsLimb"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  + timeFromEarlySampleInDays
+
+  + fastSlow
+  ,
+  clinical[clinical$group != "Control", ]
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  BulbarEarlyVsBulbarLate =  groupBulbarEarly - groupBulbarLate,
+  BulbarEarlyVsLimbEarly = groupBulbarEarly - groupLimbEarly,
+  BulbarEarlyVsLimbLate = groupBulbarEarly - groupLimbLate,
+  BulbarLateVsBulbarEarly = groupBulbarLate - groupBulbarEarly,
+  BulbarLateVsLimbEarly = groupBulbarLate - groupLimbEarly,
+  BulbarLateVsLimbLate = groupBulbarLate - groupLimbLate,
+  LimbEarlyVsBulbarEarly = groupLimbEarly - groupBulbarEarly,
+  LimbEarlyVsBulbarLate = groupLimbEarly - groupBulbarLate,
+  LimbEarlyVsLimbLate = groupLimbEarly - groupLimbLate,
+  LimbLateVsBulbarEarly = groupLimbLate - groupBulbarEarly,
+  LimbLateVsBulbarLate = groupLimbLate - groupBulbarLate,
+  LimbLateVsLimbEarly =   groupLimbLate - groupLimbEarly,
+  levels = design
+)
+
+performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])], design, cont.matrix, experimentName)

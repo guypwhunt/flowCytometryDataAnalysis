@@ -95,11 +95,11 @@ foreach(clusterName = clusterNames) %dopar% {
       c(
         paste0(
           clusterName,
-          "visitVisits1, 2, 3AllCellsDifferentialStatesStatistics.csv"
+          "visitVisits2, 3AllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "visitVisits1, 2, 3",
+          "visitVisits2, 3",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -113,7 +113,8 @@ foreach(clusterName = clusterNames) %dopar% {
                                  markersOrCell,
                                  flipFoldChange)
 
-    # Define Directories and files
+
+    ## Define Directories and files
     fileNames <-
       c(
         paste0(
@@ -129,7 +130,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -147,7 +148,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -165,7 +166,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     #fileNames <-
@@ -193,7 +194,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -211,7 +212,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
 
     ### Differential Abundance ###
@@ -268,11 +269,11 @@ foreach(clusterName = clusterNames) %dopar% {
       c(
         paste0(
           clusterName,
-          "visitVisits1, 2, 3AllCellsDifferentialAbundanceStatistics.csv"
+          "visitVisits2, 3AllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "visitVisits1, 2, 3",
+          "visitVisits2, 3",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -302,7 +303,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -320,7 +321,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -338,7 +339,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     #fileNames <-
@@ -365,7 +366,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -383,9 +384,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
-
-
+    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
   }
 }
