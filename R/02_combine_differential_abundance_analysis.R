@@ -130,7 +130,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -148,7 +148,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -166,17 +166,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
-
-    # Define Directories and files
-    #fileNames <-
-    #  c(
-    #    paste0(clusterName, "caseControlVisits1, 2, 3AllCellsDifferentialStatesStatistics.csv"),
-    #    paste0(clusterName, "caseControlVisits1, 2, 3", markersOrCell, "DifferentialStatesStatistics.csv")
-    #  )
-
-    ##################
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -194,7 +184,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -212,7 +202,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
 
     ### Differential Abundance ###
@@ -303,7 +293,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -321,7 +311,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -339,16 +329,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
 
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
-
-    # Define Directories and files
-    #fileNames <-
-    #  c(
-    #    paste0(clusterName, "caseControlVisits1, 2, 3AllCellsDifferentialAbundanceStatistics.csv"),
-    #    paste0(clusterName, "caseControlVisits1, 2, 3", markersOrCell, "DifferentialAbundanceStatistics.csv")
-    #  )
-
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -366,7 +347,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
     # Define Directories and files
     fileNames <-
@@ -384,7 +365,7 @@ foreach(clusterName = clusterNames) %dopar% {
       )
 
     ##################
-    #recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
   }
 }
