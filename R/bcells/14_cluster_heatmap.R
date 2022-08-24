@@ -27,13 +27,15 @@ clusterNames <-
     "meta_clusters_flowsom"
   )
 
-markersOrCells <- c("CellPopulations", "Markers")
+markersOrCells <- c("CellPopulations", "Markers", "Cluster")
 
 markerType <- "Phenotypic"
 
-#clusterNames <-c(clusterNames[4], clusterNames[1])
-#clusterName <- clusterNames[4]
-#markersOrCell <- markersOrCells[2]
+#clusterNames <-c(clusterNames[4])
+#clusterName <- clusterNames[1]
+#markersOrCellS <- c(markersOrCells[3])
+#markersOrCell <- c(markersOrCells[1])
+
 
 for (markersOrCell in markersOrCells) {
   for (clusterName in clusterNames) {

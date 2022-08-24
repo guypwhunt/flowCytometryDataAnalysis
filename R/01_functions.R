@@ -85,6 +85,7 @@ installlibraries <- function() {
 }
 
 loadlibraries <- function() {
+  try(library(pkgconfig))
   try(library(ComplexHeatmap))
   try(library(igraph, lib.loc = "R/x86_64-pc-linux-gnu-library/4.2/"))
   try(library(colortools, lib.loc = "R/x86_64-pc-linux-gnu-library/4.2/"))
@@ -3798,6 +3799,7 @@ generateHeatmap <-
     df <- df[df[, "clusters"] %in% populations[, clusterName],]
     populations <- populations[populations[, clusterName] %in% df[, "clusters"],]
 
+    df[,1:length(columnNames)] <- scale(df[,1:length(columnNames)])
 
     jpeg(file = paste0(figureDirectory,
                        "na.jpeg"))
@@ -3807,6 +3809,8 @@ generateHeatmap <-
 
     names(metacluster_colours) <- populations[, if (markersOrCell == "CellPopulations") {
       "cell_population"
+    } else if (markersOrCell == "Cluster") {
+      clusterName
     } else {
       "marker_population"
     }]
@@ -3816,13 +3820,15 @@ generateHeatmap <-
       summarise_all(median) %>%
       remove_rownames() %>%
       column_to_rownames('clusters') %>%
-      as.matrix() %>%
-      pheatmap:::scale_rows()
+      as.matrix() #%>%
+      #pheatmap:::scale_rows()
 
     row_order <-
       populations[match(rownames(summarisedDf), populations[, clusterName]),
                   if (markersOrCell == "CellPopulations") {
                     "cell_population"
+                  } else if (markersOrCell == "Cluster") {
+                    clusterName
                   } else {
                     "marker_population"
                   }]
@@ -3855,10 +3861,11 @@ generateHeatmap <-
     png(
       paste0(
         figureDirectory,
+        "heatmap",
         clusterName,
         markersOrCell,
         markerType,
-        "heatmap.jpeg"
+        ".jpeg"
       ),
       width = 4000,
       height = 2000,

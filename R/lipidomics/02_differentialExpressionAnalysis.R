@@ -1,59 +1,8 @@
 library(limma)
 library(umap)
 
-ex <-
-  read.csv("data/lipidomics/expressionDataRaw.csv", row.names = 1)
-
-ex <- ex[names(sort(sapply(ex, max, na.rm = T), decreasing = T))]
-
-minValue <- min(ex, na.rm = T)
-
-compensatedEx <- ex - (minValue - 1)
-
-write.csv(compensatedEx,
-          "data/lipidomics/compensatedExpressionDataRawAllSamples.csv")
-
-outliers <- c("FE7", "FL7", "FL10", "FE10")
-outliers <-
-  append(
-    outliers,
-    c(
-      "H10",
-      "H3",
-      "H1",
-      "H9",
-      "H8",
-      "H4",
-      "H5",
-      "H2",
-      "H6",
-      "FE10",
-      "FE5",
-      "FL10",
-      "FL5",
-      "SE5",
-      "SL5"
-    )
-  )
-
-ex <- ex[,-which(names(ex) %in% outliers)]
-
-minValue <- min(ex, na.rm = T)
-
-ex <- ex - (minValue - 1)
-
-write.csv(
-  ex,
-  "data/lipidomics/compensatedExpressionDataRawOutliersAndDuplicatesRemoved.csv"
-)
-
-ex <- log2(ex)
-
-ex <- normalizeBetweenArrays(ex) # normalize data
-
-write.csv(
-  ex,
-  "data/lipidomics/normalisedLogTransformedCompensatedExpressionDataRawOutliersAndDuplicatesRemoved.csv"
+ex <- read.csv(
+  "data/lipidomics/normalisedasinhTransformedExpressionDataRawOutliersAndDuplicatesRemoved.csv", row.names = 1
 )
 
 clinical <-
@@ -82,17 +31,19 @@ clinical$statinUse <- clinical$statinUse
 
 
 performDifferentialExpression <-
-  function(ex, design, cont.matrix, experimentName) {
+  function(ex, design, cont.matrix, experimentName, clinical = NULL, pairwiseTest = FALSE) {
     # put this in a function
 
     # calculate precision weights and show plot of mean-variance trend
     v <- vooma(ex, design, plot = TRUE)
-    # OR weights by group
-    # v <- voomaByGroup(gset, group=groups, design, plot=T, cex=0.1, pch=".", col=1:nlevels(gs))
 
-    fit  <- lmFit(v)
+    if (pairwiseTest) {
+      corfit <- duplicateCorrelation(v,design,block=clinical$Patient.ID)
 
-    #fit <- lmFit(ex, design)  # fit linear model
+      fit <- lmFit(v, design, block=clinical$Patient.ID, correlation=corfit$consensus)
+    } else {
+      fit  <- lmFit(v)
+    }
 
     fit2 <- contrasts.fit(fit, cont.matrix)
 
@@ -248,8 +199,8 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
-  + timeFromEarlySampleInDays #timeFromOnsetToVisitInDays
-
+  #+ timeFromEarlySampleInDays
+  + timeFromOnsetToVisitInDays
   + siteOfOnset
   + fastSlow
   ,
@@ -263,7 +214,8 @@ cont.matrix <- makeContrasts(
   levels = design
 )
 
-performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])], design, cont.matrix, experimentName)
+performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])],
+                              design, cont.matrix, experimentName, clinical[clinical$group != "Control", ], TRUE)
 
 
 ### Progression Experiment
@@ -307,7 +259,8 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
-  + timeFromEarlySampleInDays #timeFromOnsetToVisitInDays
+  #+ timeFromEarlySampleInDays
+  + timeFromOnsetToVisitInDays
   + siteOfOnset
   ,
   clinical[clinical$group != "Control", ]
@@ -330,7 +283,8 @@ cont.matrix <- makeContrasts(
   levels = design
 )
 
-performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])], design, cont.matrix, experimentName)
+performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])],
+                              design, cont.matrix, experimentName, clinical[clinical$group != "Control", ], TRUE)
 
 ### Site of Onset Experiment
 clinical$group <- clinical$sightOnsetExperiment
@@ -372,8 +326,8 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
-  + timeFromEarlySampleInDays
-
+  #+ timeFromEarlySampleInDays
+  + timeFromOnsetToVisitInDays
   + fastSlow
   ,
   clinical[clinical$group != "Control", ]
@@ -396,4 +350,5 @@ cont.matrix <- makeContrasts(
   levels = design
 )
 
-performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])], design, cont.matrix, experimentName)
+performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])],
+                              design, cont.matrix, experimentName, clinical[clinical$group != "Control", ], TRUE)

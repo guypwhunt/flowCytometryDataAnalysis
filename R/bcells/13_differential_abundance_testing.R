@@ -28,7 +28,7 @@ clusterNames <-
 # clusterName <- clusterNames[1]
 # markersOrCell <- markersOrCells[3]
 
-n.cores <- 4
+n.cores <- 19
 my.cluster <- parallel::makeCluster(
   n.cores
   )
@@ -41,12 +41,6 @@ foreach(clusterName = clusterNames) %dopar% {
   try(source("R/01_functions.R"))
 
   loadlibraries()
-
-  n.cores <- 4
-  my.cluster <- parallel::makeCluster(
-    n.cores
-  )
-  doParallel::registerDoParallel(cl = my.cluster)
 
   foreach(markersOrCell = markersOrCells) %dopar% {
     try(source("R/01_functions.R"))
