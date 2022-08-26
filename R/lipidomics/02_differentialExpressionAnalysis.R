@@ -8,14 +8,14 @@ ex <- read.csv(
 clinical <-
   read.csv("data/lipidomics/clinicalData.csv", row.names = 1)
 
-clinical <- clinical[-which(rownames(clinical) %in% outliers),]
-
-clinical <- clinical[order(row.names(clinical)),]
 ex <- ex[, order(colnames(ex))]
 
 ex <- ex[complete.cases(ex),]
 
 clinical <- clinical[which(rownames(clinical) %in% colnames(ex)),]
+clinical <- clinical[colnames(ex),]
+
+clinical[clinical$earlyLate == "Late", "statinUse"] <- "No"
 
 colnames(ex) == row.names(clinical)
 
@@ -161,8 +161,16 @@ performDifferentialExpression <-
       }
     }}
 
+nonControlClinical <- clinical[clinical$caseControl != "Control", ]
+nonControlClinical <- nonControlClinical[which(nonControlClinical$Patient.ID %in% nonControlClinical[duplicated(nonControlClinical$Patient.ID), "Patient.ID"]), ]
+
+nonControlEx <- ex[,colnames(ex) %in% rownames(nonControlClinical)]
+nonControlEx <- ex[,colnames(ex) %in% rownames(nonControlClinical)]
+
+
 ### Case vs Control Experiment
 clinical$group <- clinical$caseControlExperiment
+nonControlClinical$group <- nonControlClinical$caseControlExperiment
 experimentName <- "CaseVsControl"
 
 design <- model.matrix(
@@ -204,7 +212,7 @@ design <- model.matrix(
   + siteOfOnset
   + fastSlow
   ,
-  clinical[clinical$group != "Control", ]
+  nonControlClinical
 )
 
 # set up contrasts of interest and recalculate model coefficients
@@ -214,12 +222,14 @@ cont.matrix <- makeContrasts(
   levels = design
 )
 
-performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])],
-                              design, cont.matrix, experimentName, clinical[clinical$group != "Control", ], TRUE)
+performDifferentialExpression(nonControlEx,
+                              design, cont.matrix, experimentName, nonControlClinical, TRUE)
 
 
 ### Progression Experiment
 clinical$group <- clinical$progressionExperiment
+nonControlClinical$group <- nonControlClinical$progressionExperiment
+
 experimentName <- "ProgressionVsControl"
 
 design <- model.matrix(
@@ -263,7 +273,7 @@ design <- model.matrix(
   + timeFromOnsetToVisitInDays
   + siteOfOnset
   ,
-  clinical[clinical$group != "Control", ]
+  nonControlClinical
 )
 
 # set up contrasts of interest and recalculate model coefficients
@@ -283,11 +293,13 @@ cont.matrix <- makeContrasts(
   levels = design
 )
 
-performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])],
-                              design, cont.matrix, experimentName, clinical[clinical$group != "Control", ], TRUE)
+performDifferentialExpression(nonControlEx,
+                              design, cont.matrix, experimentName, nonControlClinical, TRUE)
 
 ### Site of Onset Experiment
 clinical$group <- clinical$sightOnsetExperiment
+nonControlClinical$group <- nonControlClinical$sightOnsetExperiment
+
 experimentName <- "SightOfOnsetVsControl"
 
 design <- model.matrix(
@@ -321,16 +333,16 @@ experimentName <- "BulbarVsLimb"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
-  + ethnicity
-  + gender
-  + sampleStorageDays
-  + statinUse
+  #+ ageAtSample
+  #+ ethnicity
+  #+ gender
+  #+ sampleStorageDays
+  #+ statinUse
   #+ timeFromEarlySampleInDays
-  + timeFromOnsetToVisitInDays
-  + fastSlow
+  #+ timeFromOnsetToVisitInDays
+  #+ fastSlow
   ,
-  clinical[clinical$group != "Control", ]
+  nonControlClinical
 )
 
 # set up contrasts of interest and recalculate model coefficients
@@ -350,5 +362,5 @@ cont.matrix <- makeContrasts(
   levels = design
 )
 
-performDifferentialExpression(ex[,colnames(ex) %in% rownames(clinical[clinical$group != "Control", ])],
-                              design, cont.matrix, experimentName, clinical[clinical$group != "Control", ], TRUE)
+performDifferentialExpression(nonControlEx,
+                              design, cont.matrix, experimentName, nonControlClinical, TRUE)

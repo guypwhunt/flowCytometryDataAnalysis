@@ -2148,7 +2148,8 @@ differentialAbundanceAnalysis <- function(directoryName,
                                           covariants,
                                           singleCluster,
                                           markersOrCell,
-                                          progression = "") {
+                                          progression = "",
+                                          blocking = NULL) {
   concatinatedVisits <- toString(visits)
 
   # Read experiment data
@@ -2327,7 +2328,8 @@ differentialAbundanceAnalysis <- function(directoryName,
   experimentInfo[, "gender"] <-
     factor(experimentInfo[, "gender"])
 
-  experimentInfo <- experimentInfo[!is.na(experimentInfo[, "ethnicity"]),]
+  experimentInfo <-
+    experimentInfo[!is.na(experimentInfo[, "ethnicity"]),]
   experimentInfo[, "ethnicity"] <-
     factor(experimentInfo[, "ethnicity"])
   experimentInfo[, "ageAtVisitDouble"] <-
@@ -2498,7 +2500,37 @@ differentialAbundanceAnalysis <- function(directoryName,
 
   ### Check this with ethnicity etc
   # Test for differential abundance (DA) of clusters
-  res_DA <- testDA_edgeR(d_counts, design, contrast, min_cells = 0)
+  if (is.null(blocking)) {
+    res_DA <- testDA_edgeR(d_counts, design, contrast, min_cells = 0)
+  } else if (singleCluster) {
+    res_DA <- testDA_edgeR(d_counts, design, contrast, min_cells = 0)
+  } else {
+    daDiagnosticPlotDirectory <- paste0(
+      figureDirectory,
+      "differentialAbundance",
+      clusterName,
+      group_id,
+      "Visits",
+      concatinatedVisits,
+      progression,
+      clusterType,
+      as.character(singleCluster)
+    )
+
+    dir.create(daDiagnosticPlotDirectory, showWarnings = FALSE)
+
+    res_DA <-
+      testDA_voom(
+        d_counts,
+        design,
+        contrast,
+        block_id = experimentInfo$patient_id,
+        min_cells = 0,
+        plot = TRUE,
+        path = daDiagnosticPlotDirectory
+      )
+  }
+
 
   # Extract statistics
   res_DA_DT <- as.data.frame(rowData(res_DA))
@@ -2549,14 +2581,46 @@ differentialAbundanceAnalysis <- function(directoryName,
   # rate (FDR)
   table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
 
+  dsDiagnosticPlotDirectory <- paste0(
+    figureDirectory,
+    "differentialState",
+    clusterName,
+    group_id,
+    "Visits",
+    concatinatedVisits,
+    progression,
+    clusterType,
+    as.character(singleCluster)
+  )
+
+  dir.create(dsDiagnosticPlotDirectory, showWarnings = FALSE)
+
+
   # Test for differential states (DS) within clusters
-  res_DS <-
-    testDS_limma(d_counts,
-                 d_medians,
-                 design,
-                 contrast,
-                 plot = FALSE,
-                 min_cells = 0)
+  if (is.null(blocking)) {
+    res_DS <-
+      testDS_limma(
+        d_counts,
+        d_medians,
+        design,
+        contrast,
+        min_cells = 0,
+        plot = TRUE,
+        path = dsDiagnosticPlotDirectory
+      )
+  } else {
+    res_DS <-
+      testDS_limma(
+        d_counts,
+        d_medians,
+        design,
+        contrast,
+        block_id = experimentInfo$patient_id,
+        min_cells = 0,
+        plot = TRUE,
+        path = dsDiagnosticPlotDirectory
+      )
+  }
 
   # Extract statistics
   res_DS_DT <- as.data.frame(rowData(res_DS))
@@ -2643,12 +2707,38 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
 
-    differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+    differentialAbundanceAnalysis(
+      directoryName,
+      columnNames,
+      clusterName,
+      samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters,
+      group_id,
+      visits,
+      cases,
+      covariants,
+      singleCluster,
+      markersOrCell
+    )
 
     ### Case vs Controls for first visit for all cells
     singleCluster <- TRUE
 
-    differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell)
+    differentialAbundanceAnalysis(
+      directoryName,
+      columnNames,
+      clusterName,
+      samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters,
+      group_id,
+      visits,
+      cases,
+      covariants,
+      singleCluster,
+      markersOrCell
+    )
 
     ### Fast Progression vs Controls for first visit for clusters
     samplesContributionToClustersThreshold <- 10
@@ -2661,12 +2751,40 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
     progression <- "Fast"
 
-    differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+    differentialAbundanceAnalysis(
+      directoryName,
+      columnNames,
+      clusterName,
+      samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters,
+      group_id,
+      visits,
+      cases,
+      covariants,
+      singleCluster,
+      markersOrCell,
+      progression
+    )
 
     ### Fast Progression vs Controls for first visit for all cells
     singleCluster <- TRUE
 
-    differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+    differentialAbundanceAnalysis(
+      directoryName,
+      columnNames,
+      clusterName,
+      samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters,
+      group_id,
+      visits,
+      cases,
+      covariants,
+      singleCluster,
+      markersOrCell,
+      progression
+    )
 
     ### Slow Progression vs Controls for first visit for clusters
     samplesContributionToClustersThreshold <- 10
@@ -2679,12 +2797,40 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
     progression <- "Slow"
 
-    differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+    differentialAbundanceAnalysis(
+      directoryName,
+      columnNames,
+      clusterName,
+      samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters,
+      group_id,
+      visits,
+      cases,
+      covariants,
+      singleCluster,
+      markersOrCell,
+      progression
+    )
 
     ### Slow Progression vs Controls for first visit for all cells
     singleCluster <- TRUE
 
-    differentialAbundanceAnalysis(directoryName, columnNames, clusterName, samplesContributionToClustersThreshold, differentialAbundanceThreshold, calculateSampleContributionsToClusters, group_id, visits, cases, covariants, singleCluster, markersOrCell, progression)
+    differentialAbundanceAnalysis(
+      directoryName,
+      columnNames,
+      clusterName,
+      samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters,
+      group_id,
+      visits,
+      cases,
+      covariants,
+      singleCluster,
+      markersOrCell,
+      progression
+    )
 
     ### Fast vs Slow for first visit for clusters
     samplesContributionToClustersThreshold <- 10
@@ -2816,7 +2962,8 @@ performAllDifferentialAbundanceTests <-
       cases,
       covariants,
       singleCluster,
-      markersOrCell
+      markersOrCell,
+      blocking = TRUE
     )
 
 
@@ -2835,7 +2982,8 @@ performAllDifferentialAbundanceTests <-
       cases,
       covariants,
       singleCluster,
-      markersOrCell
+      markersOrCell,
+      blocking = TRUE
     )
 
 
@@ -2869,7 +3017,8 @@ performAllDifferentialAbundanceTests <-
       cases,
       covariants,
       singleCluster,
-      markersOrCell
+      markersOrCell,
+      blocking = TRUE
     )
 
 
@@ -2888,7 +3037,8 @@ performAllDifferentialAbundanceTests <-
       cases,
       covariants,
       singleCluster,
-      markersOrCell
+      markersOrCell,
+      blocking = TRUE
     )
 
 
@@ -2922,7 +3072,8 @@ performAllDifferentialAbundanceTests <-
       cases,
       covariants,
       singleCluster,
-      markersOrCell
+      markersOrCell,
+      blocking = TRUE
     )
 
 
@@ -2941,7 +3092,8 @@ performAllDifferentialAbundanceTests <-
       cases,
       covariants,
       singleCluster,
-      markersOrCell
+      markersOrCell,
+      blocking = TRUE
     )
   }
 
@@ -3728,7 +3880,12 @@ elbowPlot <-
 
 
 generateHeatmap <-
-  function(clusterName, directoryName, columnNames, markersOrCell, markerType, prettyColumnNames) {
+  function(clusterName,
+           directoryName,
+           columnNames,
+           markersOrCell,
+           markerType,
+           prettyColumnNames) {
     # clusterName <- "meta_clusters_flowsom"
     # directoryName <- "bCells"
     # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
@@ -3797,9 +3954,11 @@ generateHeatmap <-
     figureDirectory <- paste0("data/", directoryName, "/figures/")
 
     df <- df[df[, "clusters"] %in% populations[, clusterName],]
-    populations <- populations[populations[, clusterName] %in% df[, "clusters"],]
+    populations <-
+      populations[populations[, clusterName] %in% df[, "clusters"],]
 
-    df[,1:length(columnNames)] <- scale(df[,1:length(columnNames)])
+    df[, 1:length(columnNames)] <-
+      scale(df[, 1:length(columnNames)])
 
     jpeg(file = paste0(figureDirectory,
                        "na.jpeg"))
@@ -3807,13 +3966,14 @@ generateHeatmap <-
       as.vector(colortools::wheel('#ce302e', num = nrow(populations)))
     dev.off()
 
-    names(metacluster_colours) <- populations[, if (markersOrCell == "CellPopulations") {
-      "cell_population"
-    } else if (markersOrCell == "Cluster") {
-      clusterName
-    } else {
-      "marker_population"
-    }]
+    names(metacluster_colours) <-
+      populations[, if (markersOrCell == "CellPopulations") {
+        "cell_population"
+      } else if (markersOrCell == "Cluster") {
+        clusterName
+      } else {
+        "marker_population"
+      }]
 
     summarisedDf <- df %>%
       group_by(clusters) %>%
@@ -3821,7 +3981,7 @@ generateHeatmap <-
       remove_rownames() %>%
       column_to_rownames('clusters') %>%
       as.matrix() #%>%
-      #pheatmap:::scale_rows()
+    #pheatmap:::scale_rows()
 
     row_order <-
       populations[match(rownames(summarisedDf), populations[, clusterName]),

@@ -8,7 +8,7 @@ asinhTransformedEx <- asinh(ex)
 write.csv(asinhTransformedEx,
           "data/lipidomics/asinhTransformedExpressionDataAllSamples.csv")
 
-outliers <- c("FE7", "FL7",
+outliers <- c("FE7", #"FL7",
               "FL10", "FE10")
 
 ex <- ex[,-which(names(ex) %in% outliers)]

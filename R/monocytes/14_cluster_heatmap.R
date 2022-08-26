@@ -43,12 +43,14 @@ markerType <- "Functional"
 columnNames <-
   c(
     "GPR32...AF488.A",
-    "FPRL1...AF647.A"
+    "FPRL1...AF647.A",
+    "HLA.Dr...BV650.A"
   )
 
 prettyColumnNames <- c(
   "GPR32",
-  "FPRL1"
+  "FPRL1",
+  "HLA-DR"
 )
 
 for (markersOrCell in markersOrCells) {
