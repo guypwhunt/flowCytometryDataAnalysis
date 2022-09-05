@@ -14,8 +14,7 @@ columnNames <- c(
   "FoxP3.PE.A",
   "CD45RO.PE.CF595.A",
   "CD4.PerCP.Cy5.5.A",
-  "GPR32.AF488.A",
-  "FPRL1.AF647.A"
+  "GPR32.AF488.A"
 )
 
 markersOrCells <- c("Clusters", "CellPopulations", "Markers")

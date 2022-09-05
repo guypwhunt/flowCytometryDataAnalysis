@@ -11,8 +11,7 @@ columnNames <- c(
   "CD14...BV605.A",
   "CD16...PE.CF595.A",
   "CD11b.activated...PE.Cy7.A",
-  "GPR32...AF488.A",
-  "FPRL1...AF647.A"
+  "GPR32...AF488.A"
 )
 
 markersOrCells <- c("Clusters", "CellPopulations", "Markers")

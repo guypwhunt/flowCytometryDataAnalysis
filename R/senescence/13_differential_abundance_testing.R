@@ -14,8 +14,7 @@ columnNames <- c(
   "CD4.PE.CF594.A",
   "CD8.BV650.A",
   "CCR7.PE.Cy7.A",
-  "GPR32.AF488.A",
-  "FPRL1.AF647.A"
+  "GPR32.AF488.A"
 )
 
 

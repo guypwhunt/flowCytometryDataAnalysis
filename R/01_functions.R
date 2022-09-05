@@ -86,6 +86,7 @@ installlibraries <- function() {
 
 loadlibraries <- function() {
   try(library(pkgconfig))
+  try(library(statmod))
   try(library(ComplexHeatmap))
   try(library(igraph, lib.loc = "R/x86_64-pc-linux-gnu-library/4.2/"))
   try(library(colortools, lib.loc = "R/x86_64-pc-linux-gnu-library/4.2/"))
@@ -176,6 +177,7 @@ gzipFiles <- function() {
 
 preprocessing <- function(directoryName,
                           columnNames,
+                          prettyColumnNames,
                           test,
                           gate = FALSE,
                           gateTogether = FALSE,
@@ -222,7 +224,7 @@ preprocessing <- function(directoryName,
         length(IND),
         " ===\n"
       ))
-      print(head(raw[IND, ]))
+      print(head(raw[IND,]))
       cat("----\n")
     }
     return(unique(raw))
@@ -230,7 +232,13 @@ preprocessing <- function(directoryName,
 
   # Read all:
   dfs <- sapply(filenames, read.flow_csv, simplify = FALSE)
-  gc()
+
+  for (x in seq(length(dfs))){
+    df <- dfs[[x]]
+    df <- df[,columnNames]
+    colnames(df) <- prettyColumnNames
+    dfs[[x]]  <- df
+  }
 
   ##############################
   #REWRITE TO FLOWFRAME/FLOWSET#
@@ -279,7 +287,7 @@ preprocessing <- function(directoryName,
     dir.create("figures", showWarnings = FALSE)
     gc()
     jpeg(file = "figures/automatedcofactors.jpeg")
-    automatedcofactors <- estParamFlowVS(dfs_fs, columnNames)
+    automatedcofactors <- estParamFlowVS(dfs_fs, prettyColumnNames)
     dev.off()
     try(capture.output(automatedcofactors,
                        file = "dataPPOutput/automatedcofactors.txt"))
@@ -288,7 +296,7 @@ preprocessing <- function(directoryName,
   }
 
   #auto
-  dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = columnNames,
+  dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = prettyColumnNames,
                                cofactor = automatedcofactors)
   gc()
   rm(automatedcofactors)
@@ -306,7 +314,7 @@ preprocessing <- function(directoryName,
   # biological variation!
   gc()
   dfs_fs_t_auto_normfda <-
-    warpSet(dfs_fs_t_auto, stains = columnNames)
+    warpSet(dfs_fs_t_auto, stains = prettyColumnNames)
   gc()
 
   # Gate
@@ -323,6 +331,8 @@ preprocessing <- function(directoryName,
   } else {
     dfs_fs_t_auto_normfda_gated <- dfs_fs_t_auto_normfda
   }
+
+  #### SCALE HERE AND visulise...
 
   ##############################
   ####### EXPORT TO FCS ########
@@ -348,9 +358,9 @@ preprocessing <- function(directoryName,
 
   figureDirectory <- paste0(getwd(), "/figures/")
 
-  # columnName <- columnNames[1]
+  # columnName <- prettyColumnNames[1]
 
-  for (columnName in columnNames) {
+  for (columnName in prettyColumnNames) {
     gc()
     columnNameFormula <- as.formula(paste(" ~ ", columnName))
     gc()
@@ -472,7 +482,7 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
     names(filenames) <- sort(unique(x$Original))
     x$fileName <- filenames[as.character(x$Original)]
     # Remove column 'Original':
-    x <- x[, -which(colnames(x) == "Original")]
+    x <- x[,-which(colnames(x) == "Original")]
     # Optionally remap Cytosplore sample tags to original filename:
     if (file.exists(path_CSPLR_ST)) {
       # Read:
@@ -495,7 +505,7 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   gc()
 
   if (test) {
-    df <- df[seq_len(nrow(df) / 50), ]
+    df <- df[seq_len(nrow(df) / 50),]
   }
 
   write.csv(df, 'dataPPOutput/rawDf.csv', row.names = FALSE)
@@ -571,7 +581,7 @@ multipleRegressionTesting <- function(directoryName, columnNames) {
                      file = "dataPPOutput/confintCaseModel.txt"))
 
   fastModel <-
-    lm(progressionModelFormula, data = df[df["fastSlow"] != -1, ])
+    lm(progressionModelFormula, data = df[df["fastSlow"] != -1,])
 
 
   print(summary(fastModel))
@@ -649,7 +659,7 @@ flowsomClustering <-
       names(filenames) <- sort(unique(x$Original))
       x$fileName <- filenames[as.character(x$Original)]
       # Remove column 'Original':
-      x <- x[, -which(colnames(x) == "Original")]
+      x <- x[,-which(colnames(x) == "Original")]
       # Optionally remap Cytosplore sample tags to original filename:
       if (file.exists(path_CSPLR_ST)) {
         # Read:
@@ -775,7 +785,7 @@ flowsomClusteringFunCluster <-
       names(filenames) <- sort(unique(x$Original))
       x$fileName <- filenames[as.character(x$Original)]
       # Remove column 'Original':
-      x <- x[, -which(colnames(x) == "Original")]
+      x <- x[,-which(colnames(x) == "Original")]
       # Optionally remap Cytosplore sample tags to original filename:
       if (file.exists(path_CSPLR_ST)) {
         # Read:
@@ -930,7 +940,7 @@ umapDimReduction <- function(directoryName, columnNames, knn) {
   randomNumbers <-
     sample(seq(nrow(df)), 50000, replace = FALSE)
 
-  df <- df[randomNumbers,]
+  df <- df[randomNumbers, ]
 
   umap <- umap(df[, columnNames],
                n_neighbors = knn,
@@ -1401,7 +1411,7 @@ diffusionMapDimReduction <-
     randomNumbers <-
       sample(seq(nrow(df)), 100000, replace = FALSE)
 
-    df <- df[randomNumbers,]
+    df <- df[randomNumbers, ]
 
     gc()
 
@@ -1776,7 +1786,7 @@ veganOptimalClusters <-
     dev.off()
     gc()
 
-    calinski.best <- as.numeric(which.max(fit$results[2,]))
+    calinski.best <- as.numeric(which.max(fit$results[2, ]))
 
     try(capture.output(
       cat(
@@ -2060,7 +2070,7 @@ gateMarkers <- function(directoryName,
   if (!is.null(columnNames)) {
     for (columnName in columnNames) {
       df <-
-        df[df[, columnName] >= cutoff[match(columnName, columnNames)],]
+        df[df[, columnName] >= cutoff[match(columnName, columnNames)], ]
     }
   }
 
@@ -2090,7 +2100,7 @@ gateTwoMarkersCombined <-
     if (!is.null(columnNames)) {
       df <-
         df[df[, columnNames[1]] >= cutoff[1] |
-             df[, columnNames[2]] >= cutoff[2], ]
+             df[, columnNames[2]] >= cutoff[2],]
     }
 
     write.csv(df, 'dataPPOutput/gatedDf.csv', row.names = FALSE)
@@ -2113,7 +2123,7 @@ gateTwoMarkersCombinedFcs <- function(df, gateColumns) {
   if (!is.null(gateColumns)) {
     df <-
       df[df[, columnName1] >= gateColumns[, columnName1] |
-           df[, columnName2] >= gateColumns[, columnName2], ]
+           df[, columnName2] >= gateColumns[, columnName2],]
   }
 
   return(df)
@@ -2128,7 +2138,7 @@ gateMarkersFcs <- function(df, gateColumns) {
   if (!is.null(gateColumns)) {
     df <-
       df[df[, columnName1] >= gateColumns[, columnName1] &
-           df[, columnName2] >= gateColumns[, columnName2], ]
+           df[, columnName2] >= gateColumns[, columnName2],]
   }
 
   return(df)
@@ -2307,18 +2317,18 @@ differentialAbundanceAnalysis <- function(directoryName,
   }
 
   experimentInfo <-
-    experimentInfo[order(experimentInfo[, "sample_id"]), ]
+    experimentInfo[order(experimentInfo[, "sample_id"]),]
   experimentInfo <-
     experimentInfo[experimentInfo[, "patient_id"] %in%
-                     experimentInfo[experimentInfo[, "visit"] == max(visits), "patient_id"],]
+                     experimentInfo[experimentInfo[, "visit"] == max(visits), "patient_id"], ]
   experimentInfo <-
-    experimentInfo[experimentInfo[, "visit"] %in% visits, ]
+    experimentInfo[experimentInfo[, "visit"] %in% visits,]
   experimentInfo <-
-    experimentInfo[experimentInfo[, "caseControl"] %in% cases, ]
+    experimentInfo[experimentInfo[, "caseControl"] %in% cases,]
   if (progression != "") {
     experimentInfo <-
       experimentInfo[experimentInfo[, "fastSlow"] == progression |
-                       experimentInfo[, "caseControl"] == "Control", ]
+                       experimentInfo[, "caseControl"] == "Control",]
   }
   experimentInfo[, "group_id"] <- NA
   experimentInfo[, "patient_id"] <-
@@ -2329,7 +2339,7 @@ differentialAbundanceAnalysis <- function(directoryName,
     factor(experimentInfo[, "gender"])
 
   experimentInfo <-
-    experimentInfo[!is.na(experimentInfo[, "ethnicity"]),]
+    experimentInfo[!is.na(experimentInfo[, "ethnicity"]), ]
   experimentInfo[, "ethnicity"] <-
     factor(experimentInfo[, "ethnicity"])
   experimentInfo[, "ageAtVisitDouble"] <-
@@ -2370,10 +2380,10 @@ differentialAbundanceAnalysis <- function(directoryName,
     df <- read.csv("clusteringOutput/fastPGDf.csv")
   }
 
-  df <- df[order(df[, "fileName"]), ]
+  df <- df[order(df[, "fileName"]),]
 
   # Filter df for samples
-  df <- df[df[, "fileName"] %in% experimentInfo[, "sample_id"], ]
+  df <- df[df[, "fileName"] %in% experimentInfo[, "sample_id"],]
 
   if (markersOrCell != "Clusters") {
     df <-
@@ -2385,7 +2395,7 @@ differentialAbundanceAnalysis <- function(directoryName,
 
   # Filter df for samples
   experimentInfo <-
-    experimentInfo[experimentInfo[, "sample_id"] %in% df[, "fileName"],]
+    experimentInfo[experimentInfo[, "sample_id"] %in% df[, "fileName"], ]
 
   # Extract only the relevant columns
   minimalDf <- df[, c(columnNames)]
@@ -2393,9 +2403,9 @@ differentialAbundanceAnalysis <- function(directoryName,
   # split the dataframe into a dataframe for each file
   listOfDfs <- list()
   for (file in unique(minimalDf[, "fileName"])) {
-    minimalDfExtract <- minimalDf[minimalDf[, "fileName"] == file, ]
+    minimalDfExtract <- minimalDf[minimalDf[, "fileName"] == file,]
     minimalDfExtract <-
-      minimalDfExtract[,!(names(minimalDfExtract) %in% c("fileName"))]
+      minimalDfExtract[, !(names(minimalDfExtract) %in% c("fileName"))]
     listOfDfs <- append(listOfDfs, list(minimalDfExtract))
   }
 
@@ -2405,7 +2415,7 @@ differentialAbundanceAnalysis <- function(directoryName,
   markerInformation[, "channel_name"] <- markerColumnNames
   markerInformation[, "marker_name"] <- markerColumnNames
   markerInformation[, "marker_class"] <-
-    c(rep("type", length(markerColumnNames) - 2), rep("state", 2))
+    c(rep("type", length(markerColumnNames) - 1), rep("state", 1))
   markerInformation <-
     markerInformation[, 2:ncol(markerInformation)]
 
@@ -2468,7 +2478,7 @@ differentialAbundanceAnalysis <- function(directoryName,
 
       try(capture.output(
         row.names(t_percentage_counts_df[which(t_percentage_counts_df[, columnName] >=
-                                                 samplesContributionToClustersThreshold), ]),
+                                                 samplesContributionToClustersThreshold),]),
         file = paste0(
           "differentialTestingOutputs/sampleContributionTo",
           clusterName,
@@ -3130,6 +3140,26 @@ recalculatePValueAdjustments <-
           } else if (directory == "senescence") {
             df[, "typeOfCells"] <- "Senescent T Cells"
           }
+        } else if (markersOrCell == "Clusters") {
+          filePath <-
+            paste0(
+              "data/",
+              directory,
+              "/clusteringOutput/",
+              clusterName,
+              "CellPopulations.csv"
+            )
+          cellPopulations <- read.csv(filePath)
+
+          df <-
+            merge(df,
+                  cellPopulations[c(clusterName, "cell_population")],
+                  by.x = "cluster_id",
+                  by.y = clusterName)
+
+          df[, "typeOfCells"] <- df[, "cell_population"]
+
+          df <- df[,-which(names(df) %in% c("cell_population"))]
         } else {
           df[, "typeOfCells"] <- df[, "cluster_id"]
         }
@@ -3290,7 +3320,7 @@ recalculatePValueAdjustments <-
       par(mar = c(1, 1, 1, 1))
       p <- ggplot(
         data =
-          combinedDf[combinedDf[, "marker_id"] == "GPR32", ],
+          combinedDf[combinedDf[, "marker_id"] == "GPR32",],
         aes(
           x = logFC,
           y = minus_log_fdr_adjusted_p_val,
@@ -3325,7 +3355,7 @@ recalculatePValueAdjustments <-
       par(mar = c(1, 1, 1, 1))
       p <- ggplot(
         data =
-          combinedDf[combinedDf[, "marker_id"] == "FPRL1", ],
+          combinedDf[combinedDf[, "marker_id"] == "FPRL1",],
         aes(
           x = logFC,
           y = minus_log_fdr_adjusted_p_val,
@@ -3360,7 +3390,7 @@ recalculatePValueAdjustments <-
       par(mar = c(1, 1, 1, 1))
       p <- ggplot(
         data =
-          combinedDf[combinedDf[, "marker_id"] == "GPR32", ],
+          combinedDf[combinedDf[, "marker_id"] == "GPR32",],
         aes(
           x = logFC,
           y = minus_log_bonferroni_adjusted_p_val,
@@ -3395,7 +3425,7 @@ recalculatePValueAdjustments <-
       par(mar = c(1, 1, 1, 1))
       p <- ggplot(
         data =
-          combinedDf[combinedDf[, "marker_id"] == "FPRL1", ],
+          combinedDf[combinedDf[, "marker_id"] == "FPRL1",],
         aes(
           x = logFC,
           y = minus_log_bonferroni_adjusted_p_val,
@@ -3461,7 +3491,7 @@ defineFlowSomCellPopulations <- function(directory, queries) {
 
   for (cluster in unique(df[, "clusters_flowsom"])) {
     cell_population <-
-      unique(df[df[, "clusters_flowsom"] == cluster, ]$flowsom_cell_populations)
+      unique(df[df[, "clusters_flowsom"] == cluster,]$flowsom_cell_populations)
     cell_population <-
       cell_population[cell_population != "Unlabeled"]
 
@@ -3517,7 +3547,7 @@ calculateClusterMarkers <-
     for (cluster in unique(df[, clusterName])) {
       new_row <- c(cluster)
 
-      df2 <- df[df[, clusterName] == cluster, ]
+      df2 <- df[df[, clusterName] == cluster,]
 
       for (column in columnNames) {
         clusterMedian <- median(df2[, column])
@@ -3690,7 +3720,7 @@ calculateVarianceWithinClusters <-
 
     frame <- list()
     for (cluster in unique(df[, clusterName])) {
-      clusterDf <- df[df[, clusterName] == cluster, ]
+      clusterDf <- df[df[, clusterName] == cluster,]
       frame <- append(frame, list(clusterDf))
     }
 
@@ -3807,7 +3837,7 @@ elbowPlot <-
     data <- data[, c("ID", columnNames)]
     head(data)
 
-    clust <- df[,!colnames(df) %in% columnNames]
+    clust <- df[, !colnames(df) %in% columnNames]
     colnames(clust) <- numberOfClusters
     clustColnames <- colnames(clust)
     clust[, "ID"] <- row.names(clust)
@@ -3953,9 +3983,9 @@ generateHeatmap <-
 
     figureDirectory <- paste0("data/", directoryName, "/figures/")
 
-    df <- df[df[, "clusters"] %in% populations[, clusterName],]
+    df <- df[df[, "clusters"] %in% populations[, clusterName], ]
     populations <-
-      populations[populations[, clusterName] %in% df[, "clusters"],]
+      populations[populations[, clusterName] %in% df[, "clusters"], ]
 
     df[, 1:length(columnNames)] <-
       scale(df[, 1:length(columnNames)])
@@ -4034,4 +4064,8 @@ generateHeatmap <-
 
     print(fig)
     dev.off()
+  }
+
+minMaxScaling <- function(x, minValue, maxValue, na.rm = TRUE) {
+    return((x- minValue) /(maxValue-minValue))
   }

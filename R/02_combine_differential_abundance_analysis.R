@@ -11,32 +11,29 @@ clusterNames <-
     "meta_clusters_flowsom"
   )
 
+# clusterName <- clusterNames[4]
+
 markersOrCells <- c("Clusters", "CellPopulations", "Markers")
 
-n.cores <- 4
+# markersOrCell <- markersOrCells[1]
+
+n.cores <- 19
 my.cluster <- parallel::makeCluster(n.cores)
 doParallel::registerDoParallel(cl = my.cluster)
 foreach::getDoParRegistered()
 foreach::getDoParWorkers()
-
 
 foreach(clusterName = clusterNames) %dopar% {
   try(source("R/01_functions.R"))
 
   loadlibraries()
 
-  n.cores <- 4
-  my.cluster <- parallel::makeCluster(n.cores)
-  doParallel::registerDoParallel(cl = my.cluster)
-
   foreach(markersOrCell = markersOrCells) %dopar% {
     try(source("R/01_functions.R"))
 
     loadlibraries()
 
-
     DA <- FALSE
-
 
     # State if you want to flip the Fold change
     flipFoldChange <- FALSE
