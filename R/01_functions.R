@@ -199,13 +199,6 @@ preprocessing <- function(directoryName,
     filenames <- filenames[1:4]
   }
 
-  ## Defining a function to read a flow cytrometry file in csv format:
-  # Each row is a cell, each column is a parameter. In our experience, the
-  # flow cytometers sometimes output duplicate entries (listing the same cell
-  # twice), we remove these and report.
-  # Please check how your csv file is separated and adjust the sep argument
-  # in the function if necessary. In this example we import a semicolon
-  # separated file.
   read.flow_csv <- function(pathIN) {
     raw <-
       read.csv(
@@ -273,18 +266,9 @@ preprocessing <- function(directoryName,
   gc()
   rm(dfs_ff)
 
-  ###############################
-  ####### TRANSFORMATION ########
-  ###############################
+  dir.create("figures", showWarnings = FALSE)
 
-  ## Each parameter of interest needs to be arcsinh transformed with an
-  # individual cofactor. The cofactor can be deduced from the size of the
-  # linear region around zero on a biexponential scale, as plotted in a
-  # histogram (in conventional gating software).
-  # Choose manual transformation or automated transformation (we prefer manual)
-  # Define parameters and cofactors for transformations:
   if (is.null(automatedcofactors)) {
-    dir.create("figures", showWarnings = FALSE)
     gc()
     jpeg(file = "figures/automatedcofactors.jpeg")
     automatedcofactors <- estParamFlowVS(dfs_fs, prettyColumnNames)
@@ -331,15 +315,6 @@ preprocessing <- function(directoryName,
   } else {
     dfs_fs_t_auto_normfda_gated <- dfs_fs_t_auto_normfda
   }
-
-  #### SCALE HERE AND visulise...
-
-  ##############################
-  ####### EXPORT TO FCS ########
-  ##############################
-
-  ## The flowset (dfs_fs_t_auto_normfda) can be exported to individual
-  # fcs files
 
   #Save flowframes wihtin flowset as fcs files using the flowCore package
   write.flowSet(dfs_fs_t_auto_normfda_gated,
@@ -433,28 +408,17 @@ preprocessing <- function(directoryName,
   })
 }
 
-convertToDataFrame <- function(directoryName, columnNames, test) {
+convertToDataFrame <- function(directoryName, columnNames) {
   workingDirectory <- getwd()
-
-  clinicalData <- read.csv('data/metadata/metadata.csv')
-  head(clinicalData)
 
   setwd(paste0("./data/", directoryName))
 
+  figureDirectory <- paste0(getwd(), "/figures/")
+
   dirFCS <- paste0(getwd(), "/dataPPOutput")
 
-  ## Optional: when loading clustered fcs files from cytosplore,
-  #provide the directory of the text file 'CSPLR_ST.txt'. Cytosplore exports
-  # this file upon running the HSNE. This file contains the decoding of the
-  # sample numbers.
   pathST <- "X:/Users/guypw/OneDrive/Documents.txt"
 
-  ## Defining a function to read multiple fcs files from a directory 'dir'
-  # into a single data.frame:
-  # NB: The column in the output named 'fileName' tracks the original file
-  # where each cell came from.
-  # Optionally perform remapping of column 'CSPLR_ST' holding cytosplore
-  # sample numbers to actual names:
   read.flowdat <- function(dir, path_CSPLR_ST = "") {
     # Read:
     filepaths <-
@@ -504,10 +468,6 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   df <- read.flowdat(dir = dirFCS[1], path_CSPLR_ST = pathST)
   gc()
 
-  if (test) {
-    df <- df[seq_len(nrow(df) / 50),]
-  }
-
   write.csv(df, 'dataPPOutput/rawDf.csv', row.names = FALSE)
   gc()
 
@@ -518,24 +478,81 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   write.csv(df, 'dataPPOutput/columnsOfInterestDf.csv', row.names = FALSE)
   gc()
 
-  df <- tryCatch({
-    merge(df, clinicalData, by.x = "fileName",
-          by.y = "Ã¯..patient_id")
-  }, error = function(x) {
-    merge(df, clinicalData,
-          by.x = "fileName", by.y = "patient_id")
-  })
-  df["caseControl"][df["caseControl"] == "Case"] <- 1
-  df["caseControl"][df["caseControl"] == "Control"] <- 0
+  for (col in columnNames) {
+    jpeg(file = paste0(figureDirectory,
+                       "rawDensityPlotCol",
+                       col,
+                       ".jpeg"))
+    d <- density(df[, col])
+    try(print(plot(d, main = col)))
+    dev.off()
+  }
 
-  df["fastSlow"][df["fastSlow"] == "Fast"] <- 1
-  df["fastSlow"][df["fastSlow"] == "Slow"] <- 0
-  df["fastSlow"][df["fastSlow"] == "N/A"] <- -1
-  gc()
-  write.csv(df,
-            'dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv',
-            row.names = FALSE)
-  gc()
+  # Scale data
+  scaledDf <- df
+  scaledDf[, columnNames] <- scale(scaledDf[, columnNames])
+  write.csv(scaledDf, 'dataPPOutput/scaledDf.csv', row.names = FALSE)
+
+  for (col in columnNames) {
+    jpeg(file = paste0(figureDirectory,
+                       "scaledDensityPlotCol",
+                       col,
+                       ".jpeg"))
+    d <- density(scaledDf[, col])
+    try(print(plot(d, main = col)))
+    dev.off()
+  }
+
+  minMaxDf <- df
+
+  for (col in columnNames) {
+    dfMax <- max(minMaxDf[, col])
+    dfMin <- min(minMaxDf[, col])
+
+    scaledColumn <- (minMaxDf[, col] - dfMin) /(dfMax-dfMin)
+
+    minMaxDf[, col] <- scaledColumn
+
+    jpeg(file = paste0(figureDirectory,
+                       "minMaxDensityPlotCol",
+                       col,
+                       ".jpeg"))
+    d <- density(scaledColumn)
+    print(plot(d))
+    dev.off()
+  }
+
+  write.csv(minMaxDf, 'dataPPOutput/minMaxScaledDf.csv', row.names = FALSE)
+
+  outliersMinMaxDf <- df
+
+  # remove outliers
+  for (col in columnNames) {
+    ninetyNinthQuantile <- quantile(outliersMinMaxDf[, col], probs = c(0.001, 0.999))
+    outliersMinMaxDf <- outliersMinMaxDf[outliersMinMaxDf[, col] >= min(ninetyNinthQuantile) &
+                                           outliersMinMaxDf[, col] <= max(ninetyNinthQuantile), ]
+  }
+
+  # plot out puts
+  for (col in columnNames) {
+    dfMax <- max(outliersMinMaxDf[, col])
+    dfMin <- min(outliersMinMaxDf[, col])
+
+    scaledColumn <- (outliersMinMaxDf[, col] - dfMin) /(dfMax-dfMin)
+
+    outliersMinMaxDf[, col] <- scaledColumn
+
+    jpeg(file = paste0(figureDirectory,
+                       "outliersRemovedMinMaxDensityPlotCol",
+                       col,
+                       ".jpeg"))
+    d <- density(scaledColumn)
+    print(plot(d))
+    dev.off()
+  }
+
+  write.csv(outliersMinMaxDf, 'dataPPOutput/outliersRemoveMinMaxScaledDf.csv', row.names = FALSE)
+
 
   tryCatch({
     setwd(workingDirectory)
@@ -546,58 +563,79 @@ convertToDataFrame <- function(directoryName, columnNames, test) {
   })
 }
 
+convertToFCS <- function(directoryName) {
+  workingDirectory <- getwd()
 
-multipleRegressionTesting <- function(directoryName, columnNames) {
+  setwd(paste0("./data/", directoryName, "/dataPPOutput"))
+
+  df <- read.csv('outliersRemoveMinMaxScaledDf.csv')
+
+  dfs <- list()
+
+  fileNames <- unique(df$fileName)
+
+  for (fileName in fileNames) {
+    x <- df[df$fileName == fileName,]
+    x <- x[ , !(colnames(x) == "fileName")]
+    x <- list(x)
+    names(x) <- fileName
+
+    dfs <- append(dfs, x)
+  }
+
+  csv_2_ff <- function(dat) {
+    # Compute required metadata - column names with description -
+    # ranges, min, and max settings
+    meta <- data.frame(
+      name = names(dat),
+      desc = names(dat),
+      range = (apply(apply(dat, 2, range), 2, diff)),
+      minRange = apply(dat, 2, min),
+      maxRange = apply(dat, 2, max)
+    )
+    # Create flowframe
+    flowframef <- new("flowFrame",
+                      exprs = as.matrix(dat),
+                      parameters = AnnotatedDataFrame(meta))
+    return(flowframef)
+  }
+
+  # rewrite to flowframe
+  dfs_ff = sapply(dfs, function(x)
+    csv_2_ff(x), simplify = FALSE)
+  gc()
+
+  dfs_fs <- as(dfs_ff, "flowSet")
+  gc()
+
+  dir.create("scaledFcs", showWarnings = FALSE)
+
+  write.flowSet(dfs_fs,
+                outdir = 'scaledFcs',
+                filename = paste0(
+                  sampleNames(dfs_fs), ".fcs"
+                ))
+
+  tryCatch({
+    setwd(workingDirectory)
+  },
+  error = function(cond) {
+    setwd("..")
+    setwd("..")
+    setwd("..")
+  })
+}
+
+copyToClusteringOutput <- function(directoryName) {
   workingDirectory <- getwd()
 
   setwd(paste0("./data/", directoryName))
 
-  df <-
-    read.csv('dataPPOutput/columnsOfInterestPlusClinicalDataDf.csv')
+  df <- read.csv("./dataPPOutput/outliersRemoveMinMaxScaledDf.csv")
 
-  # This returns the formula:
-  caseModelFormula <-
-    as.formula(paste("caseControl", paste(columnNames, collapse =
-                                            " + "), sep = " ~ "))
+  dir.create("clusteringOutput", showWarnings = FALSE)
 
-  progressionModelFormula <-
-    as.formula(paste("fastSlow", paste(columnNames, collapse =
-                                         " + "), sep = " ~ "))
-
-  caseModel <- lm(caseModelFormula, data = df)
-
-  print(summary(caseModel))
-  try(capture.output(summary(caseModel),
-                     file = "dataPPOutput/summaryCaseModel.txt"))
-
-
-  print(summary(caseModel)$coefficient)
-  try(capture.output(summary(caseModel)$coefficient,
-                     file = "dataPPOutput/coefficientCaseModel.txt"))
-
-
-  print(confint(caseModel))
-  try(capture.output(confint(caseModel),
-                     file = "dataPPOutput/confintCaseModel.txt"))
-
-  fastModel <-
-    lm(progressionModelFormula, data = df[df["fastSlow"] != -1,])
-
-
-  print(summary(fastModel))
-  try(capture.output(summary(fastModel),
-                     file = "dataPPOutput/summaryFastModel.txt"))
-
-  print(summary(fastModel)$coefficient)
-  try(capture.output(summary(fastModel)$coefficient,
-                     file = "dataPPOutput/coefficientFastModel.txt"))
-
-  print(confint(fastModel))
-  try(capture.output(confint(fastModel),
-                     file = "dataPPOutput/confintFastModel.txt"))
-
-  rm(fastModel)
-  rm(caseModel)
+  write.csv(df, 'clusteringOutput/clusteringOutputs.csv', row.names = FALSE)
 
   tryCatch({
     setwd(workingDirectory)
@@ -607,94 +645,67 @@ multipleRegressionTesting <- function(directoryName, columnNames) {
     setwd("..")
   })
 }
+
+read.twoflowdat <- function(dir, path_CSPLR_ST = "") {
+  # Read:
+  filepaths <-
+    list.files(path = dir,
+               pattern = ".fcs",
+               full.names = TRUE)
+  flowset <-
+    read.flowSet(
+      files = filepaths[1:2],
+      transformation = FALSE,
+      truncate_max_range = FALSE
+    )
+  # Transform to data frame:
+  x <-
+    as.data.frame(exprs(as(flowset, 'flowFrame')), stringsAsFactors = FALSE)
+  # Map column 'Original' to filename (in this case holding clusters of
+  # HSNE):
+  filenames <-
+    gsub("[.fcs]",
+         "",
+         list.files(
+           path = dir,
+           pattern = ".fcs",
+           full.names = FALSE
+         ))[1:2]
+  names(filenames) <- sort(unique(x$Original))
+  x$fileName <- filenames[as.character(x$Original)]
+  # Remove column 'Original':
+  x <- x[,-which(colnames(x) == "Original")]
+  # Optionally remap Cytosplore sample tags to original filename:
+  if (file.exists(path_CSPLR_ST)) {
+    # Read:
+    sampID <-
+      gsub(".fcs", "", basename(sapply(strsplit(readLines(path_CSPLR_ST), ": "),
+                                       function(x)
+                                         x[1])))
+    names(sampID) <-
+      sapply(strsplit(readLines(path_CSPLR_ST), ": "), function(x)
+        x[2])
+    x$sampleID <- sampID[as.character(x$CSPLR_ST)]
+  }
+  return(x)
+}
+
 
 flowsomClustering <-
   function(directoryName,
            columnNames,
            numberOfClusters,
-           test) {
+           df,
+           fcsDf) {
     workingDirectory <- getwd()
 
     setwd(paste0("./data/", directoryName))
 
-    dirFCS <- paste0(getwd(), "/dataPPOutput")
+    dirFCS <- paste0(getwd(), "/dataPPOutput/scaledFcs")
 
-    ## Optional: when loading clustered fcs files from cytosplore,
-    #provide the directory of the text file 'CSPLR_ST.txt'. Cytosplore exports
-    # this file upon running the HSNE. This file contains the decoding of the
-    # sample numbers.
-    pathST <- "X:/Users/guypw/OneDrive/Documents.txt"
+    columnIndexes <- seq(length(columnNames))
 
-    ## Defining a function to read multiple fcs files from a directory 'dir'
-    # into a single data.frame:
-    # NB: The column in the output named 'fileName' tracks the original file
-    # where each cell came from.
-    # Optionally perform remapping of column 'CSPLR_ST' holding cytosplore
-    # sample numbers to actual names:
-    read.flowdat <- function(dir, path_CSPLR_ST = "") {
-      # Read:
-      filepaths <-
-        list.files(path = dir,
-                   pattern = ".fcs",
-                   full.names = TRUE)
-      flowset <-
-        read.flowSet(
-          files = filepaths[1:2],
-          transformation = FALSE,
-          truncate_max_range = FALSE
-        )
-      # Transform to data frame:
-      x <-
-        as.data.frame(exprs(as(flowset, 'flowFrame')), stringsAsFactors = FALSE)
-      # Map column 'Original' to filename (in this case holding clusters of
-      # HSNE):
-      filenames <-
-        gsub("[.fcs]",
-             "",
-             list.files(
-               path = dir,
-               pattern = ".fcs",
-               full.names = FALSE
-             ))[1:2]
-      names(filenames) <- sort(unique(x$Original))
-      x$fileName <- filenames[as.character(x$Original)]
-      # Remove column 'Original':
-      x <- x[,-which(colnames(x) == "Original")]
-      # Optionally remap Cytosplore sample tags to original filename:
-      if (file.exists(path_CSPLR_ST)) {
-        # Read:
-        sampID <-
-          gsub(".fcs", "", basename(sapply(strsplit(readLines(path_CSPLR_ST), ": "),
-                                           function(x)
-                                             x[1])))
-        names(sampID) <-
-          sapply(strsplit(readLines(path_CSPLR_ST), ": "), function(x)
-            x[2])
-        x$sampleID <- sampID[as.character(x$CSPLR_ST)]
-      }
-      return(x)
-    }
-
-    ## Read fcs files
-    # In our example we will read the data which were clustered in Cytosplore
-    # (each fcs file is 1 cluster)
-    fcsDf <- read.flowdat(dir = dirFCS[1], path_CSPLR_ST = pathST)
-    gc()
-
-    dir.create("clusteringOutput", showWarnings = FALSE)
-
-    df <- read.csv('dataPPOutput/columnsOfInterestDf.csv')
-
-    dirFCS <- paste0(getwd(), "/dataPPOutput")
-
-    columnIndexes <- c()
-
-    for (columnName in columnNames) {
-      index <- grep(columnName, colnames(fcsDf))
-      columnIndexes <- append(columnIndexes, index)
-    }
-
-    seed <- 8
+    seed <- 100
 
     #run flowsom
     flowsom <- FlowSOM(
@@ -702,8 +713,6 @@ flowsomClustering <-
       transform = FALSE,
       scale = FALSE,
       colsToUse = columnIndexes,
-      #provide the columns for the
-      # clustering
       nClus = numberOfClusters,
       seed = seed
     )
@@ -713,26 +722,15 @@ flowsomClustering <-
     meta_clusters_flowsom <- as.factor(flowsom$map$mapping[, 1])
     levels(meta_clusters_flowsom) <- flowsom$metaclustering
 
-    if (test) {
-      clusters_flowsom <- clusters_flowsom[seq_len(nrow(df))]
-      meta_clusters_flowsom <-
-        meta_clusters_flowsom[seq_len(nrow(df))]
-    }
-
     #add flowsom clusters to dataframe
-    df <- cbind(df, clusters_flowsom)
-    df <- cbind(df, meta_clusters_flowsom)
+    df[, "clusters_flowsom"] <- clusters_flowsom
+    df[, paste0("meta_clusters_flowsom", as.character(numberOfClusters))] <- meta_clusters_flowsom
 
     write.csv(df,
-              paste0('clusteringOutput/flowSomDf', numberOfClusters , '.csv'),
+              'clusteringOutput/clusteringOutputs.csv',
               row.names = FALSE)
-    try(saveRDS(flowsom,
-                file = paste0("clusteringOutput/flowSom", numberOfClusters, ".rds")))
-    FlowSOMmary(flowsom,
-                plotFile = paste0("clusteringOutput/FlowSOMmary", numberOfClusters, ".pdf"))
-    rm(flowsom)
-    rm(clusters_flowsom)
-    gc()
+    try(FlowSOMmary(flowsom,
+                plotFile = paste0("clusteringOutput/FlowSOMmary", numberOfClusters, ".pdf")))
 
     tryCatch({
       setwd(workingDirectory)
@@ -741,6 +739,8 @@ flowsomClustering <-
       setwd("..")
       setwd("..")
     })
+
+    return(df)
   }
 
 flowsomClusteringFunCluster <-
@@ -846,7 +846,7 @@ phenographClustering <- function(directoryName, columnNames, knn) {
 
   dir.create("clusteringOutput", showWarnings = FALSE)
 
-  df <- read.csv('dataPPOutput/columnsOfInterestDf.csv')
+  df <- read.csv('clusteringOutput/clusteringOutputs.csv')
 
   gc()
 
@@ -861,13 +861,9 @@ phenographClustering <- function(directoryName, columnNames, knn) {
     })
 
   #add phenograph clusters to expression data frame
-  df <- cbind(df, clusters_phenograph)
+  df[, "clusters_phenograph"] <- clusters_phenograph
 
-  write.csv(df, 'clusteringOutput/phenographDf.csv', row.names = FALSE)
-  try(saveRDS(phenograph, file = "clusteringOutput/phenograph.rds"))
-  rm(phenograph)
-  rm(clusters_phenograph)
-  gc()
+  write.csv(df, 'clusteringOutput/clusteringOutputs.csv', row.names = FALSE)
 
   tryCatch({
     setwd(workingDirectory)
@@ -885,12 +881,12 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
 
   dir.create("clusteringOutput", showWarnings = FALSE)
 
-  df <- read.csv('dataPPOutput/columnsOfInterestDf.csv')
+  df <- read.csv('clusteringOutput/clusteringOutputs.csv')
 
   gc()
 
   fastPGResults <-
-    FastPG::fastCluster(as.matrix(df[, columnNames]), knn, 4)
+    FastPG::fastCluster(as.matrix(df[, columnNames]), knn, 19)
   clusters_fast_pg <-
     tryCatch({
       as.factor(fastPGResults$communities)
@@ -901,14 +897,10 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
     })
 
 
-  #add clusters to expression data frame
-  df <- cbind(df, clusters_fast_pg)
+  #add phenograph clusters to expression data frame
+  df[, "clusters_fast_pg"] <- clusters_fast_pg
 
-  write.csv(df, 'clusteringOutput/fastPGDf.csv', row.names = FALSE)
-  try(saveRDS(fastPGResults, file = "clusteringOutput/fastPGResults.rds"))
-  rm(fastPGResults)
-  rm(clusters_fast_pg)
-  gc()
+  write.csv(df, 'clusteringOutput/clusteringOutputs.csv', row.names = FALSE)
 
   tryCatch({
     setwd(workingDirectory)
@@ -924,18 +916,8 @@ umapDimReduction <- function(directoryName, columnNames, knn) {
 
   setwd(paste0("./data/", directoryName))
 
-  flowSomDf <-
-    read.csv('clusteringOutput/flowSomDf.csv')
-  phenographDf <-
-    read.csv('clusteringOutput/phenographDf.csv')
-  fastPgDf <-
-    read.csv('clusteringOutput/fastPGDf.csv')
-
-  df <- flowSomDf
-  df[, "clusters_phenograph"] <-
-    phenographDf[, "clusters_phenograph"]
-  df[, "clusters_fast_pg"] <-
-    fastPgDf[, "clusters_fast_pg"]
+  df <-
+    read.csv('clusteringOutput/clusteringOutputs.csv')
 
   randomNumbers <-
     sample(seq(nrow(df)), 50000, replace = FALSE)
@@ -1395,18 +1377,8 @@ diffusionMapDimReduction <-
 
     setwd(paste0("./data/", directoryName))
 
-    flowSomDf <-
-      read.csv('clusteringOutput/flowSomDf.csv')
-    phenographDf <-
-      read.csv('clusteringOutput/phenographDf.csv')
-    fastPgDf <-
-      read.csv('clusteringOutput/fastPGDf.csv')
-
-    df <- flowSomDf
-    df[, "clusters_phenograph"] <-
-      phenographDf[, "clusters_phenograph"]
-    df[, "clusters_fast_pg"] <-
-      fastPgDf[, "clusters_fast_pg"]
+    df <-
+      read.csv('clusteringOutput/clusteringOutputs.csv')
 
     randomNumbers <-
       sample(seq(nrow(df)), 100000, replace = FALSE)
@@ -2031,14 +2003,6 @@ differentialStatesSaveResults <- function(res_DS_DT,
     ),
     row.names = FALSE
   )
-  try(saveRDS(
-    res_DS,
-    file = paste0(
-      'differentialTestingOutputs/',
-      datasetTitle,
-      'DifferentialStatesStatistics.rds'
-    )
-  ))
   write.csv(
     res_DA_DT,
     paste0(
@@ -2048,14 +2012,6 @@ differentialStatesSaveResults <- function(res_DS_DT,
     ),
     row.names = FALSE
   )
-  try(saveRDS(
-    res_DA,
-    file = paste0(
-      'differentialTestingOutputs/',
-      datasetTitle,
-      'DifferentialAbundanceStatistics.rds'
-    )
-  ))
 }
 
 gateMarkers <- function(directoryName,
@@ -2146,7 +2102,8 @@ gateMarkersFcs <- function(df, gateColumns) {
   gc()
 }
 
-differentialAbundanceAnalysis <- function(directoryName,
+differentialAbundanceAnalysis <- function(df,
+                                          directoryName,
                                           columnNames,
                                           clusterName,
                                           samplesContributionToClustersThreshold,
@@ -2368,17 +2325,6 @@ differentialAbundanceAnalysis <- function(directoryName,
 
   dir.create("differentialTestingOutputs", showWarnings = FALSE)
   figureDirectory <- paste0(getwd(), "/figures/")
-
-  # Read csv
-  if (clusterName == "clusters_flowsom") {
-    df <- read.csv("clusteringOutput/flowSomDf.csv")
-  } else if (clusterName == "meta_clusters_flowsom") {
-    df <- read.csv("clusteringOutput/flowSomDf.csv")
-  } else if (clusterName == "clusters_phenograph") {
-    df <- read.csv("clusteringOutput/phenographDf.csv")
-  } else if (clusterName == "clusters_fast_pg") {
-    df <- read.csv("clusteringOutput/fastPGDf.csv")
-  }
 
   df <- df[order(df[, "fileName"]),]
 
@@ -2703,7 +2649,8 @@ differentialAbundanceAnalysis <- function(directoryName,
 }
 
 performAllDifferentialAbundanceTests <-
-  function(directoryName,
+  function(df,
+           directoryName,
            columnNames,
            clusterName,
            markersOrCell) {
@@ -2718,36 +2665,42 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
+      blocking = NULL
     )
 
     ### Case vs Controls for first visit for all cells
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
+      blocking = NULL
     )
 
     ### Fast Progression vs Controls for first visit for clusters
@@ -2762,38 +2715,42 @@ performAllDifferentialAbundanceTests <-
     progression <- "Fast"
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
-      progression
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = progression,
+      blocking = NULL
     )
 
     ### Fast Progression vs Controls for first visit for all cells
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
-      progression
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = progression,
+      blocking = NULL
     )
 
     ### Slow Progression vs Controls for first visit for clusters
@@ -2808,38 +2765,42 @@ performAllDifferentialAbundanceTests <-
     progression <- "Slow"
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
-      progression
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = progression,
+      blocking = NULL
     )
 
     ### Slow Progression vs Controls for first visit for all cells
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
-      progression
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = progression,
+      blocking = NULL
     )
 
     ### Fast vs Slow for first visit for clusters
@@ -2858,18 +2819,21 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
+      blocking = NULL
     )
 
 
@@ -2877,18 +2841,21 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
+      blocking = NULL
     )
 
 
@@ -2908,18 +2875,21 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
+      blocking = NULL
     )
 
 
@@ -2927,18 +2897,21 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
+      blocking = NULL
     )
 
 
@@ -2961,18 +2934,20 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
       blocking = TRUE
     )
 
@@ -2981,18 +2956,20 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
       blocking = TRUE
     )
 
@@ -3016,18 +2993,20 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
       blocking = TRUE
     )
 
@@ -3036,18 +3015,20 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
       blocking = TRUE
     )
 
@@ -3071,18 +3052,20 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- FALSE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
       blocking = TRUE
     )
 
@@ -3091,18 +3074,20 @@ performAllDifferentialAbundanceTests <-
     singleCluster <- TRUE
 
     differentialAbundanceAnalysis(
-      directoryName,
-      columnNames,
-      clusterName,
-      samplesContributionToClustersThreshold,
-      differentialAbundanceThreshold,
-      calculateSampleContributionsToClusters,
-      group_id,
-      visits,
-      cases,
-      covariants,
-      singleCluster,
-      markersOrCell,
+      df = df,
+      directoryName = directoryName,
+      columnNames = columnNames,
+      clusterName = clusterName,
+      samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+      differentialAbundanceThreshold = differentialAbundanceThreshold,
+      calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+      group_id = group_id,
+      visits = visits,
+      cases = cases,
+      covariants = covariants,
+      singleCluster = singleCluster,
+      markersOrCell = markersOrCell,
+      progression = "",
       blocking = TRUE
     )
   }
@@ -3339,112 +3324,6 @@ recalculatePValueAdjustments <-
       print(p)
       dev.off()
       gc()
-
-      jpeg(
-        file = paste0(
-          figureDirectory,
-          "fprl1",
-          "fdr",
-          str_replace_all(str_replace_all(
-            str_replace_all(fileNames, " ", ""), ",", ""
-          ), "\\.", "")[1],
-          markersOrCell,
-          ".jpeg"
-        )
-      )
-      par(mar = c(1, 1, 1, 1))
-      p <- ggplot(
-        data =
-          combinedDf[combinedDf[, "marker_id"] == "FPRL1",],
-        aes(
-          x = logFC,
-          y = minus_log_fdr_adjusted_p_val,
-          col = fdr_diff_expressed,
-          label = fdr_label
-        )
-      ) +
-        geom_point() +
-        theme_minimal() +
-        geom_hline(yintercept = -log10(0.05), col = "red") +
-        geom_hline(yintercept = -log10(0.01), col = "red") +
-        scale_colour_manual(values = mycolors) +
-        geom_text_repel() +
-        ggtitle("Differential States of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
-      print(p)
-      dev.off()
-
-      # bonferroni figures
-      jpeg(
-        file = paste0(
-          figureDirectory,
-          "gpr32",
-          "bonferroni",
-          str_replace_all(str_replace_all(
-            str_replace_all(fileNames, " ", ""), ",", ""
-          ), "\\.", "")[1],
-          markersOrCell,
-          ".jpeg"
-        )
-      )
-      par(mar = c(1, 1, 1, 1))
-      p <- ggplot(
-        data =
-          combinedDf[combinedDf[, "marker_id"] == "GPR32",],
-        aes(
-          x = logFC,
-          y = minus_log_bonferroni_adjusted_p_val,
-          col = bonferroni_diff_expressed,
-          label = bonferroni_label
-        )
-      ) +
-        geom_point() +
-        theme_minimal() +
-        geom_hline(yintercept = -log10(0.05), col = "red") +
-        geom_hline(yintercept = -log10(0.01), col = "red") +
-        scale_colour_manual(values = mycolors) +
-        geom_text_repel() +
-        ggtitle("Differential States of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
-      print(p)
-      dev.off()
-      gc()
-
-      jpeg(
-        file = paste0(
-          figureDirectory,
-          "fprl1",
-          "bonferroni",
-          str_replace_all(str_replace_all(
-            str_replace_all(fileNames, " ", ""), ",", ""
-          ), "\\.", "")[1],
-          markersOrCell,
-          ".jpeg"
-        )
-      )
-      par(mar = c(1, 1, 1, 1))
-      p <- ggplot(
-        data =
-          combinedDf[combinedDf[, "marker_id"] == "FPRL1",],
-        aes(
-          x = logFC,
-          y = minus_log_bonferroni_adjusted_p_val,
-          col = bonferroni_diff_expressed,
-          label = bonferroni_label
-        )
-      ) +
-        geom_point() +
-        theme_minimal() +
-        geom_hline(yintercept = -log10(0.05), col = "red") +
-        geom_hline(yintercept = -log10(0.01), col = "red") +
-        scale_colour_manual(values = mycolors) +
-        geom_text_repel() +
-        ggtitle("Differential States of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
-      print(p)
-      dev.off()
-
-      gc()
     }
 
     write.csv(
@@ -3465,75 +3344,12 @@ recalculatePValueAdjustments <-
     setwd("..")
   }
 
-defineFlowSomCellPopulations <- function(directory, queries) {
-  fSOM <-
-    readRDS(paste0("data/", directory, "/clusteringOutput/flowSom.rds"))
-
-  cellTypes <- factor(rep("Unlabeled", fSOM$map$nNodes),
-                      levels = c("Unlabeled", unique(names(queries))))
-
-  i <- 1
-
-  for (query in queries) {
-    query_res <-
-      QueryStarPlot(fSOM, query, equalNodeSize = TRUE, plot = FALSE)
-
-    cellTypes[query_res$selected] <- names(queries[i])
-    i <- i + 1
-  }
-
-  flowsom_cell_populations <- as.factor(fSOM$map$mapping[, 1])
-  levels(flowsom_cell_populations) <- cellTypes
-
-  df <-
-    read.csv(paste0("data/", directory, '/clusteringOutput/flowSomDf.csv'))
-  df[, "flowsom_cell_populations"] <- flowsom_cell_populations
-
-  for (cluster in unique(df[, "clusters_flowsom"])) {
-    cell_population <-
-      unique(df[df[, "clusters_flowsom"] == cluster,]$flowsom_cell_populations)
-    cell_population <-
-      cell_population[cell_population != "Unlabeled"]
-
-    if (length(cell_population) == 1) {
-      df[df[, "clusters_flowsom"] == cluster, "flowsom_cell_populations_updated"] <-
-        as.character(cell_population)
-    } else {
-      df[df[, "clusters_flowsom"] == cluster, "flowsom_cell_populations_updated"] <-
-        df[df[, "clusters_flowsom"] == cluster, "flowsom_cell_populations"]
-    }
-  }
-
-  write.csv(df,
-            paste0("data/", directory, '/clusteringOutput/flowSomDf.csv'),
-            row.names = FALSE)
-}
-
 calculateClusterMarkers <-
-  function(directoryName,
+  function(df, directoryName,
            clusterName,
            columnNames,
            cutoff,
            markersOrCell = "CellPopulations") {
-    if (clusterName == "clusters_flowsom" |
-        clusterName == "meta_clusters_flowsom") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/flowSomDf.csv"
-        ))
-    } else if (clusterName == "clusters_phenograph") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/phenographDf.csv"
-        ))
-    } else if (clusterName == "clusters_fast_pg") {
-      df <-
-        read.csv(paste0("data/", directoryName, "/clusteringOutput/fastPGDf.csv"))
-    }
 
     columnNamesMedian <- paste0(columnNames, "_median")
     columnNamesPositive <- paste0(columnNames, "_positive")
@@ -3590,9 +3406,9 @@ calculateClusterMarkers <-
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
-          IgD...PerCP.Cy5.5.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "IgD...PerCP.Cy5.5.A_positive"] &
-            CD24...BV605.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD24...BV605.A_positive"] &
-            CD27...BV650.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27...BV650.A_positive"]
+          IgD_positive == cellPopulationMarkers[cellPopulationMarkersRow, "IgD_positive"] &
+            CD24_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD24_positive"] &
+            CD27_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27_positive"]
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
@@ -3600,10 +3416,11 @@ calculateClusterMarkers <-
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
-          CD11b...17BV421.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b...17BV421.A_positive"] &
-            CD11b.activated...PE.Cy7.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b.activated...PE.Cy7.A_positive"] &
-            CD14...BV605.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD14...BV605.A_positive"] &
-            CD16...PE.CF595.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD16...PE.CF595.A_positive"]
+          HLA_DR_positive == cellPopulationMarkers[cellPopulationMarkersRow, "HLA_DR_positive"] &
+          CD11b_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b_positive"] &
+            CD11b_activated_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b_activated_positive"] &
+            CD14_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD14_positive"] &
+            CD16_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD16_positive"]
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
@@ -3611,12 +3428,12 @@ calculateClusterMarkers <-
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
-          CD127.BV510.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD127.BV510.A_positive"] &
-            CD8.BV650.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8.BV650.A_positive"] &
-            CD25.BV786.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD25.BV786.A_positive"] &
-            FoxP3.PE.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "FoxP3.PE.A_positive"] &
-            CD45RO.PE.CF595.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RO.PE.CF595.A_positive"] &
-            CD4.PerCP.Cy5.5.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4.PerCP.Cy5.5.A_positive"]
+          CD127_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD127_positive"] &
+            CD8_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8_positive"] &
+            CD25_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD25_positive"] &
+            FoxP3_positive == cellPopulationMarkers[cellPopulationMarkersRow, "FoxP3_positive"] &
+            CD45RO_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RO_positive"] &
+            CD4_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4_positive"]
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
@@ -3624,13 +3441,13 @@ calculateClusterMarkers <-
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
-          CD27.BV421.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27.BV421.A_positive"] &
-            CD45RA.BV605.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RA.BV605.A_positive"] &
-            CD28.BV785.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD28.BV785.A_positive"] &
-            KLRG1.PE.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "KLRG1.PE.A_positive"] &
-            CD4.PE.CF594.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4.PE.CF594.A_positive"] &
-            CCR7.PE.Cy7.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CCR7.PE.Cy7.A_positive"] &
-            CD8.PerCP.Cy5.5.A_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8.PerCP.Cy5.5.A_positive"]
+          CD27_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27_positive"] &
+            CD45RA_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RA_positive"] &
+            CD28_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD28_positive"] &
+            KLRG1_positive == cellPopulationMarkers[cellPopulationMarkersRow, "KLRG1_positive"] &
+            CD4_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4_positive"] &
+            CCR7_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CCR7_positive"] &
+            CD8_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8_positive"]
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
@@ -3662,107 +3479,6 @@ calculateClusterMarkers <-
       ),
       row.names = FALSE
     )
-  }
-
-
-calculateVarianceWithinClusters <-
-  function(directoryName,
-           columnNames,
-           clusterName,
-           numberOfClusters = NA) {
-    if (clusterName == "meta_clusters_flowsom") {
-      df <-
-        read.csv(
-          paste0(
-            "data/",
-            directoryName,
-            "/clusteringOutput/flowSomDf",
-            numberOfClusters,
-            ".csv"
-          )
-        )
-    } else if (clusterName == "clusters_flowsom") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/flowSomDf.csv"
-        ))
-    } else if (clusterName == "clusters_phenograph") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/phenographDf.csv"
-        ))
-    } else if (clusterName == "clusters_fast_pg") {
-      df <-
-        read.csv(paste0("data/", directoryName, "/clusteringOutput/fastPGDf.csv"))
-    }
-
-    df <- df[, c(columnNames, clusterName)]
-
-    #Function to calculate the total within-cluster variance for a model of k-classes
-    #df is a dataframe expected to contain only the columns used for clustering and a column indicating the allocated cluster (titled "clusters_flowsom")
-
-    calcVar <- function(df2) {
-      #Compute total variance across all clusters and predictor variables
-      totvar <- df2 %>%
-        group_by_at(clusterName) %>%                                 #Split clusters
-        dplyr::summarise(across(everything(), ~ var(.))) %>%      #Identify variance for each variable by cluster
-        ungroup() %>%                                             #Remove grouping by cluster
-        select(-paste(clusterName)) %>%                             #drop cluster identifying column
-        sum()                                                     #sum all variances
-
-      return(totvar)
-
-    }
-
-    frame <- list()
-    for (cluster in unique(df[, clusterName])) {
-      clusterDf <- df[df[, clusterName] == cluster,]
-      frame <- append(frame, list(clusterDf))
-    }
-
-    #Apply calcVar across a list of data.frames which individually detail each cluster allocation
-    clustVar <- sapply(frame, calcVar)
-
-    saveRDS(
-      clustVar,
-      paste0(
-        "data/",
-        directoryName,
-        "/clusteringOutput/",
-        clusterName,
-        numberOfClusters,
-        "flowSomDf.rds"
-      )
-    )
-
-    figureDirectory <- paste0("data/", directoryName, "/figures/")
-
-    jpeg(file = paste0(
-      figureDirectory,
-      "elbowPlot",
-      clusterName,
-      numberOfClusters,
-      ".jpeg"
-    ))
-    #Plot the elbow plot across variances from clustVar
-    elbow_plot <-
-      ggplot(data.frame(clustVar),
-             aes(
-               x = as.factor(1:length(clustVar)),
-               y = clustVar,
-               group = 1
-             )) +
-      geom_point() +
-      geom_line() +
-      xlab("Number of clusters") +
-      ylab("Sum of within-cluster variance") +
-      theme_bw()
-    try(print(elbow_plot))
-    dev.off()
   }
 
 consolidateFlowSomClusters <-
@@ -3825,19 +3541,17 @@ elbowPlot <-
           "data/",
           directoryName,
           "/clusteringOutput/",
-          "flowSomDfAllMetaClusters.csv"
+          "clusteringOutputs.csv"
         )
-        #, nrows = 100000
       )
-
-    head(df)
 
     data <- df[, columnNames]
     data[, "ID"] <- row.names(data)
     data <- data[, c("ID", columnNames)]
     head(data)
 
-    clust <- df[, !colnames(df) %in% columnNames]
+    clust <- df[, paste0("meta_clusters_flowsom", numberOfClusters)]
+
     colnames(clust) <- numberOfClusters
     clustColnames <- colnames(clust)
     clust[, "ID"] <- row.names(clust)
@@ -3845,9 +3559,16 @@ elbowPlot <-
     clust <- clust[, c("ID", "1", clustColnames)]
     head(clust)
 
+    edist <- function(x) {
+      xmean <- mean(x)
+      x <- x - xmean
+      x <- x^2
+      return(x)
+    }
+
     calcVar <- function(clust, data, clust_ID) {
       clust_wIDs <-
-        data.frame(clust_ID, clust) #Recombine the clust_ID and clust vectors into a dataframe
+        data.frame(clust_ID, clust) #Recombine the clust_ID and clust vectors into a datafram
       colnames(clust_wIDs) <-
         c("ID", "clust") #Rename to appropriate names
 
@@ -3863,11 +3584,13 @@ elbowPlot <-
       totvar <- df %>%
         select(-ID) %>%                                           #Drop the ID column
         group_by(clust) %>%                                       #group by clusters
-        dplyr::summarise(across(everything(), ~ var(.))) %>%      #Identify variance for each variable by cluster
+        dplyr::summarise(across(everything(), ~ edist(.))) %>%      #Identify variance for each variable by cluster
         ungroup() %>%                                             #Remove grouping by cluster
         select(-clust)                                       #drop cluster identifying column
 
-      totvar <- sum(totvar ^ 2) #square and sum all variance
+      print(colSums(totvar))
+
+      totvar <- sum(totvar) #square and sum all variance
 
       return(totvar)                                              #Return total within-cluster variances for this clustering solution
 
@@ -3890,7 +3613,7 @@ elbowPlot <-
       geom_point() +
       geom_line() +
       xlab("Number of clusters") +
-      ylab("Sum of squared within-cluster variance") +
+      ylab("Sum of squared distances") +
       theme_bw() +
       theme(axis.text.x = element_text(
         angle = 45,
@@ -3920,31 +3643,7 @@ generateHeatmap <-
     # directoryName <- "bCells"
     # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
     # markersOrCell <- "Markers"
-    if (clusterName == "meta_clusters_flowsom") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/flowSomDf.csv"
-        ))
-    } else if (clusterName == "clusters_flowsom") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/flowSomDf.csv"
-        ))
-    } else if (clusterName == "clusters_phenograph") {
-      df <-
-        read.csv(paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/phenographDf.csv"
-        ))
-    } else if (clusterName == "clusters_fast_pg") {
-      df <-
-        read.csv(paste0("data/", directoryName, "/clusteringOutput/fastPGDf.csv"))
-    }
+    df <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
 
     cellPopulationMarkers <-
       read.csv(
@@ -3986,9 +3685,6 @@ generateHeatmap <-
     df <- df[df[, "clusters"] %in% populations[, clusterName], ]
     populations <-
       populations[populations[, clusterName] %in% df[, "clusters"], ]
-
-    df[, 1:length(columnNames)] <-
-      scale(df[, 1:length(columnNames)])
 
     jpeg(file = paste0(figureDirectory,
                        "na.jpeg"))

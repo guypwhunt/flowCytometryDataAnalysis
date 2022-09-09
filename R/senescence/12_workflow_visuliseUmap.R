@@ -4,6 +4,6 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 directoryName <- "senescence"
-columnNames <- senescenceColumnNames
+columnNames <- senescenceClusteringColumnNames
 
-convertToDataFrame(directoryName, columnNames)
+visuliseUmap(directoryName, columnNames)

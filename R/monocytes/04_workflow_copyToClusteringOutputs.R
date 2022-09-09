@@ -4,6 +4,5 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 directoryName <- "monocytes"
-columnNames <- monocytesColumnNames
 
-convertToDataFrame(directoryName, columnNames)
+copyToClusteringOutput(directoryName)

@@ -4,6 +4,5 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 directoryName <- "tCells"
-columnNames <- tCellsColumnNames
 
-convertToDataFrame(directoryName, columnNames)
+convertToFCS(directoryName)

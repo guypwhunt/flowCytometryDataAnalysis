@@ -1,33 +1,16 @@
-# https://bioconductor.org/packages/devel/bioc/vignettes/diffcyt/inst/doc/diffcyt_workflow.html
 try(source("R/01_functions.R"))
+try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-# variables
 directoryName <- "bCells"
-columnNames <-
-  c(
-    "CD27...BV650.A",
-    "CD24...BV605.A",
-    "IgD...PerCP.Cy5.5.A"
-  )
+columnNames <- bCellsClusteringColumnNames
 
-prettyColumnNames <-
-  c(
-    "CD27",
-    "CD24",
-    "IgD"
-  )
+prettyColumnNames <- bCellsClusteringColumnNames
 
-clusterNames <-
-  c(
-    "clusters_flowsom",
-    "clusters_phenograph",
-    "clusters_fast_pg",
-    "meta_clusters_flowsom"
-  )
+clusterNames <- clusterColumns
 
-markersOrCells <- c("CellPopulations", "Markers", "Cluster")
+markersOrCells <- markersOrCellsClassification
 
 markerType <- "Phenotypic"
 
@@ -47,13 +30,11 @@ markerType <- "Functional"
 
 columnNames <-
   c(
-    "GPR32...AF488.A",
-    "FPRL1...AF647.A"
+    "GPR32"
   )
 
 prettyColumnNames <-   c(
-  "GPR32",
-  "FPRL1"
+  "GPR32"
 )
 
 for (markersOrCell in markersOrCells) {

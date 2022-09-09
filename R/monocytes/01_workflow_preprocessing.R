@@ -1,11 +1,11 @@
 try(source("R/01_functions.R"))
+try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-monocytesDirectoryName <- "monocytes"
-monocytesColumnNames <- c(
+directoryName <- "monocytes"
+columnNames <- c(
   "GPR32...AF488.A",
-  "FPRL1...AF647.A",
   "CD11b...17BV421.A",
   "CD14...BV605.A",
   "HLA.Dr...BV650.A",
@@ -14,17 +14,18 @@ monocytesColumnNames <- c(
   "Zombie.NIR.A"
 )
 
-automatedcofactors <- c(130.957690, 3.820902, 28828.722419, 41.415505,
+prettyColumnNames <- c("GPR32", "CD11b","CD14", "HLA_DR","CD16", "CD11b_activated", "Zombie")
+
+automatedcofactors <- c(130.957690, 28828.722419, 41.415505,
                         1194.595206, 10.386289, 32.117761, 932.989806)
 
 test <- FALSE
-
-directoryName <- monocytesDirectoryName
-columnNames <- monocytesColumnNames
-gateColumns <- data.frame (CD14...BV605.A  = c(0),
-                           CD16...PE.CF595.A = c(0))
 gate <- TRUE
 gateTogether <- TRUE
 
-preprocessing(directoryName, columnNames, test, gate, gateTogether,
-              gateColumns, automatedcofactors = NULL)
+gateColumns <- data.frame (CD14  = c(0),
+                           CD16 = c(0))
+
+preprocessing(directoryName, columnNames, prettyColumnNames,
+              test, gate, gateTogether, gateColumns,
+              automatedcofactors = automatedcofactors)

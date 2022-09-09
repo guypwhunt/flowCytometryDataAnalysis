@@ -4,6 +4,5 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 directoryName <- "bCells"
-columnNames <- bCellsColumnNames
 
-convertToDataFrame(directoryName, columnNames)
+copyToClusteringOutput(directoryName)
