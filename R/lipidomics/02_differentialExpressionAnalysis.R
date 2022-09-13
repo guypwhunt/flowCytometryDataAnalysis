@@ -1,6 +1,8 @@
 library(limma)
 library(umap)
 
+adjustment <- "fdr"
+
 ex <- read.csv(
   "data/lipidomics/normalisedasinhTransformedExpressionDataRawOutliersAndDuplicatesRemoved.csv", row.names = 1
 )
@@ -54,7 +56,7 @@ performDifferentialExpression <-
     # Build histogram of P-values for all genes. Normal test
     # assumption is that most genes are not differentially expressed.
     tT2 <- topTable(fit2,
-                    adjust = "fdr",
+                    adjust = adjustment,
                     sort.by = "B",
                     number = Inf)
 
@@ -83,7 +85,7 @@ performDifferentialExpression <-
     gc()
 
     # summarize test results as "up", "down" or "not expressed"
-    dT <- decideTests(fit2, adjust.method = "fdr", p.value = 0.05)
+    dT <- decideTests(fit2, adjust.method = adjustment, p.value = 0.05)
 
 
     jpeg(file = paste0(figureDirectory,
@@ -145,7 +147,7 @@ performDifferentialExpression <-
 
       tT <- topTable(
         fit2,
-        adjust = "fdr",
+        adjust = adjustment,
         sort.by = "P",
         number = 10,
         coef = n
@@ -333,14 +335,14 @@ experimentName <- "BulbarVsLimb"
 design <- model.matrix(
   ~ 0
   + group
-  #+ ageAtSample
-  #+ ethnicity
-  #+ gender
-  #+ sampleStorageDays
-  #+ statinUse
+  + ageAtSample
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
   #+ timeFromEarlySampleInDays
-  #+ timeFromOnsetToVisitInDays
-  #+ fastSlow
+  + timeFromOnsetToVisitInDays
+  + fastSlow
   ,
   nonControlClinical
 )

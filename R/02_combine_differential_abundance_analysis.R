@@ -1,23 +1,21 @@
 try(source("R/01_functions.R"))
+try(source("R/00_datasets.R"))
 
 loadlibraries()
 
 # Define if it is Differential States or Differential Abundance Aanlaysis
-clusterNames <-
-  c(
-    "clusters_flowsom",
-    "clusters_phenograph",
-    "clusters_fast_pg",
-    "meta_clusters_flowsom"
-  )
+clusterNames <- clusterColumns
 
 # clusterName <- clusterNames[4]
+# clusterNames <- clusterNames[3]
 
-markersOrCells <- c("Clusters", "CellPopulations", "Markers")
+markersOrCells <- markersOrCellsClassification
 
 # markersOrCell <- markersOrCells[1]
+# markersOrCells <- markersOrCells[3]
 
-n.cores <- 19
+
+n.cores <- 10
 my.cluster <- parallel::makeCluster(n.cores)
 doParallel::registerDoParallel(cl = my.cluster)
 foreach::getDoParRegistered()

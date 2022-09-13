@@ -19,10 +19,11 @@ markerType <- "Phenotypic"
 #markersOrCellS <- c(markersOrCells[3])
 #markersOrCell <- c(markersOrCells[1])
 
+df <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
 
 for (markersOrCell in markersOrCells) {
   for (clusterName in clusterNames) {
-    generateHeatmap(clusterName, directoryName, columnNames, markersOrCell, markerType, prettyColumnNames)
+    generateHeatmap(df, clusterName, directoryName, columnNames, markersOrCell, markerType, prettyColumnNames)
   }
 }
 
@@ -39,6 +40,6 @@ prettyColumnNames <-   c(
 
 for (markersOrCell in markersOrCells) {
   for (clusterName in clusterNames) {
-    generateHeatmap(clusterName, directoryName, columnNames, markersOrCell, markerType, prettyColumnNames)
+    generateHeatmap(df, clusterName, directoryName, columnNames, markersOrCell, markerType, prettyColumnNames)
   }
 }

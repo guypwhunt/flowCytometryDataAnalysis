@@ -3,8 +3,8 @@ try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-directoryName <- append("fileName", "senescence")
-columnNames <- senescenceColumnNames
+directoryName <- "senescence"
+columnNames <- append("fileName", senescenceColumnNames)
 
 markersOrCells <- markersOrCellsClassification
 
@@ -12,11 +12,9 @@ clusterNames <- clusterColumns
 
 # clusterName <- clusterNames[1]
 # markersOrCell <- markersOrCells[2]
-
-n.cores <- 10
 my.cluster <- parallel::makeCluster(
   n.cores
-  )
+)
 doParallel::registerDoParallel(cl = my.cluster)
 foreach::getDoParRegistered()
 foreach::getDoParWorkers()

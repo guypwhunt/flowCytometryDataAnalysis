@@ -1,3 +1,4 @@
+library(limma)
 ex <-
   read.csv("data/lipidomics/expressionDataRaw.csv", row.names = 1)
 
@@ -24,21 +25,12 @@ outliers <-
   append(
     outliers,
     c(
-      "H10",
-      "H3",
-      "H1",
       "H9",
       "H8",
-      "H4",
       "H5",
       "H2",
-      "H6",
-      "FE10",
-      "FE5",
-      "FL10",
-      "FL5",
-      "SE5",
-      "SL5"
+      "H6"
+
     )
   )
 

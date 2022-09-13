@@ -8,7 +8,7 @@ loadlibraries()
 directoryName <- "senescence"
 columnNames <- senescenceClusteringColumnNames
 
-cutoff <- c(0.5,0.5,0.5,0.5,0.5,0.5,0.5)
+cutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
 
 markersOrCells <- c("CellPopulations", "Markers")
 

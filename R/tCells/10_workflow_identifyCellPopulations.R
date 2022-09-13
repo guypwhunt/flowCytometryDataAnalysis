@@ -8,7 +8,7 @@ loadlibraries()
 directoryName <- "tCells"
 columnNames <- tCellsClusteringColumnNames
 
-cutoff <- c(0.5,0.5,0.5,0.5,0.5,0.5)
+cutoff <- c(0.5,0.6,0.5,0.4,0.5,0.6)
 
 markersOrCells <- c("CellPopulations", "Markers")
 

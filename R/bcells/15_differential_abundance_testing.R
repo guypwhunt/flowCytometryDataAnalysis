@@ -12,8 +12,6 @@ clusterNames <-  clusterColumns
 
 # clusterName <- clusterNames[1]
 # markersOrCell <- markersOrCells[2]
-
-n.cores <- 10
 my.cluster <- parallel::makeCluster(
   n.cores
   )
