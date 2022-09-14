@@ -14,18 +14,12 @@ markersOrCells <- markersOrCellsClassification
 # markersOrCell <- markersOrCells[1]
 # markersOrCells <- markersOrCells[3]
 
-
-n.cores <- 10
 my.cluster <- parallel::makeCluster(n.cores)
 doParallel::registerDoParallel(cl = my.cluster)
 foreach::getDoParRegistered()
 foreach::getDoParWorkers()
 
-foreach(clusterName = clusterNames) %dopar% {
-  try(source("R/01_functions.R"))
-
-  loadlibraries()
-
+foreach(clusterName = clusterNames) %:%
   foreach(markersOrCell = markersOrCells) %dopar% {
     try(source("R/01_functions.R"))
 
@@ -363,4 +357,3 @@ foreach(clusterName = clusterNames) %dopar% {
     recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
   }
-}

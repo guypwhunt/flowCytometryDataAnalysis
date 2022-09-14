@@ -30,10 +30,8 @@ numberOfClusters <- seq(3,20)
 knn <- 50
 
 # Viuslisisation Inputs
-clusterColumns <- c(#"clusters_flowsom", "meta_clusters_flowsom", "clusters_fast_pg",
-  "clusters_phenograph")
-markersOrCellsClassification <- c(#"Clusters", "Markers",
-  "CellPopulations")
+clusterColumns <- c("clusters_flowsom", "meta_clusters_flowsom", "clusters_fast_pg","clusters_phenograph")
+markersOrCellsClassification <- c("Clusters", "Markers", "CellPopulations")
 
 # Parallel inputs
-n.cores <- 2
+n.cores <- 11

@@ -21,12 +21,7 @@ foreach::getDoParWorkers()
 
 df <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
 
-foreach(clusterName = clusterNames) %dopar% {
-  try(source("R/01_functions.R"))
-  try(source("R/00_datasets.R"))
-
-  loadlibraries()
-
+foreach(clusterName = clusterNames)%:%
   foreach(markersOrCell = markersOrCells) %dopar% {
     try(source("R/01_functions.R"))
     try(source("R/00_datasets.R"))
@@ -34,4 +29,3 @@ foreach(clusterName = clusterNames) %dopar% {
     loadlibraries()
     performAllDifferentialAbundanceTests(df, directoryName, columnNames, clusterName, markersOrCell)
   }
-}

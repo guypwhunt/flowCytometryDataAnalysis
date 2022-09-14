@@ -8,7 +8,7 @@ ex <- read.csv(
 )
 
 clinical <-
-  read.csv("data/lipidomics/clinicalData.csv", row.names = 1)
+  read.csv("data/metadata/lipidomicsclinicalData.csv", row.names = 1)
 
 ex <- ex[, order(colnames(ex))]
 

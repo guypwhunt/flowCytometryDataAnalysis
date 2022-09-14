@@ -2396,6 +2396,8 @@ differentialAbundanceAnalysis <- function(df,
   # Filter df for samples
   df <- df[df[, "fileName"] %in% experimentInfo[, "sample_id"], ]
 
+  colnames(experimentInfo)[1] <- "fileID"
+
   if (markersOrCell != "Clusters") {
     df <-
       merge(df,
@@ -2404,12 +2406,27 @@ differentialAbundanceAnalysis <- function(df,
             all.x = TRUE)
   }
 
+  df <-
+    merge(df,
+          experimentInfo[, c("sample_id", "fileID")],
+          by.x = "fileName",
+          by.y = "sample_id",
+          all.x = TRUE)
+
   # Filter df for samples
   experimentInfo <-
     experimentInfo[experimentInfo[, "sample_id"] %in% df[, "fileName"],]
 
+  # Reorder df and experiemnt info
+  df <- df[order(df[, "fileName"]), ]
+  experimentInfo <-
+    experimentInfo[order(experimentInfo[, "sample_id"]), ]
+
+  # Check df and experiment data are in the same order
+  all(unique(df[, "fileName"]) == unique(experimentInfo[, "sample_id"]))
+
   # Extract only the relevant columns
-  minimalDf <- df[, c(columnNames)]
+  minimalDf <- df[, c(clusterName, "fileID", columnNames)]
 
   # split the dataframe into a dataframe for each file
   listOfDfs <- list()
@@ -2421,32 +2438,57 @@ differentialAbundanceAnalysis <- function(df,
   }
 
   # Create marker information
-  markerColumnNames <- columnNames[columnNames != "fileName"]
+  markerColumnNames <- c(clusterName, "fileID", columnNames[columnNames != "fileName"])
   markerInformation <- data.frame(markerColumnNames)
   markerInformation[, "channel_name"] <- markerColumnNames
   markerInformation[, "marker_name"] <- markerColumnNames
   markerInformation[, "marker_class"] <-
-    c(rep("type", length(markerColumnNames) - 1), rep("state", 1))
+    c(rep("none", 2),
+      rep("type", length(columnNames) - 2),
+      rep("state", 1))
   markerInformation <-
     markerInformation[, 2:ncol(markerInformation)]
+  markerInformation[, "marker_class"] <- as.factor(
+    markerInformation[, "marker_class"])
 
   # Transform the input into the correct format
   d_se <- prepareData(listOfDfs, experimentInfo, markerInformation)
+  rowData(d_se)[, "file_ID"] <- assay(d_se)[, "fileID"]
+  rowData(d_se)[, "row_ID"] <- rownames(rowData(d_se))
+
+  head(rowData(d_se))
+
+  # Test Experiment data was created successfully
+  all(rowData(d_se)[, "file_ID"] == assay(d_se)[, "fileID"])
+
   if (singleCluster) {
     rowData(d_se)[, "cluster_id"] <- 1
     clusterType <- "AllCells"
   } else if (markersOrCell != "Clusters") {
-    rowData(d_se)[, "cluster_id"] <- df[, "cell_population"]
+    rowData(d_se)[, "clusterID"] <- assay(d_se)[, clusterName]
+    rowData(d_se) <- merge(rowData(d_se),
+                           cellPopulationMarkers[, c(clusterName, "cell_population")],
+                           by.x = "clusterID", by.y = clusterName,
+                           all.x = TRUE)
+    rowData(d_se)[, "cluster_id"] <- rowData(d_se)[, "cell_population"]
+
+    rowData(d_se) <- rowData(d_se)[order(as.integer(
+                                         rowData(d_se)[, "row_ID"])), ]
+
     clusterType <- markersOrCell
   } else {
-    rowData(d_se)[, "cluster_id"] <- df[, clusterName]
+    rowData(d_se)[, "cluster_id"] <- assay(d_se)[, clusterName]
     clusterType <- markersOrCell
   }
 
+  all(rowData(d_se)[, "file_ID"] == assay(d_se)[, "fileID"])
+
+  rowData(d_se)[, "cluster_id"] <- as.factor(rowData(d_se)[, "cluster_id"])
+
   # Calculate cluster cell counts
   d_counts <- calcCounts(d_se)
-  rowData(d_counts)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
+  #rowData(d_counts)[, "cluster_id"] <-
+  #  as.factor(rownames(rowData(d_counts)))
 
   if (calculateSampleContributionsToClusters) {
     # Transform the cluster cell counts into a plotable format
@@ -2505,8 +2547,8 @@ differentialAbundanceAnalysis <- function(df,
 
   # Calculate cluster medians
   d_medians <- calcMedians(d_se)
-  rowData(d_medians)[, "cluster_id"] <-
-    as.factor(rownames(rowData(d_counts)))
+  #rowData(d_medians)[, "cluster_id"] <-
+  #  as.factor(rownames(rowData(d_counts)))
 
   # Create experiment design
   design <-
@@ -3146,6 +3188,82 @@ performAllDifferentialAbundanceTests <-
       return(NA)
     })
 
+    ### Visit 2 vs Visit 3 for visit 1 & 3 for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "visit"
+    visits <- c(2, 3)
+    cases <- c("Case")
+    covariants <-
+      c(
+        "ageAtVisit",
+        "gender",
+        "ethnicity",
+        "fastSlow",
+        "bulbarLimb",
+        "timeFromOnsetToVisitInDays"
+      )
+    singleCluster <- FALSE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = "",
+        blocking = TRUE
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+
+    ### Visit 2 vs Visit 3 for visit 1 & 3 for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = "",
+        blocking = TRUE
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
 
     ### Visit 1 vs Visit 3 for visit 1 & 3 for clusters
     samplesContributionToClustersThreshold <- 10
@@ -3194,83 +3312,6 @@ performAllDifferentialAbundanceTests <-
 
 
     ### Visit 1 vs Visit 3 for visit 1 & 3 for all cells
-    singleCluster <- TRUE
-
-    tryCatch({
-      differentialAbundanceAnalysis(
-        df = df,
-        directoryName = directoryName,
-        columnNames = columnNames,
-        clusterName = clusterName,
-        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
-        differentialAbundanceThreshold = differentialAbundanceThreshold,
-        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
-        group_id = group_id,
-        visits = visits,
-        cases = cases,
-        covariants = covariants,
-        singleCluster = singleCluster,
-        markersOrCell = markersOrCell,
-        progression = "",
-        blocking = TRUE
-      )
-    },
-    error = function(cond) {
-      message(cond)
-      setwd("..")
-      setwd("..")
-      # Choose a return value in case of error
-      return(NA)
-    })
-
-
-    ### Visit 2 vs Visit 3 for visit 1 & 3 for clusters
-    samplesContributionToClustersThreshold <- 10
-    differentialAbundanceThreshold <- 0.05
-    calculateSampleContributionsToClusters <- FALSE
-    group_id <- "visit"
-    visits <- c(2, 3)
-    cases <- c("Case")
-    covariants <-
-      c(
-        "ageAtVisit",
-        "gender",
-        "ethnicity",
-        "fastSlow",
-        "bulbarLimb",
-        "timeFromOnsetToVisitInDays"
-      )
-    singleCluster <- FALSE
-
-    tryCatch({
-      differentialAbundanceAnalysis(
-        df = df,
-        directoryName = directoryName,
-        columnNames = columnNames,
-        clusterName = clusterName,
-        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
-        differentialAbundanceThreshold = differentialAbundanceThreshold,
-        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
-        group_id = group_id,
-        visits = visits,
-        cases = cases,
-        covariants = covariants,
-        singleCluster = singleCluster,
-        markersOrCell = markersOrCell,
-        progression = "",
-        blocking = TRUE
-      )
-    },
-    error = function(cond) {
-      message(cond)
-      setwd("..")
-      setwd("..")
-      # Choose a return value in case of error
-      return(NA)
-    })
-
-
-    ### Visit 2 vs Visit 3 for visit 1 & 3 for all cells
     singleCluster <- TRUE
 
     tryCatch({
@@ -3351,7 +3392,9 @@ recalculatePValueAdjustments <-
               merge(df,
                     cellPopulations[c(clusterName, "cell_population")],
                     by.x = "cluster_id",
-                    by.y = clusterName)
+                    by.y = clusterName,
+                    all.x=TRUE
+                    )
 
             df[, "typeOfCells"] <- df[, "cell_population"]
 
@@ -3384,13 +3427,19 @@ recalculatePValueAdjustments <-
             cellPopulations <-
               merge(markerPopulations[c(clusterName, "marker_population")],
                     cellPopulations[c(clusterName, "cell_population")],
-                    by = clusterName)
+                    by = clusterName,
+                    all.x = TRUE
+                    )
+
+            cellPopulations <- cellPopulations[!duplicated(cellPopulations[, c("marker_population", "cell_population")]),]
 
             df <-
               merge(df,
                     cellPopulations[c("marker_population", "cell_population")],
                     by.x = "cluster_id",
-                    by.y = "marker_population")
+                    by.y = "marker_population",
+                    all.x = TRUE
+                    )
 
             df[, "typeOfCells"] <- df[, "cell_population"]
 
@@ -3927,7 +3976,8 @@ generateHeatmap <-
       "marker_population"
 
     populations <-
-      merge(cellPopulationMarkers, markerPopulationMarkers, by = clusterName)
+      merge(cellPopulationMarkers, markerPopulationMarkers, by = clusterName,
+            all.x = TRUE)
 
     populations <-
       populations[, c(clusterName, "cell_population", "marker_population")]
