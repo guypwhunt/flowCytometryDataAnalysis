@@ -15,8 +15,8 @@ columnNames <- c("CD27.BV421.A",
                  "Zombie.NIR.A"
 )
 
-prettyColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
-                       "CD8", "CCR7", "GPR32", "Zombie")
+prettyColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4", "CD8",
+                       "CCR7", "GPR32", "Zombie")
 
 automatedcofactors <- c(5975.868290, 4937.436002, 41.415505, 0.361972, 8742.139346, 1500,
                         25.120859, 45.300406, 105.314192)

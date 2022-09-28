@@ -7,9 +7,19 @@ workingDirectory <- getwd()
 directoryNames <- c("senescence_FMO")
 
 columnNames <-
-  c("GPR32.AF488.A",
-    "FPRL1.AF647.A")
-automatedcofactors <- c(45.30041, 101.9894)
+  c("CD27.BV421.A",
+    "CD45RA.BV605.A",
+    "CD28.BV785.A",
+    "KLRG1.PE.A",
+    "CD4.PE.CF594.A",
+    "CD8.PerCP.Cy5.5.A",
+    "CCR7.PE.Cy7.A",
+    "GPR32.AF488.A",
+    "Zombie.NIR.A"
+  )
+
+automatedcofactors <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4", "CD8",
+                        "CCR7", "GPR32", "Zombie")
 
 for (directoryName in directoryNames) {
   setwd(paste0("./data/isotypes/", directoryName))
@@ -17,6 +27,8 @@ for (directoryName in directoryNames) {
   # Create an 'output' folder
   gc()
   dir.create("results", showWarnings = FALSE)
+  dir.create("transformedData", showWarnings = FALSE)
+
   gc()
 
   # Find file names of .csv files in the current working directory:
@@ -82,17 +94,36 @@ for (directoryName in directoryNames) {
   dfs_fs <- as(dfs_ff, "flowSet")
 
   #auto
-  dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = columnNames,
-                               cofactor = automatedcofactors)
+  dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = colnames(dfs_fs),
+                               cofactor = rep(150, length(colnames(dfs_fs))))
 
+  n <- 1
+  saveFlowSetAsCsv <- function(df, columnNames, filenames) {
+    df <- as.data.frame(exprs(df))
+    write.csv(df[,columnNames], paste0("./transformedData/", filenames[n]), row.names = FALSE)
+    n <<- n +1
+  }
+
+  fsApply(dfs_fs_t_auto, saveFlowSetAsCsv, columnNames, filenames)
 
   # Pre-Normalized Plots
   flowViz.par.set(theme =  trellis.par.get(), reset = TRUE)
 
   figureDirectory <- paste0(getwd(), "/results/")
 
-  for (columnName in columnNames) {
+  for (columnName in colnames(dfs_fs)) {
     columnNameFormula <- as.formula(paste(" ~ ", columnName))
+
+    jpeg(file = paste0(
+      figureDirectory,
+      "rawDensityPlot",
+      str_replace_all(columnName, "\\.", ""),
+      ".jpeg"
+    ))
+    plot <-
+      densityplot(columnNameFormula, dfs_fs, main = "auto")
+    try(print(plot))
+    dev.off()
 
     jpeg(file = paste0(
       figureDirectory,
@@ -106,6 +137,7 @@ for (directoryName in directoryNames) {
     dev.off()
     gc()
   }
+
 
   tryCatch({
     setwd(workingDirectory)

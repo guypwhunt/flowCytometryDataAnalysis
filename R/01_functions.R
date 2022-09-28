@@ -128,6 +128,7 @@ loadlibraries <- function() {
   try(require(vegan))
   try(library(apcluster))
   try(library(mclust))
+  try(library(readxl))
 }
 
 ungzipFiles <- function() {
@@ -173,6 +174,64 @@ gzipFiles <- function() {
   setwd(workingDirectory)
 
   gc()
+}
+
+rawDensityPlots <- function(directoryName,
+                          columnNames,
+                          prettyColumnNames) {
+  workingDirectory <- getwd()
+
+  setwd(paste0("./data/", directoryName))
+
+    # Find file names of .csv files in the current working directory:
+  filenames <- list.files(pattern = ".csv")
+
+  dfs <- lapply(filenames, read.csv,
+                   sep = ",",
+                   header = TRUE,
+                   stringsAsFactors = FALSE)
+
+  df <- bind_rows(dfs)
+
+  df <- df[, columnNames]
+
+  colnames(df) <- prettyColumnNames
+
+  dir.create("figures", showWarnings = FALSE)
+
+  figureDirectory <- paste0(getwd(), "/figures/")
+
+  for (columnName in prettyColumnNames) {
+    jpeg(file = paste0(figureDirectory,
+                       "rawCombinedDensityPlot",
+                       columnName,
+                       ".jpeg"))
+    d <- density(df[, columnName])
+    print(plot(d))
+    dev.off()
+  }
+
+  i <- 1
+  for (columnName in prettyColumnNames) {
+    jpeg(file = paste0(figureDirectory,
+                       "linearPlusLogCombinedDensityPlot",
+                       columnName,
+                       ".jpeg"))
+    x <- df[, columnName]
+    x[x > automatedcofactors[i]] <- asinh(x[x > automatedcofactors[i]]) + automatedcofactors[i]
+
+    d <- density(x)
+    print(plot(d))
+    dev.off()
+  }
+
+  tryCatch({
+    setwd(workingDirectory)
+  },
+  error = function(cond) {
+    setwd("..")
+    setwd("..")
+  })
 }
 
 preprocessing <- function(directoryName,
@@ -534,6 +593,8 @@ convertToDataFrame <- function(directoryName, columnNames) {
       outliersMinMaxDf[outliersMinMaxDf[, col] >= min(ninetyNinthQuantile) &
                          outliersMinMaxDf[, col] <= max(ninetyNinthQuantile),]
   }
+
+  columnNames <- columnNames[columnNames != "GPR32"]
 
   # plot out puts
   for (col in columnNames) {
@@ -2181,11 +2242,12 @@ differentialAbundanceAnalysis <- function(df,
                                           singleCluster,
                                           markersOrCell,
                                           progression = "",
+                                          siteOfOnset = "",
                                           blocking = NULL) {
   concatinatedVisits <- toString(visits)
 
   # Read experiment data
-  experimentInfo <- read.csv("data/metadata/metadata.csv")
+  experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
 
   if (markersOrCell != "Clusters") {
     cellPopulationMarkers <-
@@ -2352,6 +2414,13 @@ differentialAbundanceAnalysis <- function(df,
       experimentInfo[experimentInfo[, "fastSlow"] == progression |
                        experimentInfo[, "caseControl"] == "Control", ]
   }
+
+  siteOfOnset
+  if (siteOfOnset != "") {
+    experimentInfo <-
+      experimentInfo[experimentInfo[, "bulbarLimb"] == siteOfOnset |
+                       experimentInfo[, "caseControl"] == "Control", ]
+  }
   experimentInfo[, "group_id"] <- NA
   experimentInfo[, "patient_id"] <-
     factor(experimentInfo[, "patient_id"])
@@ -2423,7 +2492,7 @@ differentialAbundanceAnalysis <- function(df,
     experimentInfo[order(experimentInfo[, "sample_id"]), ]
 
   # Check df and experiment data are in the same order
-  all(unique(df[, "fileName"]) == unique(experimentInfo[, "sample_id"]))
+  message(all(unique(df[, "fileName"]) == unique(experimentInfo[, "sample_id"])))
 
   # Extract only the relevant columns
   minimalDf <- df[, c(clusterName, "fileID", columnNames)]
@@ -2459,7 +2528,7 @@ differentialAbundanceAnalysis <- function(df,
   head(rowData(d_se))
 
   # Test Experiment data was created successfully
-  all(rowData(d_se)[, "file_ID"] == assay(d_se)[, "fileID"])
+  message(all(rowData(d_se)[, "file_ID"] == assay(d_se)[, "fileID"]))
 
   if (singleCluster) {
     rowData(d_se)[, "cluster_id"] <- 1
@@ -2481,7 +2550,7 @@ differentialAbundanceAnalysis <- function(df,
     clusterType <- markersOrCell
   }
 
-  all(rowData(d_se)[, "file_ID"] == assay(d_se)[, "fileID"])
+  message(all(rowData(d_se)[, "file_ID"] == assay(d_se)[, "fileID"]))
 
   rowData(d_se)[, "cluster_id"] <- as.factor(rowData(d_se)[, "cluster_id"])
 
@@ -2576,6 +2645,7 @@ differentialAbundanceAnalysis <- function(df,
       "Visits",
       concatinatedVisits,
       progression,
+      siteOfOnset,
       clusterType,
       as.character(singleCluster)
     )
@@ -2617,6 +2687,7 @@ differentialAbundanceAnalysis <- function(df,
       "Visits",
       concatinatedVisits,
       progression,
+      siteOfOnset,
       clusterType,
       "DifferentialAbundanceManhattanPlot.jpeg"
     )
@@ -2632,6 +2703,7 @@ differentialAbundanceAnalysis <- function(df,
       "Visits",
       concatinatedVisits,
       progression,
+      siteOfOnset,
       clusterType,
       "DifferentialAbundanceVolcanoPlot.jpeg"
     )
@@ -2652,6 +2724,7 @@ differentialAbundanceAnalysis <- function(df,
     "Visits",
     concatinatedVisits,
     progression,
+    siteOfOnset,
     clusterType,
     as.character(singleCluster)
   )
@@ -2710,6 +2783,7 @@ differentialAbundanceAnalysis <- function(df,
       "Visits",
       concatinatedVisits,
       progression,
+      siteOfOnset,
       clusterType,
       "DifferentialStatesVolcanoPlot.jpeg"
     )
@@ -2724,6 +2798,7 @@ differentialAbundanceAnalysis <- function(df,
       "Visits",
       concatinatedVisits,
       progression,
+      siteOfOnset,
       clusterType,
       "DifferentialStatesManhattanPlot.jpeg"
     )
@@ -2740,6 +2815,7 @@ differentialAbundanceAnalysis <- function(df,
       "Visits",
       concatinatedVisits,
       progression,
+      siteOfOnset,
       clusterType
     )
   )
@@ -2786,7 +2862,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -2816,7 +2892,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -2854,7 +2930,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = progression,
+        progression = progression, siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -2884,7 +2960,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = progression,
+        progression = progression, siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -2922,10 +2998,10 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = progression,
+        progression = progression, siteOfOnset = "",
         blocking = NULL
       )
-    },
+      },
     error = function(cond) {
       message(cond)
       setwd("..")
@@ -2952,7 +3028,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = progression,
+        progression = progression, siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -2994,7 +3070,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -3025,7 +3101,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -3037,6 +3113,419 @@ performAllDifferentialAbundanceTests <-
       return(NA)
     })
 
+    ### Fast Bulbar Onset vs Controls for first visit for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "caseControl"
+    visits <- c(1)
+    cases <- c("Case", "Control")
+    covariants <- c("ageAtVisit", "gender", "ethnicity")
+    singleCluster <- FALSE
+    progression <- "Fast"
+    siteOfOnset <- "bulbar"
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Fast Bulbar Onset vs Controls for first visit for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Slow Bulbar Onset vs Controls for first visit for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "caseControl"
+    visits <- c(1)
+    cases <- c("Case", "Control")
+    covariants <- c("ageAtVisit", "gender", "ethnicity")
+    singleCluster <- FALSE
+    progression <- "Slow"
+    siteOfOnset <- "bulbar"
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Slow Bulbar Onset vs Controls for first visit for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Fast Limb Onset vs Controls for first visit for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "caseControl"
+    visits <- c(1)
+    cases <- c("Case", "Control")
+    covariants <- c("ageAtVisit", "gender", "ethnicity")
+    singleCluster <- FALSE
+    progression <- "Fast"
+    siteOfOnset <- "limb"
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Fast Limb Onset vs Controls for first visit for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Slow Limb Onset vs Controls for first visit for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "caseControl"
+    visits <- c(1)
+    cases <- c("Case", "Control")
+    covariants <- c("ageAtVisit", "gender", "ethnicity")
+    singleCluster <- FALSE
+    progression <- "Slow"
+    siteOfOnset <- "limb"
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Slow Limb Onset vs Controls for first visit for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Bulbar Onset vs Controls for first visit for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "caseControl"
+    visits <- c(1)
+    cases <- c("Case", "Control")
+    covariants <- c("ageAtVisit", "gender", "ethnicity")
+    singleCluster <- FALSE
+    progression <- ""
+    siteOfOnset <- "bulbar"
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Bulbar Onset vs Controls for first visit for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Limb onset vs Controls for first visit for clusters
+    samplesContributionToClustersThreshold <- 10
+    differentialAbundanceThreshold <- 0.05
+    calculateSampleContributionsToClusters <- FALSE
+    group_id <- "caseControl"
+    visits <- c(1)
+    cases <- c("Case", "Control")
+    covariants <- c("ageAtVisit", "gender", "ethnicity")
+    singleCluster <- FALSE
+    progression <- ""
+    siteOfOnset <- "limb"
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
+
+    ### Limb onset vs Controls for first visit for all cells
+    singleCluster <- TRUE
+
+    tryCatch({
+      differentialAbundanceAnalysis(
+        df = df,
+        directoryName = directoryName,
+        columnNames = columnNames,
+        clusterName = clusterName,
+        samplesContributionToClustersThreshold = samplesContributionToClustersThreshold,
+        differentialAbundanceThreshold = differentialAbundanceThreshold,
+        calculateSampleContributionsToClusters = calculateSampleContributionsToClusters,
+        group_id = group_id,
+        visits = visits,
+        cases = cases,
+        covariants = covariants,
+        singleCluster = singleCluster,
+        markersOrCell = markersOrCell,
+        progression = progression, siteOfOnset = siteOfOnset,
+        blocking = NULL
+      )
+    },
+    error = function(cond) {
+      message(cond)
+      setwd("..")
+      setwd("..")
+      # Choose a return value in case of error
+      return(NA)
+    })
 
     ### Bulbar vs Limb for first visit for clusters
     samplesContributionToClustersThreshold <- 10
@@ -3068,7 +3557,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -3099,7 +3588,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = NULL
       )
     },
@@ -3145,10 +3634,10 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = TRUE
       )
-    },
+      },
     error = function(cond) {
       message(cond)
       setwd("..")
@@ -3176,7 +3665,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = TRUE
       )
     },
@@ -3221,10 +3710,10 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = TRUE
       )
-    },
+      },
     error = function(cond) {
       message(cond)
       setwd("..")
@@ -3252,7 +3741,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = TRUE
       )
     },
@@ -3298,7 +3787,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = TRUE
       )
     },
@@ -3329,7 +3818,7 @@ performAllDifferentialAbundanceTests <-
         covariants = covariants,
         singleCluster = singleCluster,
         markersOrCell = markersOrCell,
-        progression = "",
+        progression = "", siteOfOnset = "",
         blocking = TRUE
       )
     },
@@ -3511,6 +4000,8 @@ recalculatePValueAdjustments <-
                                   combinedDf[, "bonferroni_adjusted_p_val"] > sigCutOff] <-
       NA
 
+    combinedDf$minus_log_p_val <-
+      0 - log10(combinedDf[, "p_val"])
 
     # Define Colours
     mycolors <- data.frame(DOWN = "blue",
@@ -3538,52 +4029,17 @@ recalculatePValueAdjustments <-
         data = combinedDf,
         aes(
           x = logFC,
-          y = minus_log_fdr_adjusted_p_val,
+          y = minus_log_p_val,
           col = fdr_diff_expressed,
           label = fdr_label
         )
       ) +
         geom_point() +
         theme_minimal() +
-        geom_hline(yintercept = -log10(0.05), col = "red") +
-        geom_hline(yintercept = -log10(0.01), col = "red") +
         scale_colour_manual(values = mycolors) +
         geom_text_repel() +
         ggtitle("Differential Abundance of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
-      print(p)
-      dev.off()
-      gc()
-
-      jpeg(
-        file = paste0(
-          figureDirectory,
-          "bonferroni",
-          str_replace_all(str_replace_all(
-            str_replace_all(fileNames, " ", ""), ",", ""
-          ), "\\.", "")[1],
-          markersOrCell,
-          ".jpeg"
-        )
-      )
-      par(mar = c(1, 1, 1, 1))
-      p <- ggplot(
-        data = combinedDf,
-        aes(
-          x = logFC,
-          y = minus_log_bonferroni_adjusted_p_val,
-          col = bonferroni_diff_expressed,
-          label = bonferroni_label
-        )
-      ) +
-        geom_point() +
-        theme_minimal() +
-        geom_hline(yintercept = -log10(0.05), col = "red") +
-        geom_hline(yintercept = -log10(0.01), col = "red") +
-        scale_colour_manual(values = mycolors) +
-        geom_text_repel() +
-        ggtitle("Differential Abundance of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+        xlab("Log Fold Change") + ylab("0 - Log P-Value")
       print(p)
       dev.off()
       gc()
@@ -3617,19 +4073,17 @@ recalculatePValueAdjustments <-
           combinedDf[combinedDf[, "marker_id"] == "GPR32", ],
         aes(
           x = logFC,
-          y = minus_log_fdr_adjusted_p_val,
+          y = minus_log_p_val,
           col = fdr_diff_expressed,
           label = fdr_label
         )
       ) +
         geom_point() +
         theme_minimal() +
-        geom_hline(yintercept = -log10(0.05), col = "red") +
-        geom_hline(yintercept = -log10(0.01), col = "red") +
         scale_colour_manual(values = mycolors) +
         geom_text_repel() +
         ggtitle("Differential States of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log Adjusted P-Value")
+        xlab("Log Fold Change") + ylab("0 - Log P-Value")
       print(p)
       dev.off()
       gc()
@@ -4074,4 +4528,83 @@ generateHeatmap <-
 
 minMaxScaling <- function(x, minValue, maxValue, na.rm = TRUE) {
   return((x - minValue) / (maxValue - minValue))
+}
+
+calculateMediansValue <- function(directoryName,
+                                  columnNames,
+                                  markersOrCell,
+                                  clusterName,
+                                  df) {
+  if (markersOrCell == "CellPopulations") {
+    filePath <-
+      paste0(
+        "data/",
+        directoryName,
+        "/clusteringOutput/",
+        clusterName,
+        "CellPopulations.csv"
+      )
+
+    cellPopulationMarkers <- read.csv(filePath)
+  } else if (markersOrCell == "Markers") {
+    markerFilePath <-
+      paste0("data/",
+             directoryName,
+             "/clusteringOutput/",
+             clusterName,
+             "Markers.csv")
+
+    cellPopulationMarkers <- read.csv(markerFilePath)
+  }
+  if (markersOrCell != "Clusters") {
+    df <-
+      merge(df,
+            cellPopulationMarkers[, c(clusterName, "cell_population")],
+            by = clusterName,
+            all.x = TRUE)
+    df[, clusterName] <- df[, "cell_population"]
+  }
+
+
+
+  columnNamesMedian <- paste0(columnNames, "_median")
+
+
+  results <-
+    data.frame(matrix(ncol = length(columnNamesMedian) + 2,
+                      nrow = 0))
+  for (filename in unique(df[, "fileName"])) {
+    for (cluster in unique(df[, clusterName])) {
+      new_row <- c(filename, cluster)
+
+      df2 <-
+        df[df[, clusterName] == cluster & df[, "fileName"] == filename, ]
+
+      for (column in columnNames) {
+        clusterMedian <- median(df2[, column])
+
+        new_row <- append(new_row, clusterMedian)
+      }
+
+      results <- rbind(new_row, results)
+    }
+  }
+
+  colnames(results) <-
+    c("fileName",
+      clusterName,
+      columnNamesMedian)
+
+  write.csv(
+    results,
+    paste0(
+      "data/",
+      directoryName,
+      "/clusteringOutput/",
+      clusterName,
+      markersOrCell,
+      "Medians.csv"
+    ),
+    row.names = FALSE
+  )
 }

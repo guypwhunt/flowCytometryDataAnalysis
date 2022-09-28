@@ -193,6 +193,115 @@ foreach(clusterName = clusterNames) %:%
     ##################
     recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1limbAllCellsDifferentialStatesStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1limb",
+          markersOrCell,
+          "DifferentialStatesStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1bulbarAllCellsDifferentialStatesStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1bulbar",
+          markersOrCell,
+          "DifferentialStatesStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1SlowbulbarAllCellsDifferentialStatesStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Slowbulbar",
+          markersOrCell,
+          "DifferentialStatesStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1SlowlimbAllCellsDifferentialStatesStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Slowlimb",
+          markersOrCell,
+          "DifferentialStatesStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1FastbulbarAllCellsDifferentialStatesStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Fastbulbar",
+          markersOrCell,
+          "DifferentialStatesStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1FastlimbAllCellsDifferentialStatesStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Fastlimb",
+          markersOrCell,
+          "DifferentialStatesStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
 
     ### Differential Abundance ###
     DA <- TRUE
@@ -348,6 +457,115 @@ foreach(clusterName = clusterNames) %:%
         paste0(
           clusterName,
           "caseControlVisits1Fast",
+          markersOrCell,
+          "DifferentialAbundanceStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1limbAllCellsDifferentialAbundanceStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1limb",
+          markersOrCell,
+          "DifferentialAbundanceStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1bulbarAllCellsDifferentialAbundanceStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1bulbar",
+          markersOrCell,
+          "DifferentialAbundanceStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1SlowbulbarAllCellsDifferentialAbundanceStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Slowbulbar",
+          markersOrCell,
+          "DifferentialAbundanceStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1FastbulbarAllCellsDifferentialAbundanceStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Fastbulbar",
+          markersOrCell,
+          "DifferentialAbundanceStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1SlowbulbarAllCellsDifferentialAbundanceStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Slowbulbar",
+          markersOrCell,
+          "DifferentialAbundanceStatistics.csv"
+        )
+      )
+
+    ##################
+    recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
+
+    # Define Directories and files
+    fileNames <-
+      c(
+        paste0(
+          clusterName,
+          "caseControlVisits1FastlimbAllCellsDifferentialAbundanceStatistics.csv"
+        ),
+        paste0(
+          clusterName,
+          "caseControlVisits1Fastlimb",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )

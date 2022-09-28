@@ -7,9 +7,21 @@ workingDirectory <- getwd()
 directoryNames <- c("tCells_ISO", "tCells_FMO")
 
 columnNames <-
-  c("GPR32.AF488.A",
-    "FPRL1.AF647.A")
-automatedcofactors <- c(343.22777, 2838.94867)
+  c(
+    "CD127.BV510.A",
+    "CD3.BV605.A",
+    "CD8.BV650.A",
+    "CD25.BV786.A",
+    "FoxP3.PE.A",
+    "CD45RO.PE.CF595.A",
+    "CD4.PerCP.Cy5.5.A",
+    "GPR32.AF488.A",
+    "Zombie.NIR.A"
+  )
+
+automatedcofactors <- c("CD127", "CD3","CD8",
+                        "CD25", "FoxP3","CD45RO",
+                        "CD4", "GPR32", "Zombie")
 
 for (directoryName in directoryNames) {
   setwd(paste0("./data/isotypes/", directoryName))
@@ -18,6 +30,7 @@ for (directoryName in directoryNames) {
   gc()
   dir.create("results", showWarnings = FALSE)
   dir.create("transformedData", showWarnings = FALSE)
+
   gc()
 
   # Find file names of .csv files in the current working directory:
@@ -83,25 +96,24 @@ for (directoryName in directoryNames) {
   dfs_fs <- as(dfs_ff, "flowSet")
 
   #auto
-  dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = columnNames,
-                               cofactor = automatedcofactors)
+  dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = colnames(dfs_fs),
+                               cofactor = rep(150, length(colnames(dfs_fs))))
 
   n <- 1
   saveFlowSetAsCsv <- function(df, columnNames, filenames) {
     df <- as.data.frame(exprs(df))
-    write.csv(df[,columnNames], paste0("./transformedData/", filenames[n]))
+    write.csv(df[,columnNames], paste0("./transformedData/", filenames[n]), row.names = FALSE)
     n <<- n +1
   }
 
   fsApply(dfs_fs_t_auto, saveFlowSetAsCsv, columnNames, filenames)
-
 
   # Pre-Normalized Plots
   flowViz.par.set(theme =  trellis.par.get(), reset = TRUE)
 
   figureDirectory <- paste0(getwd(), "/results/")
 
-  for (columnName in columnNames) {
+  for (columnName in colnames(dfs_fs)) {
     columnNameFormula <- as.formula(paste(" ~ ", columnName))
 
     jpeg(file = paste0(
@@ -127,6 +139,7 @@ for (directoryName in directoryNames) {
     dev.off()
     gc()
   }
+
 
   tryCatch({
     setwd(workingDirectory)

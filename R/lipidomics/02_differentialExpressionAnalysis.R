@@ -8,29 +8,18 @@ ex <- read.csv(
 )
 
 clinical <-
-  read.csv("data/metadata/lipidomicsclinicalData.csv", row.names = 1)
+  read_excel("data/metadata/clinicalData.xlsx")
+clinical <- as.data.frame(clinical)
+clinical <- clinical[clinical$experiment == "lipidomics",]
 
 ex <- ex[, order(colnames(ex))]
-
 ex <- ex[complete.cases(ex),]
 
-clinical <- clinical[which(rownames(clinical) %in% colnames(ex)),]
+clinical <- clinical[which(clinical$classification %in% colnames(ex)),]
+rownames(clinical) <- clinical$classification
 clinical <- clinical[colnames(ex),]
 
-clinical[clinical$earlyLate == "Late", "statinUse"] <- "No"
-
-colnames(ex) == row.names(clinical)
-
-clinical$Patient.ID <- clinical$Patient.ID
-clinical$caseControlExperiment <- clinical$caseControlExperiment
-clinical$sightOnsetExperiment <- clinical$sightOnsetExperiment
-clinical$progressionExperiment <- clinical$progressionExperiment
-clinical$fastSlow <- clinical$fastSlow
-clinical$siteOfOnset  <- clinical$siteOfOnset
-clinical$ethnicity <- clinical$ethnicity
-clinical$gender <- clinical$gender
-clinical$statinUse <- clinical$statinUse
-
+all(colnames(ex) == row.names(clinical))
 
 performDifferentialExpression <-
   function(ex, design, cont.matrix, experimentName, clinical = NULL, pairwiseTest = FALSE) {
@@ -40,9 +29,9 @@ performDifferentialExpression <-
     v <- vooma(ex, design, plot = TRUE)
 
     if (pairwiseTest) {
-      corfit <- duplicateCorrelation(v,design,block=clinical$Patient.ID)
+      corfit <- duplicateCorrelation(v,design,block=clinical$patient_id)
 
-      fit <- lmFit(v, design, block=clinical$Patient.ID, correlation=corfit$consensus)
+      fit <- lmFit(v, design, block=clinical$patient_id, correlation=corfit$consensus)
     } else {
       fit  <- lmFit(v)
     }
@@ -55,14 +44,6 @@ performDifferentialExpression <-
     # Visualize and quality control test results.
     # Build histogram of P-values for all genes. Normal test
     # assumption is that most genes are not differentially expressed.
-    tT2 <- topTable(fit2,
-                    adjust = adjustment,
-                    sort.by = "B",
-                    number = Inf)
-
-    write.csv(tT2,
-              "data/lipidomics/Results/differentialExpressionProgressionResults.csv")
-
     figureDirectory <- "data/lipidomics/Results/"
 
     par(mar = c(1, 1, 1, 1))
@@ -71,15 +52,6 @@ performDifferentialExpression <-
                        "histogram",
                        experimentName,
                        ".jpeg"))
-
-    hist(
-      tT2$adj.P.Val,
-      col = "grey",
-      border = "white",
-      xlab = "P-adj",
-      ylab = "Number of genes",
-      main = "P-adj value distribution"
-    )
 
     dev.off()
     gc()
@@ -149,7 +121,7 @@ performDifferentialExpression <-
         fit2,
         adjust = adjustment,
         sort.by = "P",
-        number = 10,
+        number = Inf,
         coef = n
       )
 
@@ -164,7 +136,7 @@ performDifferentialExpression <-
     }}
 
 nonControlClinical <- clinical[clinical$caseControl != "Control", ]
-nonControlClinical <- nonControlClinical[which(nonControlClinical$Patient.ID %in% nonControlClinical[duplicated(nonControlClinical$Patient.ID), "Patient.ID"]), ]
+nonControlClinical <- nonControlClinical[which(nonControlClinical$patient_id %in% nonControlClinical[duplicated(nonControlClinical$patient_id), "patient_id"]), ]
 
 nonControlEx <- ex[,colnames(ex) %in% rownames(nonControlClinical)]
 nonControlEx <- ex[,colnames(ex) %in% rownames(nonControlClinical)]
@@ -178,7 +150,7 @@ experimentName <- "CaseVsControl"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
+  + ageAtVisit
   + ethnicity
   + gender
   + sampleStorageDays
@@ -204,14 +176,14 @@ experimentName <- "EarlyVsLate"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
+  + ageAtVisit
   + ethnicity
   + gender
   + sampleStorageDays
   + statinUse
-  #+ timeFromEarlySampleInDays
-  + timeFromOnsetToVisitInDays
-  + siteOfOnset
+  #+ timeFromVisit1InYears
+  + timeFromOnsetToVisitInYears
+  + BulbarLimb
   + fastSlow
   ,
   nonControlClinical
@@ -237,7 +209,7 @@ experimentName <- "ProgressionVsControl"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
+  + ageAtVisit
   + ethnicity
   + gender
   + sampleStorageDays
@@ -266,14 +238,14 @@ experimentName <- "FastVsSlow"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
+  + ageAtVisit
   + ethnicity
   + gender
   + sampleStorageDays
   + statinUse
-  #+ timeFromEarlySampleInDays
-  + timeFromOnsetToVisitInDays
-  + siteOfOnset
+  #+ timeFromVisit1InYears
+  + timeFromOnsetToVisitInYears
+  + BulbarLimb
   ,
   nonControlClinical
 )
@@ -307,7 +279,7 @@ experimentName <- "SightOfOnsetVsControl"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
+  + ageAtVisit
   + ethnicity
   + gender
   + sampleStorageDays
@@ -335,13 +307,13 @@ experimentName <- "BulbarVsLimb"
 design <- model.matrix(
   ~ 0
   + group
-  + ageAtSample
+  + ageAtVisit
   + ethnicity
   + gender
   + sampleStorageDays
   + statinUse
-  #+ timeFromEarlySampleInDays
-  + timeFromOnsetToVisitInDays
+  #+ timeFromVisit1InYears
+  + timeFromOnsetToVisitInYears
   + fastSlow
   ,
   nonControlClinical

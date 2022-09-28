@@ -1,6 +1,7 @@
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+library(stringr)
 
 workingDirectory <- getwd()
 
@@ -20,10 +21,7 @@ for (file in files) {
   df <- df[df$panel == "monocytes", ]
 
   df$fdr_label <- df$typeOfCells
-  #df$fdr_label <- gsub('Monocytes', '', df$fdr_label)
   df$fdr_label <- gsub(' Negative/Low', '-', df$fdr_label)
-  #paste0(df$typeOfCells, " (Cluster ", df$cluster_id, ")")
-  #df$fdr_label[1] <- "Monocytes"
 
   df[df$fdr_adjusted_p_val > 0.05, "fdr_label"] <- NA
 
@@ -44,7 +42,7 @@ for (file in files) {
     theme_minimal() +
     scale_colour_manual(values = mycolors) +
     xlab("log2(Fold Change)") + ylab("-log10(P-value)") +
-    xlim(-0.05, 0.05) +
+    xlim(-0.5, 0.5) +
     ylim(0, 10) +
     geom_text_repel(size = 2, force_pull = 0, max.time = 2) +
     theme(legend.position = "none")
@@ -70,13 +68,9 @@ for (file in seq(nrow(filesDf))) {
 
 
   df$fdr_label <- df$typeOfCells
-  #df$fdr_label <- gsub('Monocytes', '', df$fdr_label)
   df$fdr_label <- gsub(' Negative/Low', '-', df$fdr_label)
-  #paste0(df$typeOfCells, " (Cluster ", df$cluster_id, ")")
-  #df$fdr_label[1] <- "Monocytes"
 
-  df[df$fdr_adjusted_p_val > 0.05, "fdr_label"] <- NA
-  df[df$fdr_adjusted_p_val > 0.05, "comparison"] <- "Not_Significant"
+  #df[df$fdr_adjusted_p_val > 0.05, "fdr_label"] <- "Not Significant"
 
   df$minus_log_p_val <- 0 - log(df$p_val)
   if (exists("combinedDf")) {
@@ -86,19 +80,22 @@ for (file in seq(nrow(filesDf))) {
   }
 }
 
-mycolors <- data.frame(
-  "ALS_vs_Healthy_Controls" = "red",
-  "Slow_Progressors_vs_Healthy_Controls" = "yellow",
-  "Fast_Progressors_vs_Healthy_Controls" = "green",
-  "Fast_Progressors_vs_Slow_Progressors" = "blue",
-  "Not_Significant" = "black"
+unique(combinedDf$fdr_label)
+
+mycolors <- list(
+  "HLA-DR- Activated CD11b+ Classical Monocytes" = "#f94144",
+  "HLA-DR- Classical Monocytes" = "#f3722c",
+  "HLA-DR- Intermediate Monocytes" = "#90be6d",
+  "HLA-DR- Activated CD11b+ Intermediate Monocytes" = "#43aa8b",
+  "HLA-DR- Non-Classical Monocytes" = "#577590",
+  "HLA-DR- Activated CD11b+ Non-Classical Monocytes" = "#277da1",
+  "Not Significant" = "black"
   )
 
 labelValues <- c("ALS vs Healthy Controls",
                  "Fast Progressors vs Healthy Controls",
-                 #"Slow Progressors vs Healthy Controls" = "8ac926",
-                 "Fast Progressors vs Slow Progressors" ,
-                 "Not Significant")
+                 "Fast Progressors vs Slow Progressors",
+                 "Slow Progressors vs Healthy Controls")
 
 combinedDf$fdr_label <- as.factor(combinedDf$fdr_label)
 combinedDf$comparison <- as.factor(combinedDf$comparison)
@@ -107,17 +104,57 @@ p <- ggplot(data = combinedDf,
             aes(
               x = logFC,
               y = minus_log_p_val,
-              col = comparison,
-              label = comparison
+              col = fdr_label,
+              label = fdr_label
             )) +
-  geom_point() +
+  geom_point(
+    aes(shape=comparison)
+    ) +
   theme_minimal() +
+  #scale_colour_viridis_d() +
   scale_colour_manual(values = mycolors) +
   xlab("log2(Fold Change)") + ylab("-log10(P-value)") +
-  geom_label_repel(size = 2) +
-  theme(legend.position = "none") +
-  xlim(-0.05, 0.05) +
-  ylim(0, 10)
+  xlim(-0.5, 0.5) +
+  ylim(0, 10) +
+  scale_shape_discrete(labels = labelValues) +
+  guides(colour = guide_legend("Cell Types"),
+         shape = guide_legend("Comparison")) +
+  theme(axis.title = element_text(size = 8),
+        legend.title = element_text(size = 8),
+        legend.text = element_text(size = 8))
+  #geom_text_repel()
 print(p)
+
+filteredcombinedDf <- combinedDf
+
+#filteredcombinedDf <- filteredcombinedDf[filteredcombinedDf$fdr_adjusted_p_val <= 0.05,]
+filteredcombinedDf <- filteredcombinedDf[filteredcombinedDf$fdr_label != "Monocytes",]
+
+
+filteredcombinedDf$fdr_label <- gsub(" Classical ", " \n Clasical ", filteredcombinedDf$fdr_label)
+filteredcombinedDf$fdr_label <- gsub(" Non-Classical ", " \n Non-Classical ", filteredcombinedDf$fdr_label)
+filteredcombinedDf$fdr_label <- gsub(" Intermediate ", " \n Intermediate ", filteredcombinedDf$fdr_label)
+filteredcombinedDf$fdr_label <- paste0(filteredcombinedDf$fdr_label, " (", filteredcombinedDf[, "cluster_id"], ")")
+
+filteredcombinedDf[, c("cluster_id", "fdr_label")]
+
+filteredcombinedDf$comparison <- str_replace_all(filteredcombinedDf$comparison, "_", " ")
+
+
+head(filteredcombinedDf)
+
+ggplot(filteredcombinedDf, aes(x = fdr_label, y = minus_log_p_val,
+                      color = as.factor(comparison), size = logFC)) +
+  geom_point() +
+  xlab("Monocyte Populations") + ylab("-log10(P-value)") +
+  guides(colour = guide_legend("Comparisons",
+                               override.aes = list(size=5)),
+         size = guide_legend("Log2(Fold Change)")) +
+  theme(axis.text.x = element_text(angle = 90, size = 8)) +
+  scale_colour_viridis_d(alpha = 0.75) +
+  ylim(0, 10) +
+  geom_hline(yintercept = 0-log10(0.00001))
+
+
 
 setwd(workingDirectory)
