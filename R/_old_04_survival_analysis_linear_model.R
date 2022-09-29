@@ -3,7 +3,41 @@ try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-results <- read.csv("data/medianValues/medianValues.csv")
+clusterNames <- clusterColumns
+markersOrCells <- markersOrCellsClassification
+
+for (clusterName in clusterNames) {
+  for (markersOrCell in markersOrCells) {
+    medianResultsAllClusters <- read.csv("data/medianValues/medianValues.csv")
+
+    medianResultsAllClusters <- medianResultsAllClusters[
+      medianResultsAllClusters$clusterName == clusterName &
+      medianResultsAllClusters$markersOrCell == markersOrCell,]
+
+    head(medianResultsAllClusters)
+
+    medianResultsIndividualClusters <-
+      data.frame(fileName = as.character(),
+                 clusterName = as.character(),
+                 clusterId = as.character(),
+                 markersOrCell = as.character(),
+                 GPR32_median = as.double()
+                 )
+
+    for (panel in unique(medianResultsAllClusters$panel)){
+      x <-
+        read.csv(paste0("data/monocytes/clusteringOutput/",clusterName, markersOrCell, "Medians.csv"))
+
+      x$clusterName <- clusterName
+      x$markersOrCell <- markersOrCell
+      x$clusterId <- x[, clusterName]
+
+      medianResultsIndividualClusters <- rbind(medianResultsIndividualClusters, x)
+
+    }
+  }
+}
+
 
 experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
 
@@ -76,22 +110,71 @@ experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
 
 combinedDf <-
   merge(
-    results,
+    medianResultsAllClusters,
     experimentInfo,
     by.x = "fileName",
     by.y = "sample_id",
     all.x = TRUE
   )
 
-combinedDf <- combinedDf[!is.na(combinedDf$outcomeDeathDate),]
+
+
+dsResults <- read.csv(
+  paste0(
+    "data/pValueAdjustmentsResults/",
+    clusterName,
+    "fastSlowVisits1AllCellsDifferentialStatesStatisticscsv",
+    markersOrCell ,
+    ".csv"
+  )
+)
+
+dsResults <- dsResults[dsResults$fdr_adjusted_p_val <= 0.05,]
+
+unique(dsResults$panel)
+
+head(monocytesResults)
+head(dsResults)
+
+monocytesDsResults <- dsResults[dsResults$panel == "monocytes"]
+
+#monocytesResults$meta_clusters_flowsom  monocytesDsResults$cluster_id
+
+monocytesResults <-
+  monocytesResults[monocytesResults[, 'meta_clusters_flowsom'] %in% monocytesDsResults$cluster_id,]
+
+monocytesResults <-
+  monocytesResults[, c("fileName", "meta_clusters_flowsom", "GPR32_median")]
+
+monocytesResults <-
+  reshape(
+    monocytesResults,
+    idvar = "fileName",
+    timevar = "meta_clusters_flowsom",
+    direction = "wide"
+  )
+
+combinedDf <- merge(combinedDf,
+                    as.data.frame(monocytesResults),
+                    by = "fileName",
+                    all.x = TRUE
+                    )
+
+colnames(combinedDf)[colnames(combinedDf)== "medianValue"] <- "GPR32_median.all"
+
+combinedDf <- combinedDf[!is.na(combinedDf$outcomeDeathDate), ]
 
 combinedDf$fileName <- factor(combinedDf$fileName)
 
-combinedDf <- combinedDf[combinedDf$visit == 1,]
+combinedDf <- combinedDf[combinedDf$visit == 1, ]
 
-minMaxDf <- combinedDf
+scaledDF <- combinedDf
 columnNames <- c(
-  "medianValue",
+  "GPR32_median.all",
+  "GPR32_median.11",
+  "GPR32_median.3",
+  "GPR32_median.2",
+  "GPR32_median.4",
   "survivalFromVisit",
   "alsfrsR",
   "timeFromOnsetToVisitInYears",
@@ -100,72 +183,47 @@ columnNames <- c(
   "ageAtVisit"
 )
 
-minMaxDf[, columnNames] <- scale(minMaxDf[, columnNames])
+scaledDF[, columnNames] <- scale(scaledDF[, columnNames])
 
-print(plot(density(minMaxDf[, columnNames[1]])))
-print(plot(density(minMaxDf[, columnNames[2]])))
+for (column in columnNames) {
+  print(plot(density(na.omit(scaledDF[, column])), main = column))
+  print(hist(na.omit(scaledDF[, column]), main = column))
+  print(column)
+  print(cor(scaledDF$survivalFromVisit, scaledDF[, column]))
+  plot(as.formula(paste0("survivalFromVisit ~ ", column)), data = scaledDF,
+       main = column)
 
-#for (col in columnNames) {
-#  dfMax <- max(minMaxDf[, col])
-#  dfMin <- min(minMaxDf[, col])
-
-#  scaledColumn <- (minMaxDf[, col] - dfMin) / (dfMax - dfMin)
-
-#  minMaxDf[, col] <- scaledColumn
-
-#  d <- density(scaledColumn)
-#  print(plot(d))
-#}
-
-
-# https://www.scribbr.com/statistics/linear-regression-in-r/
-# Initial Checks
-# In the data normally distributed?
-hist(minMaxDf$medianValue)
-hist(minMaxDf$survivalFromVisit)
-
-# Are the relationships linear?
-cor(minMaxDf$survivalFromVisit, minMaxDf$medianValue)
-plot(survivalFromVisit ~ medianValue, data = minMaxDf)
+  }
 
 # https://stackoverflow.com/questions/33740012/command-for-finding-the-best-linear-model-in-r
 library(MASS)
 fitx <- lm(
-  survivalFromVisit ~ 0 +
-    medianValue +
-    ageAtVisit +
-    gender +
-    ethnicity +
-    BulbarLimb +
-    alsfrsR +
-    timeFromOnsetToVisitInYears +
-    diagnosticDelayInYears +
-    ageAtOnset
+  as.formula(paste("survivalFromVisit ~ 0",
+                   sapply(list(columnNames[columnNames!= "survivalFromVisit"]), paste, collapse=" + "),
+
+                   sep=" + "))
   ,
-  data = minMaxDf
+  data = scaledDF
 )
 step <- stepAIC(fitx, direction = "both")
 step$anova # display results
 
 fit <-
   lm(
-    survivalFromVisit ~ medianValue + ageAtVisit + gender + ethnicity +
-      BulbarLimb + alsfrsR + timeFromOnsetToVisitInYears - 1
+    survivalFromVisit ~ GPR32_median.2 + GPR32_median.4 + timeFromOnsetToVisitInYears +
+      diagnosticDelayInYears + ageAtOnset - 1
     ,
-    data = minMaxDf
+    data = scaledDF
   )
 
 summary(fit)
 plot(fit)
 
-#boxplot(minMaxDf$survivalFromVisit ~ minMaxDf$gender)
-
-
 library(ggeffects)  # install the package first if you haven't already, then load it
 
 # Extract the prediction data frame
 pred.mm <-
-  ggpredict(fit, terms = c("medianValue"))  # this gives overall predictions for the model
+  ggpredict(fit, terms = c("GPR32_median.2"))  # this gives overall predictions for the model
 # Plot the predictions
 
 (
@@ -181,9 +239,9 @@ pred.mm <-
       alpha = 0.5
     ) +  # error band
     geom_point(
-      data = minMaxDf,
+      data = scaledDF,
       # adding the raw data (scaled values)
-      aes(x = medianValue, y = survivalFromVisit, colour = fastSlow)
+      aes(x = GPR32_median.2, y = survivalFromVisit, colour = fastSlow)
     ) +
     labs(x = "Median GPR32 Abundance", y = "Survival from Visit in Years") +
     guides(color = guide_legend(title = "Progression")) +
@@ -204,9 +262,9 @@ pred.mm <-
       alpha = 0.5
     ) +  # error band
     geom_point(
-      data = minMaxDf,
+      data = scaledDF,
       # adding the raw data (scaled values)
-      aes(x = medianValue, y = survivalFromVisit, colour = ethnicity)
+      aes(x = GPR32_median.2, y = survivalFromVisit, colour = ethnicity)
     ) +
     labs(x = "Median GPR32 Abundance", y = "Survival from Visit in Years") +
     guides(color = guide_legend(title = "Ethnicity")) +
@@ -227,9 +285,9 @@ pred.mm <-
       alpha = 0.5
     ) +  # error band
     geom_point(
-      data = minMaxDf,
+      data = scaledDF,
       # adding the raw data (scaled values)
-      aes(x = medianValue, y = survivalFromVisit, colour = BulbarLimb)
+      aes(x = GPR32_median.2, y = survivalFromVisit, colour = BulbarLimb)
     ) +
     labs(x = "Median GPR32 Abundance", y = "Survival from Visit in Years") +
     guides(color = guide_legend(title = "Site of Onset")) +
@@ -238,7 +296,7 @@ pred.mm <-
 )
 
 (
-  ggplot(data = minMaxDf,
+  ggplot(data = scaledDF,
          # adding the raw data (scaled values)
          aes(x = ageAtVisit, y = survivalFromVisit)) +
     geom_point() +
@@ -248,7 +306,7 @@ pred.mm <-
 )
 
 (
-  ggplot(minMaxDf, aes(x = alsfrsR, y = survivalFromVisit)) +
+  ggplot(scaledDF, aes(x = alsfrsR, y = survivalFromVisit)) +
     geom_point() +
     labs(x = "ALSFRSR", y = "Survival from Visit in Years") +
     geom_smooth(method = "lm") +
@@ -257,7 +315,7 @@ pred.mm <-
 
 (
   ggplot(
-    minMaxDf,
+    scaledDF,
     aes(x = timeFromOnsetToVisitInYears, y = survivalFromVisit)
   ) +
     geom_point() +
@@ -266,27 +324,6 @@ pred.mm <-
     theme_minimal()
 )
 
-boxplot(minMaxDf$survivalFromVisit ~ minMaxDf$gender)
-boxplot(minMaxDf$survivalFromVisit ~ minMaxDf$ethnicity)
-boxplot(minMaxDf$survivalFromVisit ~ minMaxDf$BulbarLimb)
-
-
-anova(mixedFit)
-
-
-# Linear mixed model
-# https://ourcodingclub.github.io/tutorials/mixed-models/
-library(lme4)
-mixedFit <-
-  lmer(
-    survivalFromVisit ~ medianValue + ageAtVisit + (1 |
-                                                      ethnicity) + (1 |
-                                                                      BulbarLimb) +
-      alsfrsR + timeFromOnsetToVisitInYears - 1,
-    data = combinedDf
-  )
-summary(mixedFit)
-coef(mixedFit)
-plot(mixedFit)
-qqnorm(resid(mixedFit))
-qqline(resid(mixedFit))
+boxplot(scaledDF$survivalFromVisit ~ scaledDF$gender)
+boxplot(scaledDF$survivalFromVisit ~ scaledDF$ethnicity)
+boxplot(scaledDF$survivalFromVisit ~ scaledDF$BulbarLimb)

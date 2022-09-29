@@ -155,6 +155,7 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
+  + batchControl
   ,
   clinical
 )
@@ -185,6 +186,7 @@ design <- model.matrix(
   + timeFromOnsetToVisitInYears
   + BulbarLimb
   + fastSlow
+  + batchControl
   ,
   nonControlClinical
 )
@@ -214,6 +216,7 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
+  + batchControl
   ,
   clinical
 )
@@ -246,6 +249,7 @@ design <- model.matrix(
   #+ timeFromVisit1InYears
   + timeFromOnsetToVisitInYears
   + BulbarLimb
+  + batchControl
   ,
   nonControlClinical
 )
@@ -283,7 +287,9 @@ design <- model.matrix(
   + ethnicity
   + gender
   + sampleStorageDays
-  + statinUse,
+  + statinUse
+  + batchControl
+  ,
   clinical
 )
 
@@ -315,6 +321,7 @@ design <- model.matrix(
   #+ timeFromVisit1InYears
   + timeFromOnsetToVisitInYears
   + fastSlow
+  + batchControl
   ,
   nonControlClinical
 )

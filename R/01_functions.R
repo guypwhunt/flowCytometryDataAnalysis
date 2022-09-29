@@ -2249,6 +2249,11 @@ differentialAbundanceAnalysis <- function(df,
   # Read experiment data
   experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
 
+  experimentInfo <- as.data.frame(experimentInfo)
+
+  experimentInfo <- experimentInfo[experimentInfo$experiment == "flowCytometry", ]
+
+
   if (markersOrCell != "Clusters") {
     cellPopulationMarkers <-
       read.csv(
@@ -2415,40 +2420,20 @@ differentialAbundanceAnalysis <- function(df,
                        experimentInfo[, "caseControl"] == "Control", ]
   }
 
-  siteOfOnset
   if (siteOfOnset != "") {
     experimentInfo <-
-      experimentInfo[experimentInfo[, "bulbarLimb"] == siteOfOnset |
+      experimentInfo[experimentInfo[, "BulbarLimb"] == siteOfOnset |
                        experimentInfo[, "caseControl"] == "Control", ]
   }
   experimentInfo[, "group_id"] <- NA
-  experimentInfo[, "patient_id"] <-
-    factor(experimentInfo[, "patient_id"])
-  experimentInfo[, "sample_id"] <-
-    factor(experimentInfo[, "sample_id"])
-  experimentInfo[, "gender"] <-
-    factor(experimentInfo[, "gender"])
-
   experimentInfo <-
     experimentInfo[!is.na(experimentInfo[, "ethnicity"]),]
-  experimentInfo[, "ethnicity"] <-
-    factor(experimentInfo[, "ethnicity"])
   experimentInfo[, "ageAtVisitDouble"] <-
     as.double(experimentInfo[, "ageAtVisit"])
-  experimentInfo[, "timeFromVisit1InDaysDouble"] <-
-    as.double(experimentInfo[, "timeFromVisit1InDays"])
-  experimentInfo[, "fastSlow"] <-
-    factor(experimentInfo[, "fastSlow"])
-  experimentInfo[, "bulbarLimb"] <-
-    factor(experimentInfo[, "bulbarLimb"])
-  experimentInfo[, "caseControl"] <-
-    factor(experimentInfo[, "caseControl"])
+  experimentInfo[, "timeFromVisit1InYearsDouble"] <-
+    as.double(experimentInfo[, "timeFromVisit1InYears"])
   experimentInfo[, "visit"] <-
     as.double(experimentInfo[, "visit"])
-  experimentInfo[, "group_id"] <-
-    factor(experimentInfo[, group_id])
-  experimentInfo[, "patient_id"] <-
-    factor(experimentInfo[, "patient_id"])
 
   mycolors <- c("blue", "red", "black")
   names(mycolors) <- c("DOWN", "UP", "NO")
@@ -2490,6 +2475,25 @@ differentialAbundanceAnalysis <- function(df,
   df <- df[order(df[, "fileName"]), ]
   experimentInfo <-
     experimentInfo[order(experimentInfo[, "sample_id"]), ]
+
+  experimentInfo[, "group_id"] <-
+    factor(experimentInfo[, group_id])
+  experimentInfo[, "patient_id"] <-
+    factor(experimentInfo[, "patient_id"])
+  experimentInfo[, "fastSlow"] <-
+    factor(experimentInfo[, "fastSlow"])
+  experimentInfo[, "BulbarLimb"] <-
+    factor(experimentInfo[, "BulbarLimb"])
+  experimentInfo[, "caseControl"] <-
+    factor(experimentInfo[, "caseControl"])
+  experimentInfo[, "ethnicity"] <-
+    factor(experimentInfo[, "ethnicity"])
+  experimentInfo[, "patient_id"] <-
+    factor(experimentInfo[, "patient_id"])
+  experimentInfo[, "sample_id"] <-
+    factor(experimentInfo[, "sample_id"])
+  experimentInfo[, "gender"] <-
+    factor(experimentInfo[, "gender"])
 
   # Check df and experiment data are in the same order
   message(all(unique(df[, "fileName"]) == unique(experimentInfo[, "sample_id"])))
@@ -3050,9 +3054,9 @@ performAllDifferentialAbundanceTests <-
     covariants <-
       c("ageAtVisit",
         "gender",
-        "bulbarLimb",
+        "BulbarLimb",
         "ethnicity",
-        "timeFromOnsetToVisitInDays")
+        "timeFromOnsetToVisitInYears")
     singleCluster <- FALSE
 
     tryCatch({
@@ -3123,7 +3127,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
     progression <- "Fast"
-    siteOfOnset <- "bulbar"
+    siteOfOnset <- "Bulbar"
 
     tryCatch({
       differentialAbundanceAnalysis(
@@ -3192,7 +3196,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
     progression <- "Slow"
-    siteOfOnset <- "bulbar"
+    siteOfOnset <- "Bulbar"
 
     tryCatch({
       differentialAbundanceAnalysis(
@@ -3261,7 +3265,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
     progression <- "Fast"
-    siteOfOnset <- "limb"
+    siteOfOnset <- "Limb"
 
     tryCatch({
       differentialAbundanceAnalysis(
@@ -3330,7 +3334,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
     progression <- "Slow"
-    siteOfOnset <- "limb"
+    siteOfOnset <- "Limb"
 
     tryCatch({
       differentialAbundanceAnalysis(
@@ -3399,7 +3403,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
     progression <- ""
-    siteOfOnset <- "bulbar"
+    siteOfOnset <- "Bulbar"
 
     tryCatch({
       differentialAbundanceAnalysis(
@@ -3468,7 +3472,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
     progression <- ""
-    siteOfOnset <- "limb"
+    siteOfOnset <- "Limb"
 
     tryCatch({
       differentialAbundanceAnalysis(
@@ -3531,7 +3535,7 @@ performAllDifferentialAbundanceTests <-
     samplesContributionToClustersThreshold <- 10
     differentialAbundanceThreshold <- 0.05
     calculateSampleContributionsToClusters <- FALSE
-    group_id <- "bulbarLimb"
+    group_id <- "BulbarLimb"
     visits <- c(1)
     cases <- c("Case")
     covariants <-
@@ -3539,7 +3543,7 @@ performAllDifferentialAbundanceTests <-
         "gender",
         "fastSlow",
         "ethnicity",
-        "timeFromOnsetToVisitInDays")
+        "timeFromOnsetToVisitInYears")
     singleCluster <- FALSE
 
     tryCatch({
@@ -3614,8 +3618,8 @@ performAllDifferentialAbundanceTests <-
         "gender",
         "ethnicity",
         "fastSlow",
-        "bulbarLimb",
-        "timeFromOnsetToVisitInDays"
+        "BulbarLimb",
+        "timeFromOnsetToVisitInYears"
       )
     singleCluster <- FALSE
 
@@ -3690,8 +3694,8 @@ performAllDifferentialAbundanceTests <-
         "gender",
         "ethnicity",
         "fastSlow",
-        "bulbarLimb",
-        "timeFromOnsetToVisitInDays"
+        "BulbarLimb",
+        "timeFromOnsetToVisitInYears"
       )
     singleCluster <- FALSE
 
@@ -3767,8 +3771,8 @@ performAllDifferentialAbundanceTests <-
         "gender",
         "ethnicity",
         "fastSlow",
-        "bulbarLimb",
-        "timeFromOnsetToVisitInDays"
+        "BulbarLimb",
+        "timeFromOnsetToVisitInYears"
       )
     singleCluster <- FALSE
 

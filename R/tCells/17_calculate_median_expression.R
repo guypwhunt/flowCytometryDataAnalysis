@@ -10,10 +10,9 @@ columnNames <- tCellsColumnNames
 
 markersOrCells <- markersOrCellsClassification
 
-#markersOrCell <- markersOrCells[1]
-
 clusterNames <- clusterColumns
 
+#markersOrCell <- markersOrCells[1]
 #clusterName <- clusterNames[3]
 
 df <-
