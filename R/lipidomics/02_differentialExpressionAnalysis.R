@@ -1,37 +1,50 @@
 library(limma)
 library(umap)
+library(readxl)
+
 
 adjustment <- "fdr"
 
 ex <- read.csv(
-  "data/lipidomics/normalisedasinhTransformedExpressionDataRawOutliersAndDuplicatesRemoved.csv", row.names = 1
+  "data/lipidomics/normalisedasinhTransformedExpressionDataRawOutliersAndDuplicatesRemoved.csv",
+  row.names = 1
 )
 
 clinical <-
   read_excel("data/metadata/clinicalData.xlsx")
 clinical <- as.data.frame(clinical)
-clinical <- clinical[clinical$experiment == "lipidomics",]
+clinical <- clinical[clinical$experiment == "lipidomics", ]
 
 ex <- ex[, order(colnames(ex))]
-ex <- ex[complete.cases(ex),]
+ex <- ex[complete.cases(ex), ]
 
-clinical <- clinical[which(clinical$classification %in% colnames(ex)),]
+clinical <-
+  clinical[which(clinical$classification %in% colnames(ex)), ]
 rownames(clinical) <- clinical$classification
-clinical <- clinical[colnames(ex),]
+clinical <- clinical[colnames(ex), ]
 
 all(colnames(ex) == row.names(clinical))
 
 performDifferentialExpression <-
-  function(ex, design, cont.matrix, experimentName, clinical = NULL, pairwiseTest = FALSE) {
+  function(ex,
+           design,
+           cont.matrix,
+           experimentName,
+           clinical = NULL,
+           pairwiseTest = FALSE) {
     # put this in a function
 
     # calculate precision weights and show plot of mean-variance trend
     v <- vooma(ex, design, plot = TRUE)
 
     if (pairwiseTest) {
-      corfit <- duplicateCorrelation(v,design,block=clinical$patient_id)
+      corfit <- duplicateCorrelation(v, design, block = clinical$patient_id)
 
-      fit <- lmFit(v, design, block=clinical$patient_id, correlation=corfit$consensus)
+      fit <-
+        lmFit(v,
+              design,
+              block = clinical$patient_id,
+              correlation = corfit$consensus)
     } else {
       fit  <- lmFit(v)
     }
@@ -57,7 +70,8 @@ performDifferentialExpression <-
     gc()
 
     # summarize test results as "up", "down" or "not expressed"
-    dT <- decideTests(fit2, adjust.method = adjustment, p.value = 0.05)
+    dT <-
+      decideTests(fit2, adjust.method = adjustment, p.value = 0.05)
 
 
     jpeg(file = paste0(figureDirectory,
@@ -125,21 +139,24 @@ performDifferentialExpression <-
         coef = n
       )
 
-      write.csv(tT, paste0(figureDirectory, experimentName, colnames(fit2)[n], ".csv"))
+      write.csv(tT,
+                paste0(figureDirectory, experimentName, colnames(fit2)[n], ".csv"))
 
-      significantResults <- tT[tT$adj.P.Val < 0.05,]
+      significantResults <- tT[tT$adj.P.Val < 0.05, ]
 
       if (nrow(significantResults) > 0) {
         print(colnames(fit2)[n])
         print(significantResults)
       }
-    }}
+    }
+  }
 
-nonControlClinical <- clinical[clinical$caseControl != "Control", ]
-nonControlClinical <- nonControlClinical[which(nonControlClinical$patient_id %in% nonControlClinical[duplicated(nonControlClinical$patient_id), "patient_id"]), ]
+nonControlClinical <- clinical[clinical$caseControl != "Control",]
+nonControlClinical <-
+  nonControlClinical[which(nonControlClinical$patient_id %in% nonControlClinical[duplicated(nonControlClinical$patient_id), "patient_id"]),]
 
-nonControlEx <- ex[,colnames(ex) %in% rownames(nonControlClinical)]
-nonControlEx <- ex[,colnames(ex) %in% rownames(nonControlClinical)]
+nonControlEx <- ex[, colnames(ex) %in% rownames(nonControlClinical)]
+nonControlEx <- ex[, colnames(ex) %in% rownames(nonControlClinical)]
 
 
 ### Case vs Control Experiment
@@ -163,7 +180,7 @@ design <- model.matrix(
 # set up contrasts of interest and recalculate model coefficients
 cont.matrix <- makeContrasts(
   ControlVsEarly = groupControl - groupEarly,
-  ControlVsLate =groupControl - groupLate,
+  ControlVsLate = groupControl - groupLate,
   EarlyVsControl = groupEarly - groupControl,
   LateVsControl = groupLate - groupControl,
   levels = design
@@ -182,8 +199,8 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
-  #+ timeFromVisit1InYears
   + timeFromOnsetToVisitInYears
+  + timeFromVisit1InYears
   + BulbarLimb
   + fastSlow
   + batchControl
@@ -199,7 +216,11 @@ cont.matrix <- makeContrasts(
 )
 
 performDifferentialExpression(nonControlEx,
-                              design, cont.matrix, experimentName, nonControlClinical, TRUE)
+                              design,
+                              cont.matrix,
+                              experimentName,
+                              nonControlClinical,
+                              TRUE)
 
 
 ### Progression Experiment
@@ -230,7 +251,7 @@ cont.matrix <- makeContrasts(
   SlowLateVsControl = groupSlowLate - groupControl,
   FastEarlyVsControl = groupFastEarly - groupControl,
   SlowEarlyVsControl = groupSlowEarly - groupControl,
-  FastLateVsControl =groupFastLate - groupControl,
+  FastLateVsControl = groupFastLate - groupControl,
   levels = design
 )
 
@@ -246,8 +267,8 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
-  #+ timeFromVisit1InYears
   + timeFromOnsetToVisitInYears
+  + timeFromVisit1InYears
   + BulbarLimb
   + batchControl
   ,
@@ -272,7 +293,11 @@ cont.matrix <- makeContrasts(
 )
 
 performDifferentialExpression(nonControlEx,
-                              design, cont.matrix, experimentName, nonControlClinical, TRUE)
+                              design,
+                              cont.matrix,
+                              experimentName,
+                              nonControlClinical,
+                              TRUE)
 
 ### Site of Onset Experiment
 clinical$group <- clinical$sightOnsetExperiment
@@ -318,8 +343,8 @@ design <- model.matrix(
   + gender
   + sampleStorageDays
   + statinUse
-  #+ timeFromVisit1InYears
   + timeFromOnsetToVisitInYears
+  + timeFromVisit1InYears
   + fastSlow
   + batchControl
   ,
@@ -344,4 +369,138 @@ cont.matrix <- makeContrasts(
 )
 
 performDifferentialExpression(nonControlEx,
-                              design, cont.matrix, experimentName, nonControlClinical, TRUE)
+                              design,
+                              cont.matrix,
+                              experimentName,
+                              nonControlClinical,
+                              TRUE)
+
+
+### Progression and Site of Onset Experiment
+clinical$group <- clinical$progressionAndSightOnsetExperiment
+nonControlClinical$group <- nonControlClinical$progressionAndSightOnsetExperiment
+
+experimentName <- "ProgressionAndSightOfOnsetVsControl"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtVisit
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  + batchControl
+  ,
+  clinical
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  ControlVsFastBulbarEarly =   groupControl - groupFastBulbarEarly,
+  ControlVsFastBulbarLate =   groupControl - groupFastBulbarLate,
+  ControlVsFastLimbEarly =   groupControl - groupFastLimbEarly,
+  ControlVsFastLimbLate =   groupControl - groupFastLimbLate,
+  ControlVsSlowBulbarEarly =   groupControl - groupSlowBulbarEarly,
+  ControlVsSlowBulbarLate =   groupControl - groupSlowBulbarLate,
+  ControlVsSlowLimbEarly =   groupControl - groupSlowLimbEarly,
+  ControlVsSlowLimbLate =   groupControl - groupSlowLimbLate,
+  FastBulbarEarlyVsControl =   groupFastBulbarEarly - groupControl,
+  FastBulbarLateVsControl =   groupFastBulbarLate - groupControl,
+  FastLimbEarlyVsControl =   groupFastLimbEarly - groupControl,
+  FastLimbLateVsControl =   groupFastLimbLate - groupControl,
+  SlowBulbarEarlyVsControl =   groupSlowBulbarEarly - groupControl,
+  SlowBulbarLateVsControl =   groupSlowBulbarLate - groupControl,
+  SlowLimbEarlyVsControl =   groupSlowLimbEarly - groupControl,
+  SlowLimbLateVsControl =   groupSlowLimbLate - groupControl,
+  levels = design
+)
+
+performDifferentialExpression(ex, design, cont.matrix, experimentName)
+
+experimentName <- "ProgressionAndSightOfOnset"
+
+design <- model.matrix(
+  ~ 0
+  + group
+  + ageAtVisit
+  + ethnicity
+  + gender
+  + sampleStorageDays
+  + statinUse
+  + timeFromOnsetToVisitInYears
+  + timeFromVisit1InYears
+  #+ fastSlow
+  #+ BulbarLimb
+  + batchControl
+  ,
+  nonControlClinical
+)
+
+# set up contrasts of interest and recalculate model coefficients
+cont.matrix <- makeContrasts(
+  groupFastBulbarEarlyVsgroupFastBulbarLate = groupFastBulbarEarly - groupFastBulbarLate,
+  groupFastBulbarEarlyVsgroupFastLimbEarly = groupFastBulbarEarly - groupFastLimbEarly,
+  groupFastBulbarEarlyVsgroupFastLimbLate = groupFastBulbarEarly - groupFastLimbLate,
+  groupFastBulbarEarlyVsgroupSlowBulbarEarly = groupFastBulbarEarly - groupSlowBulbarEarly,
+  groupFastBulbarEarlyVsgroupSlowBulbarLate = groupFastBulbarEarly - groupSlowBulbarLate,
+  groupFastBulbarEarlyVsgroupSlowLimbEarly = groupFastBulbarEarly - groupSlowLimbEarly,
+  groupFastBulbarEarlyVsgroupSlowLimbLate = groupFastBulbarEarly - groupSlowLimbLate,
+  groupFastBulbarLateVsgroupFastBulbarEarly = groupFastBulbarLate - groupFastBulbarEarly,
+  groupFastBulbarLateVsgroupFastLimbEarly = groupFastBulbarLate - groupFastLimbEarly,
+  groupFastBulbarLateVsgroupFastLimbLate = groupFastBulbarLate - groupFastLimbLate,
+  groupFastBulbarLateVsgroupSlowBulbarEarly = groupFastBulbarLate - groupSlowBulbarEarly,
+  groupFastBulbarLateVsgroupSlowBulbarLate = groupFastBulbarLate - groupSlowBulbarLate,
+  groupFastBulbarLateVsgroupSlowLimbEarly = groupFastBulbarLate - groupSlowLimbEarly,
+  groupFastBulbarLateVsgroupSlowLimbLate = groupFastBulbarLate - groupSlowLimbLate,
+  groupFastLimbEarlyVsgroupFastBulbarEarly = groupFastLimbEarly - groupFastBulbarEarly,
+  groupFastLimbEarlyVsgroupFastBulbarLate = groupFastLimbEarly - groupFastBulbarLate,
+  groupFastLimbEarlyVsgroupFastLimbLate = groupFastLimbEarly - groupFastLimbLate,
+  groupFastLimbEarlyVsgroupSlowBulbarEarly = groupFastLimbEarly - groupSlowBulbarEarly,
+  groupFastLimbEarlyVsgroupSlowBulbarLate = groupFastLimbEarly - groupSlowBulbarLate,
+  groupFastLimbEarlyVsgroupSlowLimbEarly = groupFastLimbEarly - groupSlowLimbEarly,
+  groupFastLimbEarlyVsgroupSlowLimbLate = groupFastLimbEarly - groupSlowLimbLate,
+  groupFastLimbLateVsgroupFastBulbarEarly = groupFastLimbLate - groupFastBulbarEarly,
+  groupFastLimbLateVsgroupFastBulbarLate = groupFastLimbLate - groupFastBulbarLate,
+  groupFastLimbLateVsgroupFastLimbEarly = groupFastLimbLate - groupFastLimbEarly,
+  groupFastLimbLateVsgroupSlowBulbarEarly = groupFastLimbLate - groupSlowBulbarEarly,
+  groupFastLimbLateVsgroupSlowBulbarLate = groupFastLimbLate - groupSlowBulbarLate,
+  groupFastLimbLateVsgroupSlowLimbEarly = groupFastLimbLate - groupSlowLimbEarly,
+  groupFastLimbLateVsgroupSlowLimbLate = groupFastLimbLate - groupSlowLimbLate,
+  groupSlowBulbarEarlyVsgroupFastBulbarEarly = groupSlowBulbarEarly - groupFastBulbarEarly,
+  groupSlowBulbarEarlyVsgroupFastBulbarLate = groupSlowBulbarEarly - groupFastBulbarLate,
+  groupSlowBulbarEarlyVsgroupFastLimbEarly = groupSlowBulbarEarly - groupFastLimbEarly,
+  groupSlowBulbarEarlyVsgroupFastLimbLate = groupSlowBulbarEarly - groupFastLimbLate,
+  groupSlowBulbarEarlyVsgroupSlowBulbarLate = groupSlowBulbarEarly - groupSlowBulbarLate,
+  groupSlowBulbarEarlyVsgroupSlowLimbEarly = groupSlowBulbarEarly - groupSlowLimbEarly,
+  groupSlowBulbarEarlyVsgroupSlowLimbLate = groupSlowBulbarEarly - groupSlowLimbLate,
+  groupSlowBulbarLateVsgroupFastBulbarEarly = groupSlowBulbarLate - groupFastBulbarEarly,
+  groupSlowBulbarLateVsgroupFastBulbarLate = groupSlowBulbarLate - groupFastBulbarLate,
+  groupSlowBulbarLateVsgroupFastLimbEarly = groupSlowBulbarLate - groupFastLimbEarly,
+  groupSlowBulbarLateVsgroupFastLimbLate = groupSlowBulbarLate - groupFastLimbLate,
+  groupSlowBulbarLateVsgroupSlowBulbarEarly = groupSlowBulbarLate - groupSlowBulbarEarly,
+  groupSlowBulbarLateVsgroupSlowLimbEarly = groupSlowBulbarLate - groupSlowLimbEarly,
+  groupSlowBulbarLateVsgroupSlowLimbLate = groupSlowBulbarLate - groupSlowLimbLate,
+  groupSlowLimbEarlyVsgroupFastBulbarEarly = groupSlowLimbEarly - groupFastBulbarEarly,
+  groupSlowLimbEarlyVsgroupFastBulbarLate = groupSlowLimbEarly - groupFastBulbarLate,
+  groupSlowLimbEarlyVsgroupFastLimbEarly = groupSlowLimbEarly - groupFastLimbEarly,
+  groupSlowLimbEarlyVsgroupFastLimbLate = groupSlowLimbEarly - groupFastLimbLate,
+  groupSlowLimbEarlyVsgroupSlowBulbarEarly = groupSlowLimbEarly - groupSlowBulbarEarly,
+  groupSlowLimbEarlyVsgroupSlowBulbarLate = groupSlowLimbEarly - groupSlowBulbarLate,
+  groupSlowLimbEarlyVsgroupSlowLimbLate = groupSlowLimbEarly - groupSlowLimbLate,
+  groupSlowLimbLateVsgroupFastBulbarEarly = groupSlowLimbLate - groupFastBulbarEarly,
+  groupSlowLimbLateVsgroupFastBulbarLate = groupSlowLimbLate - groupFastBulbarLate,
+  groupSlowLimbLateVsgroupFastLimbEarly = groupSlowLimbLate - groupFastLimbEarly,
+  groupSlowLimbLateVsgroupFastLimbLate = groupSlowLimbLate - groupFastLimbLate,
+  groupSlowLimbLateVsgroupSlowBulbarEarly = groupSlowLimbLate - groupSlowBulbarEarly,
+  groupSlowLimbLateVsgroupSlowBulbarLate = groupSlowLimbLate - groupSlowBulbarLate,
+  groupSlowLimbLateVsgroupSlowLimbEarly = groupSlowLimbLate - groupSlowLimbEarly,
+  levels = design
+)
+
+performDifferentialExpression(nonControlEx,
+                              design,
+                              cont.matrix,
+                              experimentName,
+                              nonControlClinical,
+                              TRUE)

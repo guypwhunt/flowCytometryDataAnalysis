@@ -549,7 +549,16 @@ convertToDataFrame <- function(directoryName, columnNames) {
 
   # Scale data
   scaledDf <- df
-  scaledDf[, columnNames] <- scale(scaledDf[, columnNames])
+
+  for (col in columnNames) {
+    ninetyNinthQuantile <-
+      quantile(scaledDf[, col], probs = c(0.001, 0.999))
+    scaledDf <-
+      scaledDf[scaledDf[, col] >= min(ninetyNinthQuantile) &
+                 scaledDf[, col] <= max(ninetyNinthQuantile),]
+  }
+
+  scaledDf[, columnNames[columnNames != "GPR32"]] <- scale(scaledDf[, columnNames[columnNames != "GPR32"]])
   write.csv(scaledDf, 'dataPPOutput/scaledDf.csv', row.names = FALSE)
 
   for (col in columnNames) {
@@ -636,7 +645,7 @@ convertToFCS <- function(directoryName) {
 
   setwd(paste0("./data/", directoryName, "/dataPPOutput"))
 
-  df <- read.csv('outliersRemoveMinMaxScaledDf.csv')
+  df <- read.csv('scaledDf.csv')
 
   dfs <- list()
 
@@ -697,7 +706,7 @@ copyToClusteringOutput <- function(directoryName) {
 
   setwd(paste0("./data/", directoryName))
 
-  df <- read.csv("./dataPPOutput/outliersRemoveMinMaxScaledDf.csv")
+  df <- read.csv("./dataPPOutput/scaledDf.csv")
 
   dir.create("clusteringOutput", showWarnings = FALSE)
 
@@ -2851,6 +2860,7 @@ performAllDifferentialAbundanceTests <-
     covariants <- c("ageAtVisit", "gender", "ethnicity")
     singleCluster <- FALSE
 
+    #'
     tryCatch({
       differentialAbundanceAnalysis(
         df = df,
@@ -3602,7 +3612,7 @@ performAllDifferentialAbundanceTests <-
       setwd("..")
       # Choose a return value in case of error
       return(NA)
-    })
+    })#'
 
 
     ### Visit 1 vs Visit 2 for visit 1 & 2 for clusters
@@ -3619,7 +3629,8 @@ performAllDifferentialAbundanceTests <-
         "ethnicity",
         "fastSlow",
         "BulbarLimb",
-        "timeFromOnsetToVisitInYears"
+        "timeFromOnsetToVisitInYears",
+        "timeFromVisit1InYears"
       )
     singleCluster <- FALSE
 
@@ -3695,7 +3706,8 @@ performAllDifferentialAbundanceTests <-
         "ethnicity",
         "fastSlow",
         "BulbarLimb",
-        "timeFromOnsetToVisitInYears"
+        "timeFromOnsetToVisitInYears",
+        "timeFromVisit1InYears"
       )
     singleCluster <- FALSE
 
@@ -3772,7 +3784,8 @@ performAllDifferentialAbundanceTests <-
         "ethnicity",
         "fastSlow",
         "BulbarLimb",
-        "timeFromOnsetToVisitInYears"
+        "timeFromOnsetToVisitInYears",
+        "timeFromVisit1InYears"
       )
     singleCluster <- FALSE
 
@@ -4611,4 +4624,146 @@ calculateMediansValue <- function(directoryName,
     ),
     row.names = FALSE
   )
+}
+
+calculateCounts <- function(directoryName,
+                                  markersOrCell,
+                                  clusterName,
+                                  df) {
+  if (markersOrCell == "CellPopulations") {
+    filePath <-
+      paste0(
+        "data/",
+        directoryName,
+        "/clusteringOutput/",
+        clusterName,
+        "CellPopulations.csv"
+      )
+
+    cellPopulationMarkers <- read.csv(filePath)
+  } else if (markersOrCell == "Markers") {
+    markerFilePath <-
+      paste0("data/",
+             directoryName,
+             "/clusteringOutput/",
+             clusterName,
+             "Markers.csv")
+
+    cellPopulationMarkers <- read.csv(markerFilePath)
+  }
+  if (markersOrCell != "Clusters") {
+    df <-
+      merge(df,
+            cellPopulationMarkers[, c(clusterName, "cell_population")],
+            by = clusterName,
+            all.x = TRUE)
+    df[, clusterName] <- df[, "cell_population"]
+  }
+
+  results <-
+    data.frame(matrix(ncol = 3,
+                      nrow = 0))
+  for (filename in unique(df[, "fileName"])) {
+    for (cluster in unique(df[, clusterName])) {
+      df2 <-
+        df[df[, clusterName] == cluster & df[, "fileName"] == filename, ]
+
+      count <- nrow(df2)
+      new_row <- c(filename, cluster, count)
+
+      results <- rbind(new_row, results)
+    }
+  }
+
+  colnames(results) <-
+    c("fileName",
+      clusterName,
+      "count")
+
+  write.csv(
+    results,
+    paste0(
+      "data/",
+      directoryName,
+      "/clusteringOutput/",
+      clusterName,
+      markersOrCell,
+      "Counts.csv"
+    ),
+    row.names = FALSE
+  )
+}
+
+
+differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, markersOrCell) {
+  directory <- "data/pValueAdjustmentsResults/"
+
+  fileNames <- list.files(directory, pattern = pattern)
+
+  fileNames <- fileNames[grepl(clusterName, fileNames, fixed = TRUE)]
+
+  fileNamesPath <- paste0(directory, fileNames)
+
+  dfs <- lapply(fileNamesPath, read.csv)
+
+  names(dfs) <- fileNames
+
+  i <- 1
+
+  for(df in dfs){
+    df$experiment <- names(dfs)[i]
+    i <- i + 1
+
+    if (exists("combinedDf")){
+      combinedDf <- rbind(combinedDf, df)
+    } else {
+      combinedDf <- df
+    }
+  }
+
+  combinedDf <- combinedDf[combinedDf$typeOfCells %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "typeOfCells"], ]
+  combinedDf <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "experiment"], ]
+
+  combinedDf[combinedDf$experiment == paste0(clusterName,"bulbarLimbVisits1AllCells", figureName, markersOrCell, ".csv"), "experiment"] <- "Bulbar vs Limb"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1AllCells", figureName, markersOrCell, ".csv"), "experiment"] <- "ALS vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1bulbarAllCells", figureName, markersOrCell, ".csv"), "experiment"] <- "Bulbar vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1FastAllCells", figureName, markersOrCell, ".csv"), "experiment"] <- "Fast vs Controls"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1FastbulbarAllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Fast Bulbar vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1FastlimbAllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Fast Limb vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1limbAllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Limb vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1SlowAllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Slow vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1SlowbulbarAllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Slow Bulbar vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1SlowlimbAllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Slow Limb vs Control"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"fastSlowVisits1AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Fast vs Slow"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits12AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 2 vs Visit 1"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits13AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 3 vs Visit 1"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits23AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 2 vs Visit 3"
+
+  combinedDf$typeOfCells <- str_replace_all(combinedDf$typeOfCells, "Low", "Low \n")
+
+  dir.create("data/combinedFigures", showWarnings = FALSE)
+  jpeg(filename = paste0("data/combinedFigures/", clusterName, figureName, markersOrCell, ".jpeg"))
+  print(
+    ggplot(
+      combinedDf,
+      aes(
+        x = as.factor(typeOfCells),
+        y = minus_log_fdr_adjusted_p_val,
+        color = as.factor(experiment),
+        size = logFC
+      )
+    ) +
+      geom_point(alpha = 0.75) +
+      theme(axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1,
+        size = 15
+      )) +
+      xlab("Cell Populations") + ylab("-log10(P-Value)") +
+      ylim(0, 3.5) + guides(color = guide_legend(title = "Comparison")) +
+      guides(size = guide_legend(title = "log2(Fold Change)")) +
+      geom_hline(yintercept = 1.3, linetype = "dashed")
+  )
+  dev.off()
 }

@@ -8,7 +8,7 @@ loadlibraries()
 directoryName <- "monocytes"
 columnNames <- monocytesClusteringColumnNames
 
-cutoff <- c(0.6, 0.5, 0.575, 0.4, 0.45)
+cutoff <- c(0.6, 0.5, 0.6, 0.5, 0.45)
 
 markersOrCells <- c("CellPopulations", "Markers")
 

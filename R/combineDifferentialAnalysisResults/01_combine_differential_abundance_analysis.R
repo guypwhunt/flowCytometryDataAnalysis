@@ -19,8 +19,7 @@ doParallel::registerDoParallel(cl = my.cluster)
 foreach::getDoParRegistered()
 foreach::getDoParWorkers()
 
-foreach(clusterName = clusterNames) %:%
-  foreach(markersOrCell = markersOrCells) %dopar% {
+foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
     try(source("R/01_functions.R"))
 
     loadlibraries()

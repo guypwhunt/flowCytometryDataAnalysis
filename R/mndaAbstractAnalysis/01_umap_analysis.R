@@ -31,23 +31,59 @@ df$meta_flowsom_cell_population <- paste0(df$meta_flowsom_cell_population, " (",
 
 #visualize and label clusters on umap
 gc()
+df$meta_clusters_flowsom <- as.factor(df$meta_clusters_flowsom)
+df$meta_flowsom_cell_population <- as.factor(df$meta_flowsom_cell_population)
+
+
 label_meta_flowsom_umap <-
-  df %>% group_by(meta_flowsom_cell_population) %>%
+  df %>% group_by(meta_clusters_flowsom, meta_flowsom_cell_population) %>%
   select(umap_1, umap_2) %>% summarize_all(mean)
 
-gc()
-plot <-
-  ggplot(df, aes(
-    x = umap_1,
-    y = umap_2,
-    color = as.factor(meta_flowsom_cell_population)
-  )) + geom_point(size = 0.1) +
-  theme_bw() +
-  labs(y= "UMAP 2", x = "UMAP 1") +
-  guides(colour = guide_legend("Monocyte Populations",
-                               override.aes = list(size=5)))
+label_meta_flowsom_umap$meta_clusters_flowsom <- as.factor(as.character(label_meta_flowsom_umap$meta_clusters_flowsom))
 
-print(plot)
+gc()
+ggplot(df, aes(x = umap_1,
+               y = umap_2#,
+               #color = meta_clusters_flowsom
+               )) + geom_point(size = 0.1) +
+  geom_label_repel(
+    aes(label = meta_clusters_flowsom),
+    data = label_meta_flowsom_umap,
+    size = 3,
+    force_pull = 0,
+    max.time = 2
+  ) +
+  theme_bw() +
+  labs(y = "UMAP 2", x = "UMAP 1") +
+  guides(colour = guide_legend("Monocyte Populations",
+                               override.aes = list(size = 5)))
+
+#####
+ggplot(df, aes(
+  x = umap_1,
+  y = umap_2,
+  color = as.factor(meta_flowsom_cell_population)
+)) + geom_point(size = 0.1, shape = 16) +
+  theme_bw() +
+  labs(y = "UMAP 2", x = "UMAP 1") +
+  guides(colour = guide_legend("Monocyte Populations",
+                               override.aes = list(size = 5))) +
+  geom_label(aes(label = meta_clusters_flowsom,
+                 x = umap_1,
+                 y = umap_2),
+             data = label_meta_flowsom_umap,
+             show.legend = FALSE)
+
++
+  geom_label_repel(
+    aes(label = meta_clusters_flowsom),
+    data = label_meta_flowsom_umap,
+    size = 3,
+    force_pull = 0,
+    max.time = 2
+  )
+
+####
 
 label_meta_flowsom_umap <-
   df %>% group_by(meta_clusters_flowsom) %>%
@@ -75,11 +111,3 @@ plot <-
 print(plot)
 
 setwd(workingDirectory)
-
-library(gtools)
-x <- c(1,2,3,4,5)
-y <- c(2,2,2,2,2)
-x <- median(x)
-y <- median(y)
-
-foldchange(x, y)

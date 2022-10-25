@@ -24,11 +24,10 @@ df <-
     '/clusteringOutput/clusteringOutputs.csv'
   ))
 
-foreach(clusterName = clusterNames) %:%
-  foreach(markersOrCell = markersOrCells) %dopar% {
-    try(source("R/01_functions.R"))
-    try(source("R/00_datasets.R"))
+foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
+  try(source("R/01_functions.R"))
+  try(source("R/00_datasets.R"))
 
-    loadlibraries()
-    performAllDifferentialAbundanceTests(df, directoryName, columnNames, clusterName, markersOrCell)
-  }
+  loadlibraries()
+  performAllDifferentialAbundanceTests(df, directoryName, columnNames, clusterName, markersOrCell)
+}

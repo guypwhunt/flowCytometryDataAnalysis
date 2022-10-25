@@ -3,8 +3,9 @@ try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-directoryName <- "monocytes"
-columnNames <- monocytesColumnNames
+#clusterName <- clusterColumns[1]
+
+directoryName <- "bCells"
 
 markersOrCells <- markersOrCellsClassification
 
@@ -30,6 +31,6 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
   try(source("R/01_functions.R"))
   try(source("R/00_datasets.R"))
 
-  calculateMediansValue(directoryName, columnNames, markersOrCell,
+  calculateCounts(directoryName, markersOrCell,
                         clusterName, df)
 }

@@ -28,4 +28,4 @@ gateColumns <- data.frame (CD14  = c(0),
 
 preprocessing(directoryName, columnNames, prettyColumnNames,
               test, gate, gateTogether, gateColumns,
-              automatedcofactors = automatedcofactors)
+              automatedcofactors = NULL)

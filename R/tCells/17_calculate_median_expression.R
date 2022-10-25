@@ -22,9 +22,15 @@ df <-
     "/clusteringOutput/clusteringOutputs.csv"
   ))
 
-for (clusterName in clusterNames) {
-  for (markersOrCell in markersOrCells) {
-    calculateMediansValue(directoryName, columnNames, markersOrCell,
-                          clusterName, df)
-  }
+my.cluster <- parallel::makeCluster(n.cores)
+doParallel::registerDoParallel(cl = my.cluster)
+foreach::getDoParRegistered()
+foreach::getDoParWorkers()
+
+foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
+  try(source("R/01_functions.R"))
+  try(source("R/00_datasets.R"))
+
+  calculateMediansValue(directoryName, columnNames, markersOrCell,
+                        clusterName, df)
 }
