@@ -193,6 +193,11 @@ ggsurvplot(
   ggtheme = theme_minimal()
 )
 
+clinicalCovariates <- clinicalCovariates[clinicalCovariates %in% c("alsfrsR", "timeFromOnsetToVisitInYears", "delataAlsfrsRScore")]
+
+clinicalAndBiologicalCovariates <-
+  append(clinicalCovariates, biologicalCovariates)
+
 res.cox <-
   coxph(as.formula(paste(
     "Surv(survivalFromVisit, status) ~ 0",
@@ -209,11 +214,9 @@ step$anova
 
 censored.clinical.biological.res.cox <-
   coxph(
-    Surv(survivalFromVisit, status) ~ ageAtVisit + sex + ethnicityID +
-      onset + timeFromOnsetToVisitInYears + riluzole + delataAlsfrsRScore +
-      GPR32_median_Positive_Naïve_B_Cells + GPR32_median_Positive_HLA_Negative_DR_Negative_Or_Low_Classical_Monocytes +
-      GPR32_median_Positive_HLA_Negative_DR_Negative_Or_Low_Activated_CD11b_Positive__Classical_Monocytes +
-      GPR32_median_Positive_HLA_Negative_DR_Negative_Or_Low_Intermediate_Monocytes -
+    Surv(survivalFromVisit, status) ~ alsfrsR + timeFromOnsetToVisitInYears +
+      delataAlsfrsRScore + GPR32_median_Positive_Naïve_B_Cells +
+      GPR32_median_Positive_Unswitched_Memory_B_Cells + GPR32_median_Positive_HLA_Negative_DR_Negative_Or_Low_Classical_Monocytes -
       1,
     data = minDF
   )

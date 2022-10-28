@@ -29,15 +29,21 @@ senescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
 numberOfClusters <- seq(3,20)
 knn <- 50
 
-# Viuslisisation Inputs
-clusterColumns <- c(#"clusters_flowsom",
-  "meta_clusters_flowsom","clusters_phenograph"
-                    #,"clusters_fast_pg"
-                    )
+# Visulisisation Inputs
+clusterColumns <- c(
+  #"clusters_flowsom",
+  #"clusters_fast_pg",
+  "meta_clusters_flowsom",
+  "clusters_phenograph"
+)
 markersOrCellsClassification <- c(#"Clusters",
-                                  "Markers"
-                                  #,"CellPopulations"
-                                  )
+  #"CellPopulations",
+  "Markers")
 
 # Parallel inputs
 n.cores <- 2
+
+# Cluster Cutoff
+cutOff <- 0.4
+
+iterations <- 100

@@ -24,10 +24,23 @@ df <-
     '/clusteringOutput/clusteringOutputs.csv'
   ))
 
-foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
-  try(source("R/01_functions.R"))
-  try(source("R/00_datasets.R"))
+foreach(clusterName = clusterNames) %:%
+  foreach(markersOrCell = markersOrCells) %dopar% {
+    try(source("R/01_functions.R"))
+    try(source("R/00_datasets.R"))
 
-  loadlibraries()
-  performAllDifferentialAbundanceTests(df, directoryName, columnNames, clusterName, markersOrCell)
-}
+    loadlibraries()
+
+    cutoffDf <- read.csv(
+      paste0(
+        "data/",
+        directoryName,
+        "/clusteringOutput/",
+        clusterName,
+        markersOrCell,
+        "CountsOverCutoff.csv"
+      )
+    )
+
+    performAllDifferentialAbundanceTests(df, cutoffDf, directoryName, columnNames, clusterName, markersOrCell)
+  }

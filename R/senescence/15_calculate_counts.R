@@ -22,15 +22,9 @@ df <-
     "/clusteringOutput/clusteringOutputs.csv"
   ))
 
-my.cluster <- parallel::makeCluster(n.cores)
-doParallel::registerDoParallel(cl = my.cluster)
-foreach::getDoParRegistered()
-foreach::getDoParWorkers()
-
-foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
-  try(source("R/01_functions.R"))
-  try(source("R/00_datasets.R"))
-
-  calculateCounts(directoryName, markersOrCell,
-                        clusterName, df)
+for (clusterName in clusterNames) {
+  for (markersOrCell in markersOrCells) {
+    calculateCounts(directoryName, markersOrCell,
+                    clusterName, df)
+  }
 }

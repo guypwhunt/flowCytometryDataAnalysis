@@ -645,7 +645,7 @@ convertToFCS <- function(directoryName) {
 
   setwd(paste0("./data/", directoryName, "/dataPPOutput"))
 
-  df <- read.csv('scaledDf.csv')
+  df <- read.csv('outliersRemoveMinMaxScaledDf.csv')
 
   dfs <- list()
 
@@ -2237,7 +2237,7 @@ gateMarkersFcs <- function(df, gateColumns) {
   gc()
 }
 
-differentialAbundanceAnalysis <- function(df,
+differentialAbundanceAnalysis <- function(df, cutoffDf,
                                           directoryName,
                                           columnNames,
                                           clusterName,
@@ -2261,7 +2261,6 @@ differentialAbundanceAnalysis <- function(df,
   experimentInfo <- as.data.frame(experimentInfo)
 
   experimentInfo <- experimentInfo[experimentInfo$experiment == "flowCytometry", ]
-
 
   if (markersOrCell != "Clusters") {
     cellPopulationMarkers <-
@@ -2467,6 +2466,11 @@ differentialAbundanceAnalysis <- function(df,
             cellPopulationMarkers[, c(clusterName, "cell_population")],
             by = clusterName,
             all.x = TRUE)
+
+    df <- df[!df[, "cell_population"] %in% cutoffDf[, clusterName], ]
+
+  } else {
+    df <- df[!df[, clusterName] %in% cutoffDf[, clusterName], ]
   }
 
   df <-
@@ -2677,7 +2681,6 @@ differentialAbundanceAnalysis <- function(df,
       )
   }
 
-
   # Extract statistics
   res_DA_DT <- as.data.frame(rowData(res_DA))
 
@@ -2845,7 +2848,7 @@ differentialAbundanceAnalysis <- function(df,
 }
 
 performAllDifferentialAbundanceTests <-
-  function(df,
+  function(df, cutoffDf,
            directoryName,
            columnNames,
            clusterName,
@@ -2863,7 +2866,7 @@ performAllDifferentialAbundanceTests <-
     #'
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2893,7 +2896,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2931,7 +2934,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2961,7 +2964,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2999,7 +3002,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3029,7 +3032,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3071,7 +3074,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3102,7 +3105,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3141,7 +3144,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3171,7 +3174,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3210,7 +3213,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3240,7 +3243,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3279,7 +3282,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3309,7 +3312,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3348,7 +3351,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3378,7 +3381,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3417,7 +3420,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3447,7 +3450,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3486,7 +3489,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3516,7 +3519,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3558,7 +3561,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3589,7 +3592,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3636,7 +3639,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3667,7 +3670,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3713,7 +3716,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3744,7 +3747,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3791,7 +3794,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3822,7 +3825,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df,
+        df = df, cutoffDf = cutoffDf,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -4663,6 +4666,7 @@ calculateCounts <- function(directoryName,
   results <-
     data.frame(matrix(ncol = 3,
                       nrow = 0))
+
   for (filename in unique(df[, "fileName"])) {
     for (cluster in unique(df[, clusterName])) {
       df2 <-
@@ -4671,7 +4675,7 @@ calculateCounts <- function(directoryName,
       count <- nrow(df2)
       new_row <- c(filename, cluster, count)
 
-      results <- rbind(new_row, results)
+      results <- rbind(results, new_row)
     }
   }
 
@@ -4689,6 +4693,47 @@ calculateCounts <- function(directoryName,
       clusterName,
       markersOrCell,
       "Counts.csv"
+    ),
+    row.names = FALSE
+  )
+}
+
+identifyUnstableClustersFromCounts <- function(directoryName,
+                            markersOrCell,
+                            clusterName,
+                            df, cutOff) {
+  results <-
+    data.frame(matrix(ncol = 3,
+                      nrow = 0))
+
+  colnames(results) <-
+    c("fileName",
+      clusterName,
+      "count")
+
+  df[, "count"] <- as.double(df[, "count"])
+
+  for (cluster in unique(df[, clusterName])) {
+    df2 <- df[df[, clusterName] ==  cluster,]
+    totalCount <- sum(df2[, "count"])
+
+    for (filename in unique(df2[, "fileName"])) {
+      df3 <- df2[df2[, "fileName"] == filename, ]
+      if (df3[, "count"] > cutOff * totalCount) {
+        results <- rbind(results, df3)
+      }
+    }
+  }
+
+  write.csv(
+    results,
+    paste0(
+      "data/",
+      directoryName,
+      "/clusteringOutput/",
+      clusterName,
+      markersOrCell,
+      "CountsOverCutoff.csv"
     ),
     row.names = FALSE
   )
@@ -4766,4 +4811,142 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
       geom_hline(yintercept = 1.3, linetype = "dashed")
   )
   dev.off()
+}
+
+generateSubsampledFlowsomClusters <- function(directoryName,
+                                               columnNames,
+                                               clusterNames,
+                                               numberOfClusters,
+                                               iterations) {
+  df <-
+    read.csv(paste0(
+      "data/",
+      directoryName,
+      "/clusteringOutput/clusteringOutputs.csv"
+    ))
+
+  df <- df[, c("fileName", columnNames, clusterNames)]
+
+  workingDirectory <- getwd()
+
+  setwd(paste0("./data/", directoryName))
+
+  dirFCS <- paste0(getwd(), "/dataPPOutput/scaledFcs")
+
+  tempDirectory <- paste0(getwd(), "/dataPPOutput/temp")
+
+  fileNames <- list.files(dirFCS)
+
+  fileNames <- fileNames[fileNames != "annotation.txt"]
+
+  dir.create(tempDirectory, showWarnings = FALSE)
+
+  columnIndexes <- seq(length(columnNames))
+
+  for (number in seq(iterations)) {
+    try(file.remove(paste0(tempDirectory, "/", fileNames)))
+
+    file.copy(
+      from = paste0(dirFCS, "/", fileNames),
+      to = tempDirectory,
+      overwrite = TRUE,
+      recursive = TRUE,
+      copy.mode = TRUE
+    )
+
+    randomNumbers <-
+      sample(seq(length(fileNames)), floor(0.2 * length(fileNames)), replace =
+               FALSE)
+
+    message(randomNumbers)
+
+    try(file.remove(paste0(tempDirectory, "/", fileNames[randomNumbers])))
+
+    keptFileNames <-
+      fileNames[!fileNames %in% fileNames[randomNumbers]]
+
+    keptFileNames <- str_replace_all(keptFileNames, ".fcs", "")
+
+    #message(keptFileNames)
+
+    df[, paste0(clusterNames, number)] <- NA
+
+    #run flowsom
+    flowsom <- FlowSOM(
+      input = tempDirectory,
+      transform = FALSE,
+      scale = FALSE,
+      colsToUse = columnIndexes,
+      #seed = seed,
+      nClus = numberOfClusters
+    )
+
+    # Get metaclustering per cell
+    clusters_flowsom <- as.factor(flowsom$map$mapping[, 1])
+    meta_clusters_flowsom <- as.factor(flowsom$map$mapping[, 1])
+    levels(meta_clusters_flowsom) <- flowsom$metaclustering
+
+    try({df[df[, "fileName"] %in% keptFileNames, paste0(clusterNames, number)] <-
+      c(clusters_flowsom, meta_clusters_flowsom)})
+
+    write.csv(df,
+              'clusteringOutput/flowsomClusterStability.csv',
+              row.names = FALSE)
+  }
+
+  setwd(workingDirectory)
+}
+
+identifyFlowsomClusterSimilarity <- function(directoryName,
+                                             clusterNames,
+                                             markersOrCells,
+                                             iterations) {
+  setwd(paste0("./data/", directoryName))
+
+  df <- read.csv('clusteringOutput/flowsomClusterStability1.csv')
+
+  for (clusterName in clusterNames) {
+    for (markersOrCell in markersOrCells) {
+      results <- data.frame(row.names = unique(df[, clusterName]))
+
+      results[, clusterName] <- unique(df[, clusterName])
+
+      try({
+        for (number in seq(iterations)) {
+          column <- paste0("meta_clusters_flowsom", number)
+
+          results[, column] <- NA
+
+          filteredDf <-
+            na.omit(df[, c("meta_clusters_flowsom", column)])
+
+          tabulatedDf <- table(filteredDf)
+
+          tabulatedDf <- as.data.frame(tabulatedDf)
+
+          for (cluster in unique(df[, clusterName])) {
+            filteredTabulatedDf <-
+              tabulatedDf[tabulatedDf[, "meta_clusters_flowsom"] == cluster, ]
+
+            percentage <-
+              max(filteredTabulatedDf[, "Freq"] / sum(filteredTabulatedDf[, "Freq"]))
+
+            results[results[, clusterName] == cluster, column] <-
+              percentage
+          }
+        }
+      })
+
+      write.csv(
+        results,
+        paste0(
+          "clusteringOutput/",
+          clusterName,
+          markersOrCell,
+          "Stability.csv"
+        ),
+        row.names = FALSE
+      )
+    }
+  }
 }
