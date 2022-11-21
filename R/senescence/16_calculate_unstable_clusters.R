@@ -19,7 +19,7 @@ cutOff <- cutOff
 
 for (clusterName in clusterNames) {
   for (markersOrCell in markersOrCells) {
-    df <- read.csv(
+    df <- fread(file=
       paste0(
         "data/",
         directoryName,
@@ -29,6 +29,8 @@ for (clusterName in clusterNames) {
         "Counts.csv"
       )
     )
+	df <- as.data.frame(df)
+
     identifyUnstableClustersFromCounts(directoryName, markersOrCell,
                     clusterName, df, cutOff)
   }

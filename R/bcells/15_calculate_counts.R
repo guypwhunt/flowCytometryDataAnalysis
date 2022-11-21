@@ -16,11 +16,13 @@ clusterNames <- clusterColumns
 #clusterName <- clusterNames[3]
 
 df <-
-  read.csv(paste0(
+  fread(file=paste0(
     "data/",
     directoryName,
     "/clusteringOutput/clusteringOutputs.csv"
   ))
+  
+df <- as.data.frame(df)
 
 for (clusterName in clusterNames) {
   for (markersOrCell in markersOrCells) {

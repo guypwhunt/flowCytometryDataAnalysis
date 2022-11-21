@@ -4,6 +4,7 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 clusterNames <- clusterColumns
+clusterNames <- clusterNames[2:1]
 markersOrCells <- markersOrCellsClassification
 
 markersOrCell <- markersOrCells[1]
@@ -53,13 +54,12 @@ for (clusterName in clusterNames) {
   combinedDf <- combinedDf[combinedDf$typeOfCells %in% combinedDf[combinedDf$clusterModel == clusterName, "typeOfCells"],]
 }
 
-clusterName <- clusterNames[2]
-
 for(clusterName in clusterNames) {
 
   dsaResults <- combinedDf
 
   directoryNames <- unique(dsaResults$panel)
+  directoryNames <- directoryNames[!is.na(directoryNames)]
 
   for (directory in directoryNames) {
     message(directory)

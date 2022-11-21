@@ -3,10 +3,10 @@ try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-directoryName <- "bCells"
-columnNames <- bCellsClusteringColumnNames
+directoryName <- "tCells"
+columnNames <- tCellsClusteringColumnNames
 
-prettyColumnNames <- bCellsClusteringColumnNames
+prettyColumnNames <- tCellsClusteringColumnNames
 
 clusterNames <- clusterColumns
 
@@ -19,7 +19,8 @@ markerType <- "Phenotypic"
 #markersOrCellS <- c(markersOrCells[3])
 #markersOrCell <- c(markersOrCells[1])
 
-df <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
+df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
+df <- as.data.frame(df)
 
 for (markersOrCell in markersOrCells) {
   for (clusterName in clusterNames) {
@@ -43,4 +44,3 @@ for (markersOrCell in markersOrCells) {
     generateHeatmap(df, clusterName, directoryName, columnNames, markersOrCell, markerType, prettyColumnNames)
   }
 }
-

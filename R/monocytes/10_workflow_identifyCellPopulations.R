@@ -8,16 +8,18 @@ loadlibraries()
 directoryName <- "monocytes"
 columnNames <- monocytesClusteringColumnNames
 
-cutoff <- c(0.6, 0.5, 0.6, 0.5, 0.45)
+cutoff <- monocytesCutoff
 
 markersOrCells <- c("CellPopulations", "Markers")
 
 df <-
-  read.csv(paste0(
+  fread(file=paste0(
     "data/",
     directoryName,
     "/clusteringOutput/clusteringOutputs.csv"
   ))
+df <- as.data.frame(df)
+
 
 for (markersOrCell in markersOrCells) {
   for (clusterColumn in clusterColumns) {

@@ -6,20 +6,16 @@ loadlibraries()
 # Define if it is Differential States or Differential Abundance Aanlaysis
 clusterNames <- clusterColumns
 
-# clusterName <- clusterNames[4]
-# clusterNames <- clusterNames[3]
+# clusterName <- clusterNames[1]
+# clusterNames <- c(clusterNames[1])
 
 markersOrCells <- markersOrCellsClassification
 
 # markersOrCell <- markersOrCells[1]
 # markersOrCells <- markersOrCells[3]
 
-my.cluster <- parallel::makeCluster(n.cores)
-doParallel::registerDoParallel(cl = my.cluster)
-foreach::getDoParRegistered()
-foreach::getDoParWorkers()
-
-foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
+for(clusterName in clusterNames) {
+  for (markersOrCell in markersOrCells) {
     try(source("R/01_functions.R"))
 
     loadlibraries()
@@ -107,11 +103,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "bulbarLimbVisits1AllCellsDifferentialStatesStatistics.csv"
+          "BulbarLimbVisits1AllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "bulbarLimbVisits1",
+          "BulbarLimbVisits1",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -197,11 +193,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1limbAllCellsDifferentialStatesStatistics.csv"
+          "caseControlVisits1LimbAllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1limb",
+          "caseControlVisits1Limb",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -215,11 +211,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1bulbarAllCellsDifferentialStatesStatistics.csv"
+          "caseControlVisits1BulbarAllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1bulbar",
+          "caseControlVisits1Bulbar",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -234,11 +230,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1SlowbulbarAllCellsDifferentialStatesStatistics.csv"
+          "caseControlVisits1SlowBulbarAllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Slowbulbar",
+          "caseControlVisits1SlowBulbar",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -252,11 +248,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1SlowlimbAllCellsDifferentialStatesStatistics.csv"
+          "caseControlVisits1SlowLimbAllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Slowlimb",
+          "caseControlVisits1SlowLimb",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -270,11 +266,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1FastbulbarAllCellsDifferentialStatesStatistics.csv"
+          "caseControlVisits1FastBulbarAllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Fastbulbar",
+          "caseControlVisits1FastBulbar",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -288,11 +284,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1FastlimbAllCellsDifferentialStatesStatistics.csv"
+          "caseControlVisits1FastLimbAllCellsDifferentialStatesStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Fastlimb",
+          "caseControlVisits1FastLimb",
           markersOrCell,
           "DifferentialStatesStatistics.csv"
         )
@@ -379,11 +375,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "bulbarLimbVisits1AllCellsDifferentialAbundanceStatistics.csv"
+          "BulbarLimbVisits1AllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "bulbarLimbVisits1",
+          "BulbarLimbVisits1",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -469,11 +465,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1limbAllCellsDifferentialAbundanceStatistics.csv"
+          "caseControlVisits1LimbAllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1limb",
+          "caseControlVisits1Limb",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -487,11 +483,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1bulbarAllCellsDifferentialAbundanceStatistics.csv"
+          "caseControlVisits1BulbarAllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1bulbar",
+          "caseControlVisits1Bulbar",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -506,11 +502,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1SlowbulbarAllCellsDifferentialAbundanceStatistics.csv"
+          "caseControlVisits1SlowBulbarAllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Slowbulbar",
+          "caseControlVisits1SlowBulbar",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -524,11 +520,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1FastbulbarAllCellsDifferentialAbundanceStatistics.csv"
+          "caseControlVisits1FastBulbarAllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Fastbulbar",
+          "caseControlVisits1FastBulbar",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -542,11 +538,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1SlowbulbarAllCellsDifferentialAbundanceStatistics.csv"
+          "caseControlVisits1SlowBulbarAllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Slowbulbar",
+          "caseControlVisits1SlowBulbar",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -560,11 +556,11 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
       c(
         paste0(
           clusterName,
-          "caseControlVisits1FastlimbAllCellsDifferentialAbundanceStatistics.csv"
+          "caseControlVisits1FastLimbAllCellsDifferentialAbundanceStatistics.csv"
         ),
         paste0(
           clusterName,
-          "caseControlVisits1Fastlimb",
+          "caseControlVisits1FastLimb",
           markersOrCell,
           "DifferentialAbundanceStatistics.csv"
         )
@@ -574,3 +570,4 @@ foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
     recalculatePValueAdjustments(DA, sigCutOff, fileNames, clusterName, markersOrCell)
 
   }
+}

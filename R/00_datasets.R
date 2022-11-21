@@ -3,10 +3,15 @@ bCellsColumnNames <- c("IgD", "CD24", "CD27", "GPR32")
 
 bCellsClusteringColumnNames <- c("IgD", "CD24", "CD27")
 
+bCellsCutoff <- c(0.5, 0.5, 0.5)
+
 # Monocyte Inputs
 monocytesColumnNames <- c("CD11b","CD14", "HLA_DR", "CD16", "CD11b_activated", "GPR32")
 
 monocytesClusteringColumnNames <- c("CD11b","CD14","HLA_DR", "CD16", "CD11b_activated")
+
+monocytesCutoff <- c(0.6, 0.5, 0.6, 0.5, 0.45)
+
 
 # T Cells Inputs
 tCellsColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
@@ -16,6 +21,8 @@ tCellsColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
 tCellsClusteringColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
                                  "CD45RO", "CD4")
 
+tCellsCutoff <- c(0.5,0.6,0.5,0.4,0.5,0.6)
+
 # Senescence T Cells
 senescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
                            "CD8", "CCR7", "GPR32")
@@ -23,6 +30,8 @@ senescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
 
 senescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
                                      "CD8", "CCR7")
+
+senescenceCutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
 
 
 # Clustering Inputs
@@ -37,13 +46,16 @@ clusterColumns <- c(
   "clusters_phenograph"
 )
 markersOrCellsClassification <- c(#"Clusters",
-  #"CellPopulations",
-  "Markers")
+  #"CellPopulations"#,
+  "Markers"
+  )
 
 # Parallel inputs
-n.cores <- 2
+n.cores <<- 11
 
 # Cluster Cutoff
 cutOff <- 0.4
 
 iterations <- 100
+
+clusterStabilityCutoff <- 0.9

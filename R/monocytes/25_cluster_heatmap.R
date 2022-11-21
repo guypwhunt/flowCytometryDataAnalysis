@@ -19,7 +19,8 @@ markerType <- "Phenotypic"
 #markersOrCellS <- c(markersOrCells[3])
 #markersOrCell <- c(markersOrCells[1])
 
-df <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
+df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
+df <- as.data.frame(df)
 
 for (markersOrCell in markersOrCells) {
   for (clusterName in clusterNames) {

@@ -83,7 +83,7 @@ clinicalCovariates <- c(
   "ethnicityID",
   "onset",
   "alsfrsR",
-  "timeFromOnsetToVisitInYears",
+  #"timeFromOnsetToVisitInYears",
   "diagnosticDelayInYears",
   "ageAtOnset",
   "riluzole",

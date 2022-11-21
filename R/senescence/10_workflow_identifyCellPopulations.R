@@ -8,16 +8,17 @@ loadlibraries()
 directoryName <- "senescence"
 columnNames <- senescenceClusteringColumnNames
 
-cutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
+cutoff <- senescenceCutoff
 
 markersOrCells <- c("CellPopulations", "Markers")
 
 df <-
-  read.csv(paste0(
+  fread(file=paste0(
     "data/",
     directoryName,
     "/clusteringOutput/clusteringOutputs.csv"
   ))
+  df <- as.data.frame(df)
 
 for (markersOrCell in markersOrCells) {
   for (clusterColumn in clusterColumns) {

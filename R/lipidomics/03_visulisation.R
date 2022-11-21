@@ -26,14 +26,23 @@ for(df in dfs){
   }
 }
 
+summary(combinedDf$logFC)
+
 combinedDf <- combinedDf[combinedDf$experiment %in%
-combinedDf[combinedDf$adj.P.Val<0.05, "experiment"],]
+combinedDf[combinedDf$adj.P.Val<0.05 | abs(combinedDf$logFC) > 5, "experiment"],]
 
 combinedDf <- combinedDf[combinedDf$X %in%
-                           combinedDf[combinedDf$adj.P.Val<0.05, "X"],]
+                           combinedDf[combinedDf$adj.P.Val<0.05 | abs(combinedDf$logFC) > 5, "X"],]
 
 combinedDf$lipid <- combinedDf$X
 
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupFastBulbarEarly.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupFastBulbarEarly.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowBulbarEarlyVsgroupFastBulbarEarly.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowLimbLate.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowBulbarLate.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupSlowBulbarLate.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupFastLimbEarly.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "FastVsSlowFastEarlyVsFastLate.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbLate.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupFastBulbarEarly.csv",]
@@ -46,7 +55,12 @@ combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgro
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowBulbarEarlyVsgroupFastLimbLate.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupFastBulbarLate.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupFastLimbLate.csv",]
+#combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupFastBulbarEarly.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv",]
+combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupFastLimbEarly.csv",]
 combinedDf <- combinedDf[!grepl("ControlVs", combinedDf$experiment, fixed = TRUE),]
+
+
 
 combinedDf[combinedDf$experiment == "FastVsSlowFastLateVsFastEarly.csv", "experiment"] <- "Late Fast vs Early Fast"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupSlowBulbarLate.csv", "experiment"] <- "Late Fast Bulbar vs Late Slow Bulbar"
@@ -61,12 +75,23 @@ combinedDf[combinedDf$experiment == "ProgressionVsControlSlowLateVsControl.csv",
 combinedDf[combinedDf$experiment == "ProgressionVsControlSlowEarlyVsControl.csv","experiment"] <- "Early Slow vs Control"
 combinedDf[combinedDf$experiment == "ProgressionVsControlFastLateVsControl.csv","experiment"] <- "Late Fast vs Control"
 combinedDf[combinedDf$experiment == "ProgressionVsControlFastEarlyVsControl.csv","experiment"] <- "Early Fast vs Control"
+combinedDf[combinedDf$experiment == "ProgressionVsControlFastEarlyVsControl.csv","experiment"] <- "Early Fast vs Control"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlFastLimbLateVsControl.csv","experiment"] <- "Late Fast Limb vs Control"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowBulbarEarly.csv","experiment"] <- "Early Fast Bulbar vs Early Slow Bulbar"
+#combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv","experiment"] <- "Early Fast Bulbar vs Early Fast Limb"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupFastBulbarEarly.csv","experiment"] <- "Early Fast Limb vs Early Fast Bulbar"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv","experiment"] <- "Early Fast Bulbar vs Early Fast Limb"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupFastLimbLate.csv","experiment"] <- "Early Fast Limb vs Late Fast Limb"
 
-ggplot(combinedDf, aes(x = as.factor(lipid), y = -log10(P.Value),
-                      color = as.factor(experiment), size = logFC)) +
-  geom_point(alpha = 0.75) +
+
+
+ggplot(combinedDf, aes(x = as.factor(lipid), y = -log10(adj.P.Val),
+                      color = logFC)) +
+  geom_point(alpha = 0.75, size=5) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=15)) +
-  xlab("Specialized Pro-Resolving Mediator") + ylab("-log10(P-Value)") +
+  xlab("Specialized Pro-Resolving Mediator") + ylab("-log10(Adjusted P-Value)") +
   ylim(0, 3.5) + guides(color=guide_legend(title="Comparison")) +
-  guides(size=guide_legend(title="log2(Fold Change)")) +
-  geom_hline(yintercept=1.3, linetype="dashed")
+  geom_hline(yintercept=0 - log10(0.05), linetype="dashed") +
+  facet_wrap(~experiment) +
+  guides(color = guide_colourbar(title="log2(Fold Change)")) +
+  scale_colour_viridis_c()

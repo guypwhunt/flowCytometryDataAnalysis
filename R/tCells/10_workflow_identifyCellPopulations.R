@@ -8,16 +8,17 @@ loadlibraries()
 directoryName <- "tCells"
 columnNames <- tCellsClusteringColumnNames
 
-cutoff <- c(0.5,0.6,0.5,0.4,0.5,0.6)
+cutoff <- tCellsCutoff
 
 markersOrCells <- c("CellPopulations", "Markers")
 
 df <-
-  read.csv(paste0(
+  fread(file=paste0(
     "data/",
     directoryName,
     "/clusteringOutput/clusteringOutputs.csv"
   ))
+  df <- as.data.frame(df)
 
 for (markersOrCell in markersOrCells) {
   for (clusterColumn in clusterColumns) {

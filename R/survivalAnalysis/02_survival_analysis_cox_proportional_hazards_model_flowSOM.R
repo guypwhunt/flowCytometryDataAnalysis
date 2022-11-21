@@ -9,7 +9,7 @@ clusterNames <- clusterColumns
 markersOrCells <- markersOrCellsClassification
 
 clusterName <- clusterNames[1]
-markersOrCell <- markersOrCells[1]
+markersOrCell <- markersOrCells[2]
 
 experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
 
@@ -78,12 +78,12 @@ combinedDf$BulbarLimb <- factor(combinedDf$BulbarLimb)
 combinedDf$onset <- as.numeric(combinedDf$BulbarLimb)
 
 clinicalCovariates <- c(
-  "ageAtVisit",
+  #"ageAtVisit",
   "sex",
   "ethnicityID",
   "onset",
   "alsfrsR",
-  "timeFromOnsetToVisitInYears",
+  #"timeFromOnsetToVisitInYears",
   "diagnosticDelayInYears",
   "ageAtOnset",
   "riluzole",
@@ -162,6 +162,7 @@ res.cox <-
 
 library(MASS)
 step <- stepAIC(res.cox, direction = "both")
+
 step$anova
 
 censored.clinical.res.cox <-

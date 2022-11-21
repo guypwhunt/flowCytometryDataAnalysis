@@ -15,11 +15,13 @@ clusterNames <- clusterColumns
 #clusterName <- clusterNames[3]
 
 df <-
-  read.csv(paste0(
+  fread(file=paste0(
     "data/",
     directoryName,
     "/clusteringOutput/clusteringOutputs.csv"
   ))
+  
+df <- as.data.frame(df)
 
 my.cluster <- parallel::makeCluster(n.cores)
 doParallel::registerDoParallel(cl = my.cluster)

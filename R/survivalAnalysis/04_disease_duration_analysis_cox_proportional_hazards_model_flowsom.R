@@ -81,12 +81,12 @@ combinedDf$BulbarLimb <- factor(combinedDf$BulbarLimb)
 combinedDf$onset <- as.numeric(combinedDf$BulbarLimb)
 
 clinicalCovariates <- c(
-  "ageAtVisit",
+  #"ageAtVisit",
   "sex",
   "ethnicityID",
   "onset",
   "alsfrsR",
-  "timeFromOnsetToVisitInYears",
+  #"timeFromOnsetToVisitInYears",
   "diagnosticDelayInYears",
   "ageAtOnset",
   "riluzole",
@@ -171,8 +171,8 @@ step$anova
 
 censored.clinical.res.cox <-
   coxph(
-    Surv(diseaseDurationInYears, status) ~ alsfrsR + timeFromOnsetToVisitInYears +
-      delataAlsfrsRScore - 1,
+    Surv(diseaseDurationInYears, status) ~ ethnicityID + alsfrsR +
+      ageAtOnset + delataAlsfrsRScore - 1,
     data = minDF
   )
 censored.clinical.res.cox.summary <-
@@ -198,7 +198,8 @@ ggsurvplot(
   ggtheme = theme_minimal()
 )
 
-clinicalCovariates <- clinicalCovariates[clinicalCovariates %in% c("alsfrsR", "timeFromOnsetToVisitInYears", "delataAlsfrsRScore")]
+clinicalCovariates <- clinicalCovariates[clinicalCovariates %in% c("ethnicityID", "alsfrsR",
+                                                                     "ageAtOnset", "delataAlsfrsRScore")]
 
 clinicalAndBiologicalCovariates <-
   append(clinicalCovariates, biologicalCovariates)
@@ -221,9 +222,13 @@ step$anova
 
 censored.clinical.biological.res.cox <-
   coxph(
-    Surv(diseaseDurationInYears, status) ~alsfrsR + timeFromOnsetToVisitInYears +
-      delataAlsfrsRScore + GPR32_median_Positive_HLA_Negative_DR_Negative_Or_Low_Activated_CD11b_Positive__Classical_Monocytes +
-      GPR32_median_Positive_HLA_Negative_DR_Negative_Or_Low_Intermediate_Monocytes -
+    Surv(diseaseDurationInYears, status) ~ ethnicityID + alsfrsR +
+      ageAtOnset + delataAlsfrsRScore +
+      GPR32_median_Positive_Follicular_B_Cells +
+      GPR32_median_Positive_Unswitched_Memory_B_Cells_.CD24_Positive_. +
+      GPR32_median_Positive_HLA_Negative_DR_Negative__Activated_CD11b_Positive__Classical_Monocytes_.CD11b_Low. +
+      GPR32_median_Positive_HLA_Negative_DR_Negative__Intermediate_Monocytes +
+      GPR32_median_Positive_HLA_Negative_DR_Negative__Activated_CD11b_Positive__Intermediate_Monocytes_.CD11b_Low. -
       1,
     data = minDF
   )

@@ -5,7 +5,8 @@ loadlibraries()
 
 directoryName <- "bCells"
 
-df <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
+df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
+df <- as.data.frame(df)
 
 df[, "meta_clusters_flowsom"] <- df[, "meta_clusters_flowsom8"]
 

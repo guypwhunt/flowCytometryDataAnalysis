@@ -9,7 +9,7 @@ columnNames <- monocytesClusteringColumnNames
 
 clusterNames <- c("clusters_flowsom", "meta_clusters_flowsom")
 
-numberOfClusters <- 16
+numberOfClusters <- 15
 
 generateSubsampledFlowsomClusters(directoryName, columnNames, clusterNames,
                                   numberOfClusters, iterations)
