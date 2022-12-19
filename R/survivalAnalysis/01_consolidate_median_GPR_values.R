@@ -4,8 +4,8 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 clusterNames <- clusterColumns
-clusterNames <- clusterNames[2:1]
-markersOrCells <- markersOrCellsClassification
+clusterNames <- clusterNames[4:3]
+markersOrCells <- markersOrCellsClassification[2]
 
 markersOrCell <- markersOrCells[1]
 

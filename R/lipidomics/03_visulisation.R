@@ -29,10 +29,10 @@ for(df in dfs){
 summary(combinedDf$logFC)
 
 combinedDf <- combinedDf[combinedDf$experiment %in%
-combinedDf[combinedDf$adj.P.Val<0.05 | abs(combinedDf$logFC) > 5, "experiment"],]
+combinedDf[combinedDf$adj.P.Val<0.05 , "experiment"],]
 
 combinedDf <- combinedDf[combinedDf$X %in%
-                           combinedDf[combinedDf$adj.P.Val<0.05 | abs(combinedDf$logFC) > 5, "X"],]
+                           combinedDf[combinedDf$adj.P.Val<0.05 , "X"],]
 
 combinedDf$lipid <- combinedDf$X
 

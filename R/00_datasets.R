@@ -1,37 +1,47 @@
+# GPR18 T Cells
+gpr18TCellsColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
+                            "CD45RO", "CD4", "GPR18")
+
+gpr18TCellsClusteringColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
+                                      "CD45RO", "CD4")
+
+gpr18TCellsCutoff <- c(0.55,0.5,0.4,0.5,0.5,0.4)
+
+
 # B Cells Inputs
-bCellsColumnNames <- c("IgD", "CD24", "CD27", "GPR32")
+gpr32BCellsColumnNames <- c("IgD", "CD24", "CD27", "GPR32")
 
-bCellsClusteringColumnNames <- c("IgD", "CD24", "CD27")
+gpr32BCellsClusteringColumnNames <- c("IgD", "CD24", "CD27")
 
-bCellsCutoff <- c(0.5, 0.5, 0.5)
+gpr32BCellsCutoff <- c(0.5, 0.5, 0.5)
 
 # Monocyte Inputs
-monocytesColumnNames <- c("CD11b","CD14", "HLA_DR", "CD16", "CD11b_activated", "GPR32")
+gpr32MonocytesColumnNames <- c("CD11b","CD14", "HLA_DR", "CD16", "CD11b_activated", "GPR32")
 
-monocytesClusteringColumnNames <- c("CD11b","CD14","HLA_DR", "CD16", "CD11b_activated")
+gpr32MonocytesClusteringColumnNames <- c("CD11b","CD14","HLA_DR", "CD16", "CD11b_activated")
 
-monocytesCutoff <- c(0.6, 0.5, 0.6, 0.5, 0.45)
+gpr32MonocytesCutoff <- c(0.6, 0.5, 0.6, 0.5, 0.45)
 
 
 # T Cells Inputs
-tCellsColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
+gpr32TCellsColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
                        "CD45RO", "CD4", "GPR32")
 
 
-tCellsClusteringColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
+gpr32TCellsClusteringColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
                                  "CD45RO", "CD4")
 
-tCellsCutoff <- c(0.5,0.6,0.5,0.4,0.5,0.6)
+gpr32TCellsCutoff <- c(0.5,0.6,0.5,0.4,0.5,0.6)
 
 # Senescence T Cells
-senescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
+gpr32SenescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
                            "CD8", "CCR7", "GPR32")
 
 
-senescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
+gpr32SenescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
                                      "CD8", "CCR7")
 
-senescenceCutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
+gpr32SenescenceCutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
 
 
 # Clustering Inputs
@@ -40,13 +50,13 @@ knn <- 50
 
 # Visulisisation Inputs
 clusterColumns <- c(
-  #"clusters_flowsom",
-  #"clusters_fast_pg",
+  "clusters_flowsom",
+  "clusters_fast_pg",
   "meta_clusters_flowsom",
   "clusters_phenograph"
 )
 markersOrCellsClassification <- c(#"Clusters",
-  #"CellPopulations"#,
+  "CellPopulations",
   "Markers"
   )
 
@@ -58,4 +68,4 @@ cutOff <- 0.4
 
 iterations <- 100
 
-clusterStabilityCutoff <- 0.9
+clusterStabilityCutoff <- 0.85

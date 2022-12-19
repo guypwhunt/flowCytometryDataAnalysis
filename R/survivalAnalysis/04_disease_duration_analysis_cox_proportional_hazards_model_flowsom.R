@@ -5,8 +5,8 @@ library(survminer)
 
 loadlibraries()
 
-clusterNames <- clusterColumns
-markersOrCells <- markersOrCellsClassification
+clusterNames <- clusterColumns[3]
+markersOrCells <- markersOrCellsClassification[2]
 
 clusterName <- clusterNames[1]
 markersOrCell <- markersOrCells[1]
@@ -223,8 +223,7 @@ step$anova
 censored.clinical.biological.res.cox <-
   coxph(
     Surv(diseaseDurationInYears, status) ~ ethnicityID + alsfrsR +
-      ageAtOnset + delataAlsfrsRScore +
-      GPR32_median_Positive_Follicular_B_Cells +
+      ageAtOnset + delataAlsfrsRScore + GPR32_median_Positive_Follicular_B_Cells +
       GPR32_median_Positive_Unswitched_Memory_B_Cells_.CD24_Positive_. +
       GPR32_median_Positive_HLA_Negative_DR_Negative__Activated_CD11b_Positive__Classical_Monocytes_.CD11b_Low. +
       GPR32_median_Positive_HLA_Negative_DR_Negative__Intermediate_Monocytes +

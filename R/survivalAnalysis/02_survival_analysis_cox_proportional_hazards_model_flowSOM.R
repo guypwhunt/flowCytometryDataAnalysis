@@ -9,7 +9,7 @@ clusterNames <- clusterColumns
 markersOrCells <- markersOrCellsClassification
 
 clusterName <- clusterNames[1]
-markersOrCell <- markersOrCells[2]
+markersOrCell <- markersOrCells[1]
 
 experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
 

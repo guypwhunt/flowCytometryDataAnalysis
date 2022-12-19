@@ -127,10 +127,10 @@ loadlibraries <- function() {
 ungzipFiles <- function() {
   workingDirectory <- getwd()
 
-  dataDirectorys <- c("/data/bCells",
-                      "/data/monocytes",
-                      "/data/senescence",
-                      "/data/tCells")
+  dataDirectorys <- c("/data/gpr32BCells",
+                      "/data/gpr32BMonocytes",
+                      "/data/gpr32BSenescence",
+                      "/data/gpr32TCells")
 
   for (directory in dataDirectorys) {
     try(setwd(paste0(workingDirectory, directory)))
@@ -149,10 +149,10 @@ ungzipFiles <- function() {
 gzipFiles <- function() {
   workingDirectory <- getwd()
 
-  dataDirectorys <- c("/data/bCells",
-                      "/data/monocytes",
-                      "/data/senescence",
-                      "/data/tCells")
+  dataDirectorys <- c("/data/gpr32BCells",
+                      "/data/gpr32BMonocytes",
+                      "/data/gpr32BSenescence",
+                      "/data/gpr32TCells")
 
   for (directory in dataDirectorys) {
     try(setwd(paste0(workingDirectory, directory)))
@@ -198,7 +198,7 @@ rawDensityPlots <- function(directoryName,
     jpeg(file = paste0(figureDirectory,
                        "rawCombinedDensityPlot",
                        columnName,
-                       ".jpeg"))
+                       ".jpeg"), quality = 100)
     d <- density(df[, columnName])
     print(plot(d))
     dev.off()
@@ -209,7 +209,7 @@ rawDensityPlots <- function(directoryName,
     jpeg(file = paste0(figureDirectory,
                        "linearPlusLogCombinedDensityPlot",
                        columnName,
-                       ".jpeg"))
+                       ".jpeg"), quality = 100)
     x <- df[, columnName]
     x[x > automatedcofactors[i]] <- asinh(x[x > automatedcofactors[i]]) + automatedcofactors[i]
 
@@ -247,18 +247,29 @@ preprocessing <- function(directoryName,
   # Find file names of .csv files in the current working directory:
   filenames <- list.files(pattern = ".csv")
 
+  filenames <- filenames[!filenames %in% c("BLT00254_T2.csv",
+                                 "BLT00271_T2.csv",
+                                 "BLT00275_T2.csv",
+                                 "BLT00286_T2.csv",
+                                 "HC_BLT00282_T2.csv",
+                                 "HC_BLT00287_T2.csv")]
+
   if (test) {
     filenames <- filenames[1:4]
   }
 
   read.flow_csv <- function(pathIN) {
+    message(pathIN)
     raw <-
-      read.csv(
-        pathIN,
-        sep = ",",
-        header = TRUE,
-        stringsAsFactors = FALSE
+      fread(
+        pathIN#,
+        # ,
+        # sep = ",",
+        # header = TRUE,
+        # stringsAsFactors = FALSE,
+        # nrows = 100
       )
+    raw <- as.data.frame(raw)
     IND <- which(duplicated(raw))
     # Check for duplicates and report if found:
     if (any(duplicated(raw))) {
@@ -272,17 +283,39 @@ preprocessing <- function(directoryName,
       print(head(raw[IND, ]))
       cat("----\n")
     }
+
+    #if ("GPR18...AF488.A" %in% colnames(raw)){
+    #  print("")
+    #  print(pathIN)
+    #  #print(colnames(raw))
+    #}
     return(unique(raw))
   }
 
   # Read all:
   dfs <- sapply(filenames, read.flow_csv, simplify = FALSE)
 
+  xlist <- c()
+
   for (x in seq(length(dfs))) {
     df <- dfs[[x]]
-    df <- df[, columnNames]
-    colnames(df) <- prettyColumnNames
+    # print("")
+    # print(colnames(df))
+    # print("")
+
+    xlist <- append(xlist, colnames(df))
+    xcolumnNames <- columnNames[columnNames %in% colnames(df)]
+    xprettyColumnNames <- prettyColumnNames[columnNames %in% colnames(df)]
+
+    # print(columnNames[!columnNames %in% colnames(df)])
+
+    df <- df[, xcolumnNames]
+    colnames(df) <- xprettyColumnNames
     dfs[[x]]  <- df
+
+    if(length(xcolumnNames) < 9){
+      print(names(dfs[x]))
+    }
   }
 
   ##############################
@@ -291,6 +324,7 @@ preprocessing <- function(directoryName,
 
   ## Defining a function to rewrite a csv into a flowframe:
   csv_2_ff <- function(dat) {
+    message(dimnames(dat)[[2]])
     # Compute required metadata - column names with description -
     # ranges, min, and max settings
     meta <- data.frame(
@@ -308,10 +342,10 @@ preprocessing <- function(directoryName,
   }
 
   # rewrite to flowframe
-  dfs_ff = sapply(dfs, function(x)
+  dfs_ff <- sapply(dfs, function(x)
     csv_2_ff(x), simplify = FALSE)
   gc()
-  rm(dfs)
+  #rm(dfs)
 
   # rewrite to flowset
   dfs_fs <- as(dfs_ff, "flowSet")
@@ -320,9 +354,11 @@ preprocessing <- function(directoryName,
 
   dir.create("figures", showWarnings = FALSE)
 
+  prettyColumnNames <- unique(prettyColumnNames)
+
   if (is.null(automatedcofactors)) {
     gc()
-    jpeg(file = "figures/automatedcofactors.jpeg")
+    jpeg(file = "figures/automatedcofactors.jpeg", quality = 100)
     automatedcofactors <- estParamFlowVS(dfs_fs, prettyColumnNames)
     dev.off()
     try(capture.output(automatedcofactors,
@@ -398,7 +434,7 @@ preprocessing <- function(directoryName,
       "rawDensityPlot",
       str_replace_all(columnName, "\\.", ""),
       ".jpeg"
-    ))
+    ), quality = 100)
     plot <-
       densityplot(columnNameFormula, dfs_fs, main = "auto")
     try(print(plot))
@@ -411,7 +447,7 @@ preprocessing <- function(directoryName,
       "transformedDensityPlot",
       str_replace_all(columnName, "\\.", ""),
       ".jpeg"
-    ))
+    ), quality = 100)
     plot <-
       densityplot(columnNameFormula, dfs_fs_t_auto, main = "auto")
     try(print(plot))
@@ -425,7 +461,7 @@ preprocessing <- function(directoryName,
         "normalisedTransformedDensityPlot",
         str_replace_all(columnName, "\\.", ""),
         ".jpeg"
-      )
+      ), quality = 100
     )
     plot <-
       densityplot(columnNameFormula, dfs_fs_t_auto_normfda, main = "auto")
@@ -440,7 +476,7 @@ preprocessing <- function(directoryName,
         "gatedNormalisedTransformedDensityPlot",
         str_replace_all(columnName, "\\.", ""),
         ".jpeg"
-      )
+      ), quality = 100
     )
     plot <-
       densityplot(columnNameFormula, dfs_fs_t_auto_normfda_gated, main = "auto")
@@ -534,7 +570,7 @@ convertToDataFrame <- function(directoryName, columnNames) {
     jpeg(file = paste0(figureDirectory,
                        "rawDensityPlotCol",
                        col,
-                       ".jpeg"))
+                       ".jpeg"), quality = 100)
     d <- density(df[, col])
     try(print(plot(d, main = col)))
     dev.off()
@@ -551,14 +587,14 @@ convertToDataFrame <- function(directoryName, columnNames) {
                  scaledDf[, col] <= max(ninetyNinthQuantile),]
   }
 
-  scaledDf[, columnNames[columnNames != "GPR32"]] <- scale(scaledDf[, columnNames[columnNames != "GPR32"]])
+  scaledDf[, columnNames[!columnNames %in% c("GPR32", "GPR18")]] <- scale(scaledDf[, columnNames[!columnNames %in% c("GPR32", "GPR18")]])
   fwrite(scaledDf, 'dataPPOutput/scaledDf.csv', row.names = FALSE)
 
   for (col in columnNames) {
     jpeg(file = paste0(figureDirectory,
                        "scaledDensityPlotCol",
                        col,
-                       ".jpeg"))
+                       ".jpeg"), quality = 100)
     d <- density(scaledDf[, col])
     try(print(plot(d, main = col)))
     dev.off()
@@ -577,7 +613,7 @@ convertToDataFrame <- function(directoryName, columnNames) {
     jpeg(file = paste0(figureDirectory,
                        "minMaxDensityPlotCol",
                        col,
-                       ".jpeg"))
+                       ".jpeg"), quality = 100)
     d <- density(scaledColumn)
     print(plot(d))
     dev.off()
@@ -596,7 +632,7 @@ convertToDataFrame <- function(directoryName, columnNames) {
                          outliersMinMaxDf[, col] <= max(ninetyNinthQuantile),]
   }
 
-  columnNames <- columnNames[columnNames != "GPR32"]
+  columnNames <- columnNames[!columnNames %in% c("GPR32", "GPR18")]
 
   # plot out puts
   for (col in columnNames) {
@@ -613,7 +649,7 @@ convertToDataFrame <- function(directoryName, columnNames) {
       "outliersRemovedMinMaxDensityPlotCol",
       col,
       ".jpeg"
-    ))
+    ), quality = 100)
     d <- density(scaledColumn)
     print(plot(d))
     dev.off()
@@ -955,20 +991,14 @@ fastPGClustering <- function(directoryName, columnNames, knn) {
 
   df <- fread(file='clusteringOutput/clusteringOutputs.csv')
   df <- as.data.frame(df)
+  #df <- fread(file='clusteringOutput/flowsomClusterStability.csv')
 
   gc()
 
   fastPGResults <-
-    FastPG::fastCluster(as.matrix(df[, columnNames]), knn, 10)
-  clusters_fast_pg <-
-    tryCatch({
-      as.factor(fastPGResults$communities)
-    },
-    error = function(e) {
-      # return a safeError if a parsing error occurs
-      return(fastPGResults$communities)
-    })
+    FastPG::fastCluster(as.matrix(df[, columnNames]), knn, 5)
 
+  clusters_fast_pg <- fastPGResults$communities
 
   #add phenograph clusters to expression data frame
   df[, "clusters_fast_pg"] <- clusters_fast_pg
@@ -993,10 +1023,10 @@ umapDimReduction <- function(directoryName, columnNames, knn) {
     fread(file='clusteringOutput/clusteringOutputs.csv')
   df <- as.data.frame(df)
 
-  randomNumbers <-
+  try({randomNumbers <-
     sample(seq(nrow(df)), 50000, replace = FALSE)
 
-  df <- df[randomNumbers,]
+  df <- df[randomNumbers,]})
 
   umap <- umap(df[, columnNames],
                n_neighbors = knn,
@@ -1064,7 +1094,7 @@ visuliseUmap <- function(directoryName, columnNames) {
       "umap",
       str_replace_all(columnName, "\\.", ""),
       ".jpeg"
-    ))
+    ), quality = 100)
     plot <- viz.umap(dat = df, param.name = columnName)
     try(print(plot))
     dev.off()
@@ -1211,7 +1241,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   })
 
   gc()
-  jpeg(file = paste0(figureDirectory, "umapFlowsomCellPopulations.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapFlowsomCellPopulations.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = umap_1,
@@ -1230,7 +1260,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   gc()
-  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomCellPopulations.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomCellPopulations.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = umap_1,
@@ -1250,7 +1280,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   gc()
 
   try({
-    jpeg(file = paste0(figureDirectory, "umapPhenographCellPopulations.jpeg"))
+    jpeg(file = paste0(figureDirectory, "umapPhenographCellPopulations.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = umap_1,
@@ -1272,7 +1302,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   gc()
 
   try({
-    jpeg(file = paste0(figureDirectory, "umapFastPGCellPopulations.jpeg"))
+    jpeg(file = paste0(figureDirectory, "umapFastPGCellPopulations.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = umap_1,
@@ -1307,7 +1337,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   })
 
   gc()
-  jpeg(file = paste0(figureDirectory, "umapFlowsomClusters.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapFlowsomClusters.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = umap_1,
@@ -1327,7 +1357,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   gc()
-  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomClusters.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomClusters.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = umap_1,
@@ -1346,7 +1376,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   try({
-    jpeg(file = paste0(figureDirectory, "umapPhenographClusters.jpeg"))
+    jpeg(file = paste0(figureDirectory, "umapPhenographClusters.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = umap_1,
@@ -1366,7 +1396,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   try({
-    jpeg(file = paste0(figureDirectory, "umapFastPGClusters.jpeg"))
+    jpeg(file = paste0(figureDirectory, "umapFastPGClusters.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = umap_1,
@@ -1401,7 +1431,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   })
 
   gc()
-  jpeg(file = paste0(figureDirectory, "umapFlowsomMarkers.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapFlowsomMarkers.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = umap_1,
@@ -1421,7 +1451,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   gc()
-  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomMarkers.jpeg"))
+  jpeg(file = paste0(figureDirectory, "umapMetaFlowsomMarkers.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = umap_1,
@@ -1440,7 +1470,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   try({
-    jpeg(file = paste0(figureDirectory, "umapPhenographMarkers.jpeg"))
+    jpeg(file = paste0(figureDirectory, "umapPhenographMarkers.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = umap_1,
@@ -1460,7 +1490,7 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   try({
-    jpeg(file = paste0(figureDirectory, "umapFastPGMarkers.jpeg"))
+    jpeg(file = paste0(figureDirectory, "umapFastPGMarkers.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = umap_1,
@@ -1579,7 +1609,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
       "diffusionMap",
       str_replace_all(columnName, "\\.", ""),
       ".jpeg"
-    ))
+    ), quality = 100)
     plot <- viz.dm(dat = df, param.name = columnName)
     try(print(plot))
     dev.off()
@@ -1662,7 +1692,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   jpeg(file = paste0(
     figureDirectory,
     "diffusionMapFlowsomCellPopulations.jpeg"
-  ))
+  ), quality = 100)
   plot <-
     ggplot(df, aes(
       x = DC1,
@@ -1683,7 +1713,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   jpeg(file = paste0(
     figureDirectory,
     "diffusionMapMetaFlowsomCellPopulations.jpeg"
-  ))
+  ), quality = 100)
   plot <-
     ggplot(df, aes(
       x = DC1,
@@ -1705,7 +1735,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
     jpeg(file = paste0(
       figureDirectory,
       "diffusionMapPhenographCellPopulations.jpeg"
-    ))
+    ), quality = 100)
     plot <-
       ggplot(df, aes(
         x = DC1,
@@ -1728,7 +1758,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
     jpeg(file = paste0(
       figureDirectory,
       "diffusionMapFastPGCellPopulations.jpeg"
-    ))
+    ), quality = 100)
     plot <-
       ggplot(df, aes(
         x = DC1,
@@ -1763,7 +1793,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   })
 
   gc()
-  jpeg(file = paste0(figureDirectory, "diffusionMapFlowsomClusters.jpeg"))
+  jpeg(file = paste0(figureDirectory, "diffusionMapFlowsomClusters.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = DC1,
@@ -1783,7 +1813,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   gc()
-  jpeg(file = paste0(figureDirectory, "diffusionMapMetaFlowsomClusters.jpeg"))
+  jpeg(file = paste0(figureDirectory, "diffusionMapMetaFlowsomClusters.jpeg"), quality = 100)
   plot <-
     ggplot(df, aes(
       x = DC1,
@@ -1802,7 +1832,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   try({
-    jpeg(file = paste0(figureDirectory, "diffusionMapPhenographClusters.jpeg"))
+    jpeg(file = paste0(figureDirectory, "diffusionMapPhenographClusters.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = DC1,
@@ -1822,7 +1852,7 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   dev.off()
   gc()
   try({
-    jpeg(file = paste0(figureDirectory, "diffusionMapFastPGClusters.jpeg"))
+    jpeg(file = paste0(figureDirectory, "diffusionMapFastPGClusters.jpeg"), quality = 100)
     plot <-
       ggplot(df, aes(
         x = DC1,
@@ -1892,7 +1922,7 @@ veganOptimalClusters <-
       "-",
       as.character(maxClusters),
       ".jpeg"
-    ))
+    ), quality = 100)
     par(mar = c(1, 1, 1, 1))
     p <- plot(fit, sortg = TRUE, grpmts.plot = TRUE)
     print(p)
@@ -1963,7 +1993,7 @@ mclustOptimalClusters <- function(directoryName, columnNames) {
     )
   ))
 
-  jpeg(file = paste0(figureDirectory, "mclustBic.jpeg"))
+  jpeg(file = paste0(figureDirectory, "mclustBic.jpeg"), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <- plot(d_clust$BIC)
   print(p)
@@ -2022,14 +2052,14 @@ apclusterOptimalClusters <- function(directoryName, columnNames) {
   ))
 
   # 4
-  jpeg(file = paste0(figureDirectory, "apcluster1.jpeg"))
+  jpeg(file = paste0(figureDirectory, "apcluster1.jpeg"), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <- heatmap(d.apclus)
   print(p)
   dev.off()
   gc()
 
-  jpeg(file = paste0(figureDirectory, "apcluster1.jpeg"))
+  jpeg(file = paste0(figureDirectory, "apcluster1.jpeg"), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <- plot(d.apclus, d)
   print(p)
@@ -2054,7 +2084,7 @@ differentialStatesVolcanoPlot <- function(res_DS_DT,
                                           figureTitle) {
   gc()
   jpeg(file = paste0(figureDirectory,
-                     figureTitle))
+                     figureTitle), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <- ggplot(data = res_DS_DT,
               aes(
@@ -2078,7 +2108,7 @@ differentialAbundanceVolcanoPlot <- function(res_DS_DT,
                                              figureTitle) {
   gc()
   jpeg(file = paste0(figureDirectory,
-                     figureTitle))
+                     figureTitle), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <- ggplot(data = res_DS_DT,
               aes(
@@ -2101,7 +2131,7 @@ differentialStatesManhattanPlot <- function(res_DS_DT,
                                             figureTitle) {
   gc()
   jpeg(file = paste0(figureDirectory,
-                     figureTitle))
+                     figureTitle), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <-
     ggplot(res_DS_DT, aes(id, minus_log_p_adj)) +
@@ -2118,7 +2148,7 @@ differentialAbundanceManhattanPlot <- function(res_DA_DT,
                                                figureTitle) {
   gc()
   jpeg(file = paste0(figureDirectory,
-                     figureTitle))
+                     figureTitle), quality = 100)
   par(mar = c(1, 1, 1, 1))
   p <-
     ggplot(res_DA_DT, aes(cluster_id, minus_log_p_adj)) +
@@ -2243,7 +2273,7 @@ gateMarkersFcs <- function(df, gateColumns) {
   gc()
 }
 
-differentialAbundanceAnalysis <- function(df, cutoffDf,
+differentialAbundanceAnalysis <- function(df,
                                           directoryName,
                                           columnNames,
                                           clusterName,
@@ -2282,7 +2312,7 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
       )
   }
 
-  if (directoryName == "monocytes") {
+  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
                            TRUE), "sample_id"] <- "BAS057_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
@@ -2347,7 +2377,7 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
                            TRUE), "sample_id"] <- "BLT0244_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
                            TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "senescence") {
+  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
                            TRUE), "sample_id"] <- "BLT00074-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
@@ -2392,7 +2422,7 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
                            TRUE), "sample_id"] <- "BLT00274-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
                            TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "tCells") {
+  } else if (directoryName == "gpr32TCells") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
                            TRUE), "sample_id"] <- "BAS057_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
@@ -2417,7 +2447,89 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
                            TRUE), "sample_id"] <- "BLT00286-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
                            TRUE), "sample_id"] <- "BLT00297-2"
+  } else if (directoryName == "gpr18TCells") {
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
   }
+
 
   experimentInfo <-
     experimentInfo[order(experimentInfo[, "sample_id"]), ]
@@ -2473,12 +2585,6 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
             by = clusterName,
             all.x = TRUE)
 
-    df <- df[!df[, "cell_population"] %in% cutoffDf[, clusterName], ]
-
-    cellPopulationMarkers <- cellPopulationMarkers[!cellPopulationMarkers[, "cell_population"] %in% cutoffDf[, clusterName], ]
-
-  } else {
-    df <- df[!df[, clusterName] %in% cutoffDf[, clusterName], ]
   }
 
   df <-
@@ -2613,7 +2719,7 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
           clusterType,
           ".jpeg"
         )
-      ))
+      ), quality = 100)
       par(mar = c(1, 1, 1, 1))
 
       p <-
@@ -2858,7 +2964,7 @@ differentialAbundanceAnalysis <- function(df, cutoffDf,
 }
 
 performAllDifferentialAbundanceTests <-
-  function(df, cutoffDf,
+  function(df,
            directoryName,
            columnNames,
            clusterName,
@@ -2876,7 +2982,7 @@ performAllDifferentialAbundanceTests <-
     #'
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2906,7 +3012,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2944,7 +3050,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -2974,7 +3080,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3012,7 +3118,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3042,7 +3148,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3084,7 +3190,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3115,7 +3221,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3154,7 +3260,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3184,7 +3290,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3223,7 +3329,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3253,7 +3359,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3292,7 +3398,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3322,7 +3428,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3361,7 +3467,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3391,7 +3497,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3430,7 +3536,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3460,7 +3566,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3499,7 +3605,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3529,7 +3635,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3571,7 +3677,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3602,7 +3708,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3649,7 +3755,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3680,7 +3786,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3726,7 +3832,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3757,7 +3863,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3804,7 +3910,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3835,7 +3941,7 @@ performAllDifferentialAbundanceTests <-
 
     tryCatch({
       differentialAbundanceAnalysis(
-        df = df, cutoffDf = cutoffDf,
+        df = df,
         directoryName = directoryName,
         columnNames = columnNames,
         clusterName = clusterName,
@@ -3867,8 +3973,9 @@ recalculatePValueAdjustments <-
            fileNames,
            clusterName,
            markersOrCell,
+           directories,
+           markerName,
            flipFoldChange = TRUE) {
-    directories <- c("bCells", "monocytes", "tCells", "senescence")
 
     names(fileNames) <- c("allCells", "cellPopulations")
 
@@ -3886,13 +3993,13 @@ recalculatePValueAdjustments <-
           df <- read.csv(filePath)
           df[, "panel"] <- directory
           if (names(file) == "allCells") {
-            if (directory == "bCells") {
+            if (directory == "gpr32BCells" | directory == "gpr18BCells") {
               df[, "typeOfCells"] <- "B Cells"
-            } else if (directory == "monocytes") {
+            } else if (directory == "gpr32BMonocytes" | directory == "gpr18Monocytes") {
               df[, "typeOfCells"] <- "Monocytes"
-            } else if (directory == "tCells") {
+            } else if (directory == "gpr32TCells" | directory == "gpr18TCells") {
               df[, "typeOfCells"] <- "T Cells"
-            } else if (directory == "senescence") {
+            } else if (directory == "gpr32BSenescence" | directory == "gpr18Senescence") {
               df[, "typeOfCells"] <- "Senescent T Cells"
             }
           } else if (markersOrCell == "Clusters")
@@ -4040,7 +4147,7 @@ recalculatePValueAdjustments <-
 
     setwd("data")
 
-    dir.create("pValueAdjustmentsResults", showWarnings = FALSE)
+    dir.create(paste0(markerName, "pValueAdjustmentsResults"), showWarnings = FALSE)
     dir.create("figures", showWarnings = FALSE)
     figureDirectory <- paste0(getwd(), "/figures/")
 
@@ -4053,7 +4160,7 @@ recalculatePValueAdjustments <-
         ), "\\.", "")[1],
         markersOrCell,
         ".jpeg"
-      ))
+      ), quality = 100)
       par(mar = c(1, 1, 1, 1))
       p <- ggplot(
         data = combinedDf,
@@ -4095,7 +4202,7 @@ recalculatePValueAdjustments <-
           ), "\\.", "")[1],
           markersOrCell,
           ".jpeg"
-        )
+        ), quality = 100
       )
       par(mar = c(1, 1, 1, 1))
       p <- ggplot(
@@ -4122,6 +4229,7 @@ recalculatePValueAdjustments <-
     fwrite(
       combinedDf,
       paste0(
+        markerName,
         "pValueAdjustmentsResults/",
         str_replace_all(str_replace_all(
           str_replace_all(fileNames, " ", ""), ",", ""
@@ -4195,7 +4303,7 @@ calculateClusterMarkers <-
     cellPopulationMarkers <-
       cellPopulationMarkers[, c("name", columnNamesPositive)]
 
-    if (directoryName == "bCells") {
+    if (directoryName == "gpr32BCells" | directoryName == "gpr18BCells") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
@@ -4205,7 +4313,7 @@ calculateClusterMarkers <-
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "monocytes") {
+    } else if (directoryName == "gpr32BMonocytes"  | directoryName == "gpr18Monocytes") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
@@ -4217,7 +4325,7 @@ calculateClusterMarkers <-
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "tCells") {
+    } else if (directoryName == "gpr32TCells" | directoryName == "gpr18TCells") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
@@ -4230,7 +4338,7 @@ calculateClusterMarkers <-
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "senescence") {
+    } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
@@ -4432,7 +4540,7 @@ generateHeatmap <-
            markerType,
            prettyColumnNames) {
     # clusterName <- "meta_clusters_flowsom"
-    # directoryName <- "bCells"
+    # directoryName <- "gpr32BCells"
     # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
     # markersOrCell <- "Markers"
 
@@ -4481,7 +4589,7 @@ generateHeatmap <-
       populations[populations[, clusterName] %in% df[, "clusters"],]
 
     jpeg(file = paste0(figureDirectory,
-                       "na.jpeg"))
+                       "na.jpeg"), quality = 100)
     metacluster_colours <-
       as.vector(colortools::wheel('#ce302e', num = nrow(populations)))
     dev.off()
@@ -4750,8 +4858,8 @@ identifyUnstableClustersFromCounts <- function(directoryName,
 }
 
 
-differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, markersOrCell) {
-  directory <- "data/pValueAdjustmentsResults/"
+differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, markersOrCell, directoryNames, markerName) {
+  directory <- paste0("data/", markerName, "pValueAdjustmentsResults/")
 
   fileNames <- list.files(directory, pattern = pattern)
 
@@ -4776,6 +4884,50 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
     }
   }
 
+  for(directoryName in directoryNames){
+    stability <- fread(paste0("data/", directoryName, "/clusteringOutput/", clusterName, "MarkerStability", ".csv"))
+    stability <- as.data.frame(stability)
+    numberOfColumns <- ncol(stability)
+
+    stability$median <- NA
+
+    for(row in seq(nrow(stability))) {
+      stability[row, "median"] <- median(as.double(stability[row, seq(from=numberOfColumns-99, to=numberOfColumns)]))
+    }
+
+    clustermarkerName <- paste0(clusterName, "Marker")
+
+    if(!exists("combinedStability")){
+      combinedStability <- stability[,c(clustermarkerName, "median")]
+    } else {
+      combinedStability <- rbind(combinedStability, stability[,c(clustermarkerName, "median")])
+    }
+  }
+
+  combinedDf <- merge(combinedDf, combinedStability, by.x = "cluster_id", by.y = clustermarkerName, all.x = TRUE)
+
+  combinedDf[combinedDf$cluster_id == 1, "median"] <- 1
+
+  combinedDf$jaccard <- NA
+  combinedDf$shape <- NA
+
+  combinedDf[is.na(combinedDf$median), "median"] <- 0
+
+  combinedDf[combinedDf$median < 0.60, "jaccard"] <- "Low"
+  combinedDf[combinedDf$median > 0.65, "jaccard"] <- "Moderate"
+  combinedDf[combinedDf$median > 0.75, "jaccard"] <- "High"
+  combinedDf[combinedDf$median > 0.85, "jaccard"] <- "Very High"
+
+  combinedDf[combinedDf$jaccard == "Low", "shape"] <- 18
+  combinedDf[combinedDf$jaccard == "Moderate", "shape"] <- 16
+  combinedDf[combinedDf$jaccard == "High", "shape"] <- 15
+  combinedDf[combinedDf$jaccard == "Very High", "shape"] <- 17
+
+  combinedDf <- combinedDf[order(combinedDf$median),]
+
+
+  combinedDf$jaccard <- factor(combinedDf$jaccard, levels = c("Very High", "High", "Moderate", "Low"))
+
   combinedDf <- combinedDf[combinedDf$typeOfCells %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "typeOfCells"], ]
   combinedDf <- combinedDf[combinedDf$cluster_id %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "cluster_id"], ]
   combinedDf <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "experiment"], ]
@@ -4790,8 +4942,19 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
   # combinedDf[combinedDf$cluster_id == "HLA-DR-/low CD16+ CD14+ CD11b- CD11b Activated+ Monocytes", "typeOfCells"] <- "HLA-DR Negative/Low Activated CD11b+ Intermediate Monocytes (CD11b Low)"
   # combinedDf[combinedDf$cluster_id == "HLA-DR-/low CD16+ CD14+ CD11b+ CD11b Activated+ Monocytes", "typeOfCells"] <- "HLA-DR Negative/Low Activated CD11b+ Intermediate Monocytes (CD11b High)"
   # combinedDf[combinedDf$cluster_id == "CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells", "typeOfCells"] <- "Naïve CD8+ T Cells (Senescence Panel)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+ CD127+ FoxP3-)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+ CD127+ FoxP3+)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127+ FoxP3+)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127- FoxP3+)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127- FoxP3-)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127- FoxP3-)"
+
+  # message(unique(combinedDf$cluster_id))
 
   combinedDf$typeOfCells <- gsub(" CD11b\\+", " CD11b+\n", combinedDf$typeOfCells)
+  combinedDf$typeOfCells <- gsub("Memory Double Negative T Cells ", "Memory Double Negative T Cells\n", combinedDf$typeOfCells)
+  combinedDf$typeOfCells <- gsub("B Cells ", "B Cells\n", combinedDf$typeOfCells)
+  combinedDf$typeOfCells <- gsub("Memory Double Negative Regulatory ", "Memory Double Negative Regulatory\n", combinedDf$typeOfCells)
 
   unique(combinedDf[combinedDf$cluster_id %in% c("CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells",
                                "CD8- CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells",
@@ -4838,22 +5001,24 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
       aes(
         x = as.factor(typeOfCells),
         y = minus_log_fdr_adjusted_p_val,
-        color = logFC
+        color = logFC,
+        shape = jaccard
       )
     ) +
-    geom_point(alpha = 0.75, size=5#, position = position_jitter(w = 0.1, h = 0)
-               ) +
+    geom_point(alpha = 0.75, size=5) +
+    scale_shape_manual(values=unique(combinedDf$shape)) +
     facet_wrap(~experiment) +
-    guides(color = guide_colourbar(title="log2(Fold Change)")) +
+    guides(color = guide_colourbar(title="log2(Fold Change)", order = 1)) +
     theme(axis.text.x = element_text(
       angle = 90,
       vjust = 0.5,
       hjust = 1,
       size = 10
     )) +
-    xlab("Cell Populations") + ylab("-log10(Adjusted P-Value)") +
+    xlab("Cell Populations") +
+    ylab("-log10(Adjusted P-Value)") +
     ylim(0, NA) + guides(
-      shape = guide_legend(title = "Comparison")
+      shape = guide_legend(title = "Stability")
     ) +
     geom_hline(yintercept = 0 - log10(0.05), linetype = "dashed") +
     scale_colour_viridis_c()
@@ -4865,7 +5030,8 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
 
 generateSubsampledPhenographClusters <- function(directoryName,
                                                  columnNames,
-                                                 clusterName) {
+                                                 clusterName,
+                                                 knn) {
   tryCatch({
     d_f <<-
       fread(file=
@@ -4920,7 +5086,7 @@ generateSubsampledPhenographClusters <- function(directoryName,
 
   experimentInfo <- experimentInfo[, c("patient_id", "sample_id")]
 
-  if (directoryName == "monocytes") {
+  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
                            TRUE), "sample_id"] <- "BAS057_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
@@ -4985,7 +5151,7 @@ generateSubsampledPhenographClusters <- function(directoryName,
                            TRUE), "sample_id"] <- "BLT0244_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
                            TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "senescence") {
+  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
                            TRUE), "sample_id"] <- "BLT00074-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
@@ -5030,7 +5196,7 @@ generateSubsampledPhenographClusters <- function(directoryName,
                            TRUE), "sample_id"] <- "BLT00274-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
                            TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "tCells") {
+  } else if (directoryName == "gpr32TCells") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
                            TRUE), "sample_id"] <- "BAS057_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
@@ -5055,6 +5221,87 @@ generateSubsampledPhenographClusters <- function(directoryName,
                            TRUE), "sample_id"] <- "BLT00286-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
                            TRUE), "sample_id"] <- "BLT00297-2"
+  } else if (directoryName == "gpr18TCells") {
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
   }
 
   fileNames <- unique(d_f[, "fileName"])
@@ -5094,22 +5341,14 @@ generateSubsampledPhenographClusters <- function(directoryName,
 
       df2 <- d_f[d_f[, "fileName"] %in% keptFileNames,]
 
-      d_f[, paste0(clusterName, number)] <- NA
+      gc(full = TRUE)
 
       phenograph <-
         Rphenograph(df2[, columnNames], k = knn)
 
-      clusters_phenograph <-
-        tryCatch({
-          as.factor(phenograph$membership)
-        },
-        error = function(e) {
-          # return a safeError if a parsing error occurs
-          return(phenograph$membership)
-        })
+      ## attributes(phenograph)
 
-      clusters_phenograph <-
-        as.integer(clusters_phenograph)
+      clusters_phenograph <- phenograph$membership
 
       if(iterationsMin > 1) {
         d_f <<-
@@ -5120,14 +5359,35 @@ generateSubsampledPhenographClusters <- function(directoryName,
                     "/clusteringOutput/phenographClusterStability.csv"
                   )
           )
+
         d_f <<- as.data.frame(d_f)
 
         clusterNumber <-
           max(na.omit(suppressWarnings(as.numeric(gsub(".*?([0-9]+).*", "\\1", colnames(d_f)[!colnames(d_f) %in% columnNames]))))) + 1
 
       } else {
-        clusterNumber <- number
-        }
+        tryCatch({
+          d_f <<-
+            fread(file=
+                    paste0(
+                      "data/",
+                      directoryName,
+                      "/clusteringOutput/phenographClusterStability.csv"
+                    )
+            )
+
+          d_f <<- as.data.frame(d_f)
+
+          clusterNumber <<-
+            max(na.omit(suppressWarnings(as.numeric(gsub(".*?([0-9]+).*", "\\1", colnames(d_f)[!colnames(d_f) %in% columnNames]))))) + 1
+
+        },
+        error=function(cond) {
+          clusterNumber <<- number
+        })
+      }
+
+      d_f[, paste0(clusterName, clusterNumber)] <- NA
 
       try({
         d_f[d_f[, "fileName"] %in% keptFileNames, paste0(clusterName, clusterNumber)] <-
@@ -5169,7 +5429,7 @@ generateSubsampledFlowsomClusters <- function(directoryName,
 
   experimentInfo <- experimentInfo[, c("patient_id", "sample_id")]
 
-  if (directoryName == "monocytes") {
+  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
                            TRUE), "sample_id"] <- "BAS057_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
@@ -5234,7 +5494,7 @@ generateSubsampledFlowsomClusters <- function(directoryName,
                            TRUE), "sample_id"] <- "BLT0244_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
                            TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "senescence") {
+  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
                            TRUE), "sample_id"] <- "BLT00074-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
@@ -5279,7 +5539,7 @@ generateSubsampledFlowsomClusters <- function(directoryName,
                            TRUE), "sample_id"] <- "BLT00274-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
                            TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "tCells") {
+  } else if (directoryName == "gpr32TCells") {
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
                            TRUE), "sample_id"] <- "BAS057_02"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
@@ -5304,6 +5564,87 @@ generateSubsampledFlowsomClusters <- function(directoryName,
                            TRUE), "sample_id"] <- "BLT00286-4"
     experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
                            TRUE), "sample_id"] <- "BLT00297-2"
+  } else if (directoryName == "gpr18TCells") {
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
   }
 
   experimentInfo$sample_id <- paste0(experimentInfo$sample_id, ".fcs")
@@ -5325,7 +5666,7 @@ generateSubsampledFlowsomClusters <- function(directoryName,
 
   dirFCS <- paste0(getwd(), "/dataPPOutput/scaledFcs")
 
-  tempDirectory <- paste0(getwd(), "/dataPPOutput/temp")
+  tempDirectory <- paste0(getwd(), "/dataPPOutput/temp/")
 
   fileNames <- list.files(dirFCS)
 
@@ -5342,7 +5683,10 @@ generateSubsampledFlowsomClusters <- function(directoryName,
 
   columnIndexes <- seq(length(columnNames))
 
+  # for (number in seq(from=91, to = iterations))
+
   for (number in seq(iterations)) {
+    message(paste0("Iteration :", number))
     try({
       try(file.remove(paste0(tempDirectory, "/", experimentInfo$sample_id)))
 
@@ -5400,7 +5744,7 @@ generateSubsampledFlowsomClusters <- function(directoryName,
         c(as.integer(clusters_flowsom),
           as.integer(meta_clusters_flowsom))
 
-      if (number %% 25 == 0) {
+      if (number %% 10 == 0) {
         fwrite(df,
                   'clusteringOutput/flowsomClusterStability.csv',
                   row.names = FALSE)
@@ -5415,7 +5759,9 @@ identifyPhenographClusterSimilarity <- function(df,
                                              results,
                                              directoryName,
                                              clusterName,
-                                             iterations) {
+                                             columnNames) {
+  df <- df[, !colSums(is.na(df)) == nrow(df)]
+
   if (clusterName == "clusters_phenographMarker") {
     cellPopulationMarkers <-
       fread(file=
@@ -5439,6 +5785,9 @@ identifyPhenographClusterSimilarity <- function(df,
 
   }
 
+  iterations <-
+    na.omit(suppressWarnings(as.numeric(gsub(".*?([0-9]+).*", "\\1", colnames(df)[!colnames(df) %in% columnNames]))))
+
   columnOfnterestName <- clusterName
 
   resultsDf <-
@@ -5447,8 +5796,9 @@ identifyPhenographClusterSimilarity <- function(df,
   resultsDf[, columnOfnterestName] <-
     unique(df[, columnOfnterestName])
 
-  try({
-    for (number in seq(iterations)) {
+
+  for (number in iterations) {
+    try({
       message(paste0("\nIteration: ", number))
       column <- paste0(columnOfnterestName, number)
 
@@ -5456,14 +5806,13 @@ identifyPhenographClusterSimilarity <- function(df,
 
       if (columnOfnterestName != "clusters_phenograph") {
         filteredDf <-
-          merge(df,
-                results[, c("clusters_phenograph", paste0(
-                  c(
-                    "clusters_phenograph"),
-                  number
-                ))],
-                by.x = paste0("clusters_phenograph", number),
-                by.y = "clusters_phenograph")
+          merge(
+            df,
+            results[, c("clusters_phenograph", paste0(c("clusters_phenographMarker"),
+                                                      number))],
+            by.x = paste0("clusters_phenograph", number),
+            by.y = "clusters_phenograph"
+          )
       } else {
         filteredDf <- df
       }
@@ -5477,15 +5826,17 @@ identifyPhenographClusterSimilarity <- function(df,
       for (cluster in unique(df[, columnOfnterestName])) {
         message(paste0("Cluster: ", cluster))
         filteredTabulatedDf <-
-          tabulatedDf[tabulatedDf[, columnOfnterestName] == cluster, ]
+          tabulatedDf[tabulatedDf[, columnOfnterestName] == cluster,]
 
         jaccardIndexList <- c()
 
-        for (boostaqppedCluster in unique(filteredTabulatedDf[, column])){
-          numerator <- filteredTabulatedDf[filteredTabulatedDf[, column] == boostaqppedCluster, "Freq"]
-          denominator <- sum(filteredTabulatedDf[, "Freq"]) + sum(tabulatedDf[tabulatedDf[, column] == boostaqppedCluster, "Freq"]) - numerator
+        for (boostaqppedCluster in unique(filteredTabulatedDf[, column])) {
+          numerator <-
+            filteredTabulatedDf[filteredTabulatedDf[, column] == boostaqppedCluster, "Freq"]
+          denominator <-
+            sum(filteredTabulatedDf[, "Freq"]) + sum(tabulatedDf[tabulatedDf[, column] == boostaqppedCluster, "Freq"]) - numerator
 
-          jaccardIndex <- numerator/denominator
+          jaccardIndex <- numerator / denominator
 
           jaccardIndexList <- append(jaccardIndexList, jaccardIndex)
         }
@@ -5493,8 +5844,8 @@ identifyPhenographClusterSimilarity <- function(df,
         resultsDf[resultsDf[, columnOfnterestName] == cluster, column] <-
           max(jaccardIndexList)
       }
-    }
-  })
+    })
+  }
 
   fwrite(
     resultsDf,
@@ -5617,131 +5968,154 @@ identifyPhenographBoostrappedCellPopulations <- function(df,
                                                       markersOrCell,
                                                       cutoff,
                                                       columnNames){
+  df <- df[, !colSums(is.na(df)) == nrow(df)]
+
   columnNamesMedian <- paste0(columnNames, "_median")
   columnNamesPositive <- paste0(columnNames, "_positive")
 
-  for (number in seq(iterations)) {
-    message("")
-    message(paste0("Iteration:", number))
-    clusterName <- paste0("clusters_phenograph", number)
-    markerName <- paste0("clusters_phenographMarker", number)
+  iterations <<-
+    na.omit(suppressWarnings(as.numeric(gsub(".*?([0-9]+).*", "\\1", colnames(df)[!colnames(df) %in% columnNames]))))
 
-    subsampledDf <-
-      na.omit(df[, c(columnNames, "clusters_phenograph", clusterName)])
+  for (number in iterations) {
+    try({
+      message("")
+      message(paste0("Iteration:", number))
+      clusterName <- paste0("clusters_phenograph", number)
+      markerName <- paste0("clusters_phenographMarker", number)
 
-    markerResults <-
-      data.frame(matrix(
-        ncol = 2 * length(columnNamesMedian) + 2,
-        nrow = 0
-      ))
+      subsampledDf <-
+        na.omit(df[, c(columnNames, "clusters_phenograph", clusterName)])
 
-    for (cluster in unique(subsampledDf[, clusterName])) {
-      message(paste0("Cluster:", cluster))
+      markerResults <-
+        data.frame(matrix(
+          ncol = 2 * length(columnNamesMedian) + 2,
+          nrow = 0
+        ))
 
-      new_row <- c(cluster)
+      for (cluster in unique(subsampledDf[, clusterName])) {
+        message(paste0("Cluster:", cluster))
 
-      df2 <-
-        subsampledDf[subsampledDf[, clusterName] == cluster,]
+        new_row <- c(cluster)
 
-      for (column in columnNames) {
-        clusterMedian <- median(na.omit(df2[, column]))
+        df2 <-
+          subsampledDf[subsampledDf[, clusterName] == cluster, ]
 
-        new_row <- append(new_row, clusterMedian)
+        for (column in columnNames) {
+          clusterMedian <- median(na.omit(df2[, column]))
+
+          new_row <- append(new_row, clusterMedian)
+        }
+
+        new_row <-
+          append(new_row, replicate(length(colnames(
+            markerResults
+          )) - length(new_row), NA))
+
+        markerResults <- rbind(new_row, markerResults)
       }
 
-      new_row <-
-        append(new_row, replicate(length(colnames(markerResults)) - length(new_row), NA))
+      colnames(markerResults) <-
+        c(clusterName,
+          columnNamesMedian,
+          columnNamesPositive,
+          markersOrCell)
 
-      markerResults <- rbind(new_row, markerResults)
-    }
+      i <- 1
 
-    colnames(markerResults) <-
-      c(clusterName,
-        columnNamesMedian,
-        columnNamesPositive,
-        markersOrCell)
+      for (column in columnNamesMedian) {
+        markerResults[, columnNamesPositive[i]] <-
+          markerResults[, columnNamesMedian[i]] > cutoff[i]
+        i <- i + 1
+      }
 
-    i <- 1
+      if (markersOrCell == "CellPopulations") {
+        cellPopulationMarkers <-
+          fread(file = paste0("data/metadata/", directoryName, ".csv"))
+        cellPopulationMarkers <- as.data.frame(cellPopulationMarkers)
+      } else if (markersOrCell == "Markers") {
+        cellPopulationMarkers <-
+          fread(file = paste0("data/metadata/", directoryName, "Markers.csv"))
+        cellPopulationMarkers <- as.data.frame(cellPopulationMarkers)
+      }
 
-    for (column in columnNamesMedian) {
-      markerResults[, columnNamesPositive[i]] <-
-        markerResults[, columnNamesMedian[i]] > cutoff[i]
-      i <- i + 1
-    }
-
-    if (markersOrCell == "CellPopulations") {
       cellPopulationMarkers <-
-        fread(file=paste0("data/metadata/", directoryName, ".csv"))
-      cellPopulationMarkers <- as.data.frame(cellPopulationMarkers)
-    } else if (markersOrCell == "Markers") {
-      cellPopulationMarkers <-
-        fread(file=paste0("data/metadata/", directoryName, "Markers.csv"))
-      cellPopulationMarkers <- as.data.frame(cellPopulationMarkers)
-    }
+        cellPopulationMarkers[, c("name", columnNamesPositive)]
 
-    cellPopulationMarkers <-
-      cellPopulationMarkers[, c("name", columnNamesPositive)]
+      if (directoryName == "gpr32BCells" | directoryName == "gpr18BCells") {
+        for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+          markerResults[markerResults[, clusterName] %in% filter(
+            markerResults,
+            IgD_positive == cellPopulationMarkers[cellPopulationMarkersRow, "IgD_positive"] &
+              CD24_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD24_positive"] &
+              CD27_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27_positive"]
+          )[, clusterName], markerName] <-
+            cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+        }
+      } else if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
+        for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+          markerResults[markerResults[, clusterName] %in% filter(
+            markerResults,
+            HLA_DR_positive == cellPopulationMarkers[cellPopulationMarkersRow, "HLA_DR_positive"] &
+              CD11b_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b_positive"] &
+              CD11b_activated_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b_activated_positive"] &
+              CD14_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD14_positive"] &
+              CD16_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD16_positive"]
+          )[, clusterName], markerName] <-
+            cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+        }
+      } else if (directoryName == "gpr32TCells" | directoryName == "gpr18TCells") {
+        for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+          markerResults[markerResults[, clusterName] %in% filter(
+            markerResults,
+            CD127_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD127_positive"] &
+              CD8_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8_positive"] &
+              CD25_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD25_positive"] &
+              FoxP3_positive == cellPopulationMarkers[cellPopulationMarkersRow, "FoxP3_positive"] &
+              CD45RO_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RO_positive"] &
+              CD4_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4_positive"]
+          )[, clusterName], markerName] <-
+            cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+        }
+      } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
+        for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
+          markerResults[markerResults[, clusterName] %in% filter(
+            markerResults,
+            CD27_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27_positive"] &
+              CD45RA_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RA_positive"] &
+              CD28_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD28_positive"] &
+              KLRG1_positive == cellPopulationMarkers[cellPopulationMarkersRow, "KLRG1_positive"] &
+              CD4_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4_positive"] &
+              CCR7_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CCR7_positive"] &
+              CD8_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8_positive"]
+          )[, clusterName], markerName] <-
+            cellPopulationMarkers[cellPopulationMarkersRow, "name"]
+        }
+      }
 
-    if (directoryName == "bCells") {
-      for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
-        markerResults[markerResults[, clusterName] %in% filter(
-          markerResults,
-          IgD_positive == cellPopulationMarkers[cellPopulationMarkersRow, "IgD_positive"] &
-            CD24_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD24_positive"] &
-            CD27_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27_positive"]
-        )[, clusterName], markerName] <-
-          cellPopulationMarkers[cellPopulationMarkersRow, "name"]
-      }
-    } else if (directoryName == "monocytes") {
-      for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
-        markerResults[markerResults[, clusterName] %in% filter(
-          markerResults,
-          HLA_DR_positive == cellPopulationMarkers[cellPopulationMarkersRow, "HLA_DR_positive"] &
-            CD11b_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b_positive"] &
-            CD11b_activated_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD11b_activated_positive"] &
-            CD14_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD14_positive"] &
-            CD16_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD16_positive"]
-        )[, clusterName], markerName] <-
-          cellPopulationMarkers[cellPopulationMarkersRow, "name"]
-      }
-    } else if (directoryName == "tCells") {
-      for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
-        markerResults[markerResults[, clusterName] %in% filter(
-          markerResults,
-          CD127_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD127_positive"] &
-            CD8_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8_positive"] &
-            CD25_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD25_positive"] &
-            FoxP3_positive == cellPopulationMarkers[cellPopulationMarkersRow, "FoxP3_positive"] &
-            CD45RO_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RO_positive"] &
-            CD4_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4_positive"]
-        )[, clusterName], markerName] <-
-          cellPopulationMarkers[cellPopulationMarkersRow, "name"]
-      }
-    } else if (directoryName == "senescence") {
-      for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
-        markerResults[markerResults[, clusterName] %in% filter(
-          markerResults,
-          CD27_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD27_positive"] &
-            CD45RA_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD45RA_positive"] &
-            CD28_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD28_positive"] &
-            KLRG1_positive == cellPopulationMarkers[cellPopulationMarkersRow, "KLRG1_positive"] &
-            CD4_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD4_positive"] &
-            CCR7_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CCR7_positive"] &
-            CD8_positive == cellPopulationMarkers[cellPopulationMarkersRow, "CD8_positive"]
-        )[, clusterName], markerName] <-
-          cellPopulationMarkers[cellPopulationMarkersRow, "name"]
-      }
-    }
+      if (exists("results")) {
+        results <-
+          merge(
+            results,
+            markerResults[, c(clusterName, markerName)],
+            by.x = "clusters_phenograph",
+            by.y = clusterName,
+            all.x = TRUE
+          )
+      } else {
+        results <- seq(1:100)
+        results <- as.data.frame(results)
+        colnames(results) <- "clusters_phenograph"
 
-    if(exists("results")) {
-      results <- merge(results, markerResults[, c(clusterName, markerName)],by.x = "clusters_phenograph",  by.y = clusterName, all.x = TRUE)
-    } else {
-      results <- seq(1:100)
-      results <- as.data.frame(results)
-      colnames(results) <- "clusters_phenograph"
-
-      results <- merge(results, markerResults[, c(clusterName, markerName)],by.x = "clusters_phenograph",  by.y = clusterName, all.x = TRUE)
-    }
+        results <-
+          merge(
+            results,
+            markerResults[, c(clusterName, markerName)],
+            by.x = "clusters_phenograph",
+            by.y = clusterName,
+            all.x = TRUE
+          )
+      }
+    })
   }
   fwrite(
     results,
@@ -5833,7 +6207,7 @@ identifyFlowSomBoostrappedCellPopulations <- function(df,
     cellPopulationMarkers <-
       cellPopulationMarkers[, c("name", columnNamesPositive)]
 
-    if (directoryName == "bCells") {
+    if (directoryName == "gpr32BCells" | directoryName == "gpr18BCells") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         markerResults[markerResults[, metaClustername] %in% filter(
           markerResults,
@@ -5843,7 +6217,7 @@ identifyFlowSomBoostrappedCellPopulations <- function(df,
         )[, metaClustername], markerName] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "monocytes") {
+    } else if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         markerResults[markerResults[, metaClustername] %in% filter(
           markerResults,
@@ -5855,7 +6229,7 @@ identifyFlowSomBoostrappedCellPopulations <- function(df,
         )[, metaClustername], markerName] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "tCells") {
+    } else if (directoryName == "gpr32TCells" | directoryName == "gpr18TCells") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         markerResults[markerResults[, metaClustername] %in% filter(
           markerResults,
@@ -5868,7 +6242,7 @@ identifyFlowSomBoostrappedCellPopulations <- function(df,
         )[, metaClustername], markerName] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "senescence") {
+    } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         markerResults[markerResults[, metaClustername] %in% filter(
           markerResults,

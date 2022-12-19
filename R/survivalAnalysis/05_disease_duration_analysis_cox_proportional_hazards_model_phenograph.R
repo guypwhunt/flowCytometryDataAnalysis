@@ -5,10 +5,10 @@ library(survminer)
 
 loadlibraries()
 
-clusterNames <- clusterColumns
-markersOrCells <- markersOrCellsClassification
+clusterNames <- clusterColumns[4]
+markersOrCells <- markersOrCellsClassification[2]
 
-clusterName <- clusterNames[2]
+clusterName <- clusterNames[1]
 markersOrCell <- markersOrCells[1]
 
 experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
