@@ -46,7 +46,9 @@ prettyColumnNames <-
     'Zombie'
   )
 
-automatedcofactors <- NULL
+automatedcofactors <- c(2962.46160, 3709.97756,
+                        123.13927, 2536.12924, 3602.32826,
+                        56.13862, 402.84477, 101.70538)
 
 test <- FALSE
 

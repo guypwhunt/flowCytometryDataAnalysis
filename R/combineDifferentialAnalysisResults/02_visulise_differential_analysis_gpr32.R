@@ -16,7 +16,7 @@ markersOrCells <- markersOrCells[2]
 clusterNames <- clusterNames[3:4]
 #figureName <- figureNames[2]
 
-directoryNames <- c("bCells", "tCells", "monocytes", "senescence")
+directoryNames <- c("gpr32BCells", "gpr32TCells", "gpr32Monocytes", "gpr32Senescence")
 
 for (clusterName in clusterNames) {
   for (markersOrCell in markersOrCells) {

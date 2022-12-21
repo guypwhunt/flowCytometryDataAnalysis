@@ -122,6 +122,7 @@ loadlibraries <- function() {
   try(library(cluster))
   try(library(factoextra))
   try(library(readxl))
+  try(library(fda))
 }
 
 ungzipFiles <- function() {
@@ -267,9 +268,10 @@ preprocessing <- function(directoryName,
         # sep = ",",
         # header = TRUE,
         # stringsAsFactors = FALSE,
-        # nrows = 100
+         #nrows = 100
       )
     raw <- as.data.frame(raw)
+    # message(colnames(raw))
     IND <- which(duplicated(raw))
     # Check for duplicates and report if found:
     if (any(duplicated(raw))) {
@@ -313,10 +315,13 @@ preprocessing <- function(directoryName,
     colnames(df) <- xprettyColumnNames
     dfs[[x]]  <- df
 
-    if(length(xcolumnNames) < 9){
+    if(length(xcolumnNames) < 8){
       print(names(dfs[x]))
+      print(xcolumnNames)
     }
   }
+
+  unique(xlist)
 
   ##############################
   #REWRITE TO FLOWFRAME/FLOWSET#
@@ -350,7 +355,7 @@ preprocessing <- function(directoryName,
   # rewrite to flowset
   dfs_fs <- as(dfs_ff, "flowSet")
   gc()
-  rm(dfs_ff)
+  # rm(dfs_ff)
 
   dir.create("figures", showWarnings = FALSE)
 
@@ -371,7 +376,7 @@ preprocessing <- function(directoryName,
   dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = prettyColumnNames,
                                cofactor = automatedcofactors)
   gc()
-  rm(automatedcofactors)
+  # rm(automatedcofactors)
 
 
   ##############################
@@ -1224,20 +1229,20 @@ visuliseUmap <- function(directoryName, columnNames) {
   #visualize and label clusters on umap
   gc()
   label_flowsom_umap <- df %>% group_by(flowsom_cell_population) %>%
-    select(umap_1, umap_2) %>% summarize_all(mean)
+    dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   label_meta_flowsom_umap <-
     df %>% group_by(meta_flowsom_cell_population) %>%
-    select(umap_1, umap_2) %>% summarize_all(mean)
+    dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
 
   try({
     label_pheno_umap <-
       df %>% group_by(phenograph_cell_population) %>%
-      select(umap_1, umap_2) %>% summarize_all(mean)
+      dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   })
 
   try({
     label_fastpg_umap <- df %>% group_by(fastpg_cell_population) %>%
-      select(umap_1, umap_2) %>% summarize_all(mean)
+      dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   })
 
   gc()
@@ -1323,17 +1328,17 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
 
   label_flowsom_umap <- df %>% group_by(clusters_flowsom) %>%
-    select(umap_1, umap_2) %>% summarize_all(mean)
+    dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   label_meta_flowsom_umap <-
     df %>% group_by(meta_clusters_flowsom) %>%
-    select(umap_1, umap_2) %>% summarize_all(mean)
+    dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   try({
     label_pheno_umap <- df %>% group_by(clusters_phenograph) %>%
-      select(umap_1, umap_2) %>% summarize_all(mean)
+      dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   })
   try({
     label_fastpg_umap <- df %>% group_by(clusters_fast_pg) %>%
-      select(umap_1, umap_2) %>% summarize_all(mean)
+      dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   })
 
   gc()
@@ -1417,17 +1422,17 @@ visuliseUmap <- function(directoryName, columnNames) {
   dev.off()
 
   label_flowsom_umap <- df %>% group_by(flowsom_markers) %>%
-    select(umap_1, umap_2) %>% summarize_all(mean)
+    dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   label_meta_flowsom_umap <-
     df %>% group_by(meta_flowsom_markers) %>%
-    select(umap_1, umap_2) %>% summarize_all(mean)
+    dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   try({
     label_pheno_umap <- df %>% group_by(phenograph_markers) %>%
-      select(umap_1, umap_2) %>% summarize_all(mean)
+      dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   })
   try({
     label_fastpg_umap <- df %>% group_by(fastpg_markers) %>%
-      select(umap_1, umap_2) %>% summarize_all(mean)
+      dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
   })
 
   gc()
@@ -1675,17 +1680,17 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   #visualize and label clusters on umap
   gc()
   label_flowsom_dm <- df %>% group_by(flowsom_cell_population) %>%
-    select(DC1, DC2) %>% summarize_all(mean)
+    dplyr::select(DC1, DC2) %>% summarize_all(mean)
   label_meta_flowsom_dm <-
     df %>% group_by(meta_flowsom_cell_population) %>%
-    select(DC1, DC2) %>% summarize_all(mean)
+    dplyr::select(DC1, DC2) %>% summarize_all(mean)
   try({
     label_pheno_dm <- df %>% group_by(phenograph_cell_population) %>%
-      select(DC1, DC2) %>% summarize_all(mean)
+      dplyr::select(DC1, DC2) %>% summarize_all(mean)
   })
   try({
     label_fastpg_dm <- df %>% group_by(fastpg_cell_population) %>%
-      select(DC1, DC2) %>% summarize_all(mean)
+      dplyr::select(DC1, DC2) %>% summarize_all(mean)
   })
 
   gc()
@@ -1779,17 +1784,17 @@ visuliseDiffusionMap <- function(directoryName, columnNames) {
   dev.off()
 
   label_flowsom_dm <- df %>% group_by(clusters_flowsom) %>%
-    select(DC1, DC2) %>% summarize_all(mean)
+    dplyr::select(DC1, DC2) %>% summarize_all(mean)
   label_meta_flowsom_dm <-
     df %>% group_by(meta_clusters_flowsom) %>%
-    select(DC1, DC2) %>% summarize_all(mean)
+    dplyr::select(DC1, DC2) %>% summarize_all(mean)
   try({
     label_pheno_dm <- df %>% group_by(clusters_phenograph) %>%
-      select(DC1, DC2) %>% summarize_all(mean)
+      dplyr::select(DC1, DC2) %>% summarize_all(mean)
   })
   try({
     label_fastpg_dm <- df %>% group_by(clusters_fast_pg) %>%
-      select(DC1, DC2) %>% summarize_all(mean)
+      dplyr::select(DC1, DC2) %>% summarize_all(mean)
   })
 
   gc()
@@ -2312,224 +2317,7 @@ differentialAbundanceAnalysis <- function(df,
       )
   }
 
-  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-09"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-8", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-08"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00286-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT0244_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
-                           TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-4_R1"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-3 "
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT000214-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00057_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00057-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092_4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00198_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00198_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00242_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00242-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "gpr32TCells") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS033_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS101", arr.ind =
-                           TRUE), "sample_id"] <- "BAS00101"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-  } else if (directoryName == "gpr18TCells") {
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
-  }
-
+  experimentInfo <- updateClinicalData(experimentInfo, directoryName)
 
   experimentInfo <-
     experimentInfo[order(experimentInfo[, "sample_id"]), ]
@@ -2961,6 +2749,235 @@ differentialAbundanceAnalysis <- function(df,
   })
 
   gc()
+}
+
+updateClinicalData <- function(experimentInfo, directoryName){
+  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
+                           TRUE), "sample_id"] <- "BAS057_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00074-02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00075-04"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00092-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00186-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00186-09"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00211-03"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00211-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00211-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00214-02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00214-05"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230-2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00230-02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243-7", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00243-07"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00244-04"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00244-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00244-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-5", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00254-05"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-7", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00254-07"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00265-04"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00265-04"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-8", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00265-08"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00271-04"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-7", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00271-07"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00274-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-3", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00285-03"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00285-05"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00286-04"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00286-6", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00286-06"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00297_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT0244_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
+                           TRUE), "sample_id"] <- "QS_024-02"
+  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00074-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00075-6"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00186-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00186-9"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00261-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00297-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00075-4_R1"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00211-3 "
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00297-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
+                           TRUE), "sample_id"] <- "BLT000214-5"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00057_04", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00057-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092_04", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00092_4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00198_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00198_2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214_04", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00214-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230_04", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00230-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00242_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00242-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00243-5"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00274-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00243-5"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00274-2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00274-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00286-5"
+  } else if (directoryName == "gpr32TCells") {
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
+                           TRUE), "sample_id"] <- "BAS057_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
+                           TRUE), "sample_id"] <- "BAS033_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
+                           TRUE), "sample_id"] <- "BAS057_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00074-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00075-6"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00186_2"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS101", arr.ind =
+                           TRUE), "sample_id"] <- "BAS00101"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00186-9"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00261_02"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00274-5"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00286-4"
+    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
+                           TRUE), "sample_id"] <- "BLT00297-2"
+  } else if (directoryName == "gpr18TCells") {
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
+  } else if (directoryName == "gpr18BCells") {
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-04'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-04'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_02'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-04'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
+    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT0209'
+  }
+  return(experimentInfo)
 }
 
 performAllDifferentialAbundanceTests <-
@@ -4481,11 +4498,11 @@ elbowPlot <-
 
       #Compute total variance across all clusters and predictor variables
       totvar <- df %>%
-        select(-ID) %>%                                           #Drop the ID column
+        dplyr::select(-ID) %>%                                           #Drop the ID column
         group_by(clust) %>%                                       #group by clusters
         dplyr::summarise(across(everything(), ~ edist(.))) %>%      #Identify variance for each variable by cluster
         ungroup() %>%                                             #Remove grouping by cluster
-        select(-clust)                                       #drop cluster identifying column
+        dplyr::select(-clust)                                       #drop cluster identifying column
 
       print(colSums(totvar))
 
@@ -4913,7 +4930,7 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
 
   combinedDf[is.na(combinedDf$median), "median"] <- 0
 
-  combinedDf[combinedDf$median < 0.60, "jaccard"] <- "Low"
+  combinedDf[combinedDf$median < 0.65, "jaccard"] <- "Low"
   combinedDf[combinedDf$median > 0.65, "jaccard"] <- "Moderate"
   combinedDf[combinedDf$median > 0.75, "jaccard"] <- "High"
   combinedDf[combinedDf$median > 0.85, "jaccard"] <- "Very High"
@@ -4993,7 +5010,7 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
 
   #combinedDf$typeOfCells <- unlist(lapply(combinedDf$typeOfCells, stringBreak, sep = " ", buffer = 50))
 
-  dir.create("data/combinedFigures", showWarnings = FALSE)
+  #dir.create("data/combinedFigures", showWarnings = FALSE)
   #jpeg(filename = paste0("data/combinedFigures/", clusterName, figureName, markersOrCell, ".jpeg"))
   fig <-
     ggplot(
@@ -5086,223 +5103,7 @@ generateSubsampledPhenographClusters <- function(directoryName,
 
   experimentInfo <- experimentInfo[, c("patient_id", "sample_id")]
 
-  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-09"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-8", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-08"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00286-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT0244_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
-                           TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-4_R1"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-3 "
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT000214-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00057_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00057-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092_4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00198_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00198_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00242_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00242-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "gpr32TCells") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS033_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS101", arr.ind =
-                           TRUE), "sample_id"] <- "BAS00101"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-  } else if (directoryName == "gpr18TCells") {
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
-  }
+  experimentInfo <- updateClinicalData(experimentInfo, directoryName)
 
   fileNames <- unique(d_f[, "fileName"])
 
@@ -5429,223 +5230,7 @@ generateSubsampledFlowsomClusters <- function(directoryName,
 
   experimentInfo <- experimentInfo[, c("patient_id", "sample_id")]
 
-  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-09"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-8", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-08"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00286-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT0244_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
-                           TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-4_R1"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-3 "
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT000214-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00057_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00057-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092_4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00198_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00198_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00242_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00242-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "gpr32TCells") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS033_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS101", arr.ind =
-                           TRUE), "sample_id"] <- "BAS00101"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-  } else if (directoryName == "gpr18TCells") {
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
-  }
+  experimentInfo <- updateClinicalData(experimentInfo, directoryName)
 
   experimentInfo$sample_id <- paste0(experimentInfo$sample_id, ".fcs")
 

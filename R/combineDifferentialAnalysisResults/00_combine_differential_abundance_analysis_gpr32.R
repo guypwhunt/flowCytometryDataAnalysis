@@ -11,7 +11,7 @@ clusterNames <- clusterColumns
 
 markersOrCells <- markersOrCellsClassification
 
-directories <- c("bCells", "monocytes", "tCells", "senescence")
+directories <- c("gpr32BCells", "gpr32Monocytes", "gpr32TCells", "gpr32Senescence")
 markerName <- "gpr32"
 
 # markersOrCell <- markersOrCells[1]

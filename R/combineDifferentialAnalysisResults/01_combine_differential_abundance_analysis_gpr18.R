@@ -4,15 +4,16 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 # Define if it is Differential States or Differential Abundance Aanlaysis
-clusterNames <- clusterColumns
+clusterNames <- clusterColumns[!clusterColumns %in% c("clusters_flowsom", "clusters_fast_pg")]
 
 # clusterName <- clusterNames[1]
 # clusterNames <- c(clusterNames[1])
 
-markersOrCells <- markersOrCellsClassification
+markersOrCells <- markersOrCellsClassification[markersOrCellsClassification != "CellPopulations"]
 
 directories <- c(#"bCells", "monocytes",
-                 "gpr18TCells"#, "senescence"
+                 "gpr18TCells"
+                 #, "senescence"
                  )
 markerName <- "gpr18"
 
