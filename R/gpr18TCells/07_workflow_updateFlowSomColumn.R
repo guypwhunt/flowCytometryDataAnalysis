@@ -8,6 +8,6 @@ directoryName <- "gpr18TCells"
 df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'))
 df <- as.data.frame(df)
 
-df[, "meta_clusters_flowsom"] <- df[, "meta_clusters_flowsom18"]
+df[, "meta_clusters_flowsom"] <- df[, "meta_clusters_flowsom20"]
 
 fwrite(df, paste0("./data/", directoryName, '/clusteringOutput/clusteringOutputs.csv'), row.names = FALSE)

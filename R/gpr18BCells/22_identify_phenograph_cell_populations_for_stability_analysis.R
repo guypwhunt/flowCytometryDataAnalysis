@@ -13,7 +13,6 @@ columnNames <- gpr18BCellsClusteringColumnNames
 
 df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/phenographClusterStability.csv'))
 df <- as.data.frame(df)
-head(df)
 
 identifyPhenographBoostrappedCellPopulations(df,
                                              directoryName,

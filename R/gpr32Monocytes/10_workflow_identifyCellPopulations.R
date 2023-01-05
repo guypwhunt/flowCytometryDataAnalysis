@@ -20,7 +20,6 @@ df <-
   ))
 df <- as.data.frame(df)
 
-
 for (markersOrCell in markersOrCells) {
   for (clusterColumn in clusterColumns) {
     calculateClusterMarkers(df, directoryName, clusterColumn, columnNames, cutoff, markersOrCell)

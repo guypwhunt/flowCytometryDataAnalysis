@@ -13,11 +13,11 @@ gpr32BCellsClusteringColumnNames <- c("IgD", "CD24", "CD27")
 gpr32BCellsCutoff <- c(0.5, 0.5, 0.5)
 
 # GPR18 Monocyte Inputs
-gpr18MonocytesColumnNames <- c("CD11b","CD14", "HLA_DR", "CD16", "CD11b_activated", "GPR18", 'Chem23')
+gpr18MonocytesColumnNames <- c("CD11b","CD14", "HLA_DR", "CD16", "CD11b_activated", 'Chem23', "GPR18")
 
 gpr18MonocytesClusteringColumnNames <- c("CD11b","CD14","HLA_DR", "CD16", "CD11b_activated")
 
-gpr18MonocytesCutoff <- c(0.6, 0.5, 0.6, 0.5, 0.45)
+gpr18MonocytesCutoff <- c(0.6, 0.5, 0.5, 0.3, 0.4)
 
 # GPR32 Monocyte Inputs
 gpr32MonocytesColumnNames <- c("CD11b","CD14", "HLA_DR", "CD16", "CD11b_activated", "GPR32")
@@ -53,7 +53,7 @@ gpr18SenescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
 gpr18SenescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
                                           "CD8", "CCR7")
 
-gpr18SenescenceCutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
+gpr18SenescenceCutoff <- c(0.45,0.55,0.55,0.5,0.5,0.6,0.5)
 
 # GPR32 Senescence T Cells
 gpr32SenescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
@@ -64,17 +64,6 @@ gpr32SenescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4
                                           "CD8", "CCR7")
 
 gpr32SenescenceCutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
-
-# GPR32 Senescence T Cells
-gpr32SenescenceColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
-                                "CD8", "CCR7", "GPR32")
-
-
-gpr32SenescenceClusteringColumnNames <- c("CD27", "CD45RA","CD28", "KLRG1", "CD4",
-                                          "CD8", "CCR7")
-
-gpr32SenescenceCutoff <- c(0.5,0.5,0.6,0.5,0.5,0.6,0.5)
-
 
 # Clustering Inputs
 numberOfClusters <- seq(3,20)
@@ -87,7 +76,8 @@ clusterColumns <- c(
   "meta_clusters_flowsom",
   "clusters_phenograph"
 )
-markersOrCellsClassification <- c(#"Clusters",
+markersOrCellsClassification <- c(
+  "Clusters",
   "CellPopulations",
   "Markers"
   )

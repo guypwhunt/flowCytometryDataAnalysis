@@ -9,14 +9,20 @@ markerName <- "gpr18"
 
 markersOrCells <- markersOrCellsClassification
 figureNames <-
-  c("DifferentialStatesStatisticscsv",
-    "DifferentialAbundanceStatisticscsv")
+  c("DifferentialStatesStatisticscsv"#,
+    #"DifferentialAbundanceStatisticscsv"
+    )
 
-markersOrCells <- markersOrCells[2]
-clusterNames <- clusterNames[3:4]
+markersOrCells <- markersOrCells[3]
+clusterNames <- clusterNames[3]
 #figureName <- figureNames[2]
 
-directoryNames <- c("gpr18TCells")
+directoryNames <- c(
+  "gpr18BCells",
+  "gpr18Monocytes",
+  "gpr18TCells",
+  "gpr18Senescence"
+                    )
 
 for (clusterName in clusterNames) {
   for (markersOrCell in markersOrCells) {
@@ -29,8 +35,7 @@ for (clusterName in clusterNames) {
         paste0(figureName,
                markersOrCell,
                ".csv")
-      print(differentialCombinedManhattanPlot(pattern, clusterName, figureName, markersOrCell, directoryNames, markerName))
-      #try(dev.off())
+      # print(differentialCombinedManhattanPlot(pattern, clusterName, figureName, markersOrCell, directoryNames, markerName))
     }
   }
 }

@@ -9,7 +9,7 @@ columnNames <- gpr18MonocytesClusteringColumnNames
 
 clusterNames <- c("clusters_flowsom", "meta_clusters_flowsom")
 
-numberOfClusters <- 15
+numberOfClusters <- 19
 
 generateSubsampledFlowsomClusters(directoryName, columnNames, clusterNames,
                                   numberOfClusters, iterations)

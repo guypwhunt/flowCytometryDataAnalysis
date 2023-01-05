@@ -14,7 +14,7 @@ cd /scratch/users/k20064105/flowCytometryDataAnalysis
 
 iteration=${1}
 addition=1
-limit=12
+limit=20
 
 if [ "$iteration" -lt "$limit" ]; then
   echo "Iteration is less than limit"

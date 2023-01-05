@@ -9,14 +9,21 @@ markerName <- "gpr32"
 
 markersOrCells <- markersOrCellsClassification
 figureNames <-
-  c("DifferentialStatesStatisticscsv",
-    "DifferentialAbundanceStatisticscsv")
+  c(
+    "DifferentialStatesStatisticscsv"#,
+    #"DifferentialAbundanceStatisticscsv"
+    )
 
-markersOrCells <- markersOrCells[2]
-clusterNames <- clusterNames[3:4]
+markersOrCells <- markersOrCells[3]
+clusterNames <- clusterNames[3]
 #figureName <- figureNames[2]
 
-directoryNames <- c("gpr32BCells", "gpr32TCells", "gpr32Monocytes", "gpr32Senescence")
+directoryNames <- c(
+  #"gpr32BCells"#,
+  #"gpr32Monocytes"#,
+  #"gpr32TCells"#,
+  "gpr32Senescence"
+                    )
 
 for (clusterName in clusterNames) {
   for (markersOrCell in markersOrCells) {

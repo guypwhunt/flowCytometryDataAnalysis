@@ -128,10 +128,13 @@ loadlibraries <- function() {
 ungzipFiles <- function() {
   workingDirectory <- getwd()
 
-  dataDirectorys <- c("/data/gpr32BCells",
-                      "/data/gpr32BMonocytes",
-                      "/data/gpr32BSenescence",
-                      "/data/gpr32TCells")
+  dataDirectorys <- c(
+    # "/data/gpr32BCells",
+    # "/data/gpr32Monocytes",
+    # "/data/gpr32BSenescence",
+    # "/data/gpr32TCells",
+    "/data/gpr18BCells"
+    )
 
   for (directory in dataDirectorys) {
     try(setwd(paste0(workingDirectory, directory)))
@@ -150,10 +153,16 @@ ungzipFiles <- function() {
 gzipFiles <- function() {
   workingDirectory <- getwd()
 
-  dataDirectorys <- c("/data/gpr32BCells",
-                      "/data/gpr32BMonocytes",
-                      "/data/gpr32BSenescence",
-                      "/data/gpr32TCells")
+  dataDirectorys <- c(
+    # "/data/gpr32BCells",
+    # "/data/gpr32Monocytes",
+    # "/data/gpr32Senescence",
+    # "/data/gpr32TCells",
+    # "/data/gpr18BCells",
+    "/data/gpr18Monocytes",
+    "/data/gpr18TCells",
+    "/data/gpr18Senescence"
+  )
 
   for (directory in dataDirectorys) {
     try(setwd(paste0(workingDirectory, directory)))
@@ -268,7 +277,7 @@ preprocessing <- function(directoryName,
         # sep = ",",
         # header = TRUE,
         # stringsAsFactors = FALSE,
-         #nrows = 100
+         # nrows = 100
       )
     raw <- as.data.frame(raw)
     # message(colnames(raw))
@@ -302,7 +311,9 @@ preprocessing <- function(directoryName,
   for (x in seq(length(dfs))) {
     df <- dfs[[x]]
     # print("")
-    # print(colnames(df))
+    # if ("x-A" %in% colnames(df)) {
+    #   print(colnames(df))
+    # }
     # print("")
 
     xlist <- append(xlist, colnames(df))
@@ -315,7 +326,7 @@ preprocessing <- function(directoryName,
     colnames(df) <- xprettyColumnNames
     dfs[[x]]  <- df
 
-    if(length(xcolumnNames) < 8){
+    if(length(xcolumnNames) < 9){
       print(names(dfs[x]))
       print(xcolumnNames)
     }
@@ -350,12 +361,11 @@ preprocessing <- function(directoryName,
   dfs_ff <- sapply(dfs, function(x)
     csv_2_ff(x), simplify = FALSE)
   gc()
-  #rm(dfs)
+  rm(dfs)
 
   # rewrite to flowset
   dfs_fs <- as(dfs_ff, "flowSet")
   gc()
-  # rm(dfs_ff)
 
   dir.create("figures", showWarnings = FALSE)
 
@@ -376,8 +386,6 @@ preprocessing <- function(directoryName,
   dfs_fs_t_auto <- transFlowVS(dfs_fs, channels = prettyColumnNames,
                                cofactor = automatedcofactors)
   gc()
-  # rm(automatedcofactors)
-
 
   ##############################
   ######## NORMALIZATION #######
@@ -393,6 +401,7 @@ preprocessing <- function(directoryName,
   dfs_fs_t_auto_normfda <-
     warpSet(dfs_fs_t_auto, stains = prettyColumnNames)
   gc()
+
 
   # Gate
   if (gate) {
@@ -741,7 +750,7 @@ copyToClusteringOutput <- function(directoryName) {
 
   setwd(paste0("./data/", directoryName))
 
-  df <- fread(file="./dataPPOutput/scaledDf.csv")
+  df <- fread(file="./dataPPOutput/outliersRemoveMinMaxScaledDf.csv")
   df <- as.data.frame(df)
 
   dir.create("clusteringOutput", showWarnings = FALSE)
@@ -2751,231 +2760,2200 @@ differentialAbundanceAnalysis <- function(df,
   gc()
 }
 
+updateDfFileNames <- function(df) {
+  df[which(df[, 'fileName'] == 'BAS_033_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_033_02'
+  df[which(df[, 'fileName'] == 'BAS_033_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_033_02'
+  df[which(df[, 'fileName'] == 'BAS_057_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS_057_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS00101', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BAS00101_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BAS032_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS032_02'
+  df[which(df[, 'fileName'] == 'BAS032_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS032_02'
+  df[which(df[, 'fileName'] == 'BAS032_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS032_02'
+  df[which(df[, 'fileName'] == 'BAS032_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS032_02'
+  df[which(df[, 'fileName'] == 'BAS032_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS032_02'
+  df[which(df[, 'fileName'] == 'BAS032-02', arr.ind = TRUE), 'fileName'] <-
+    'BAS032_02'
+  df[which(df[, 'fileName'] == 'BAS033_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_033_02'
+  df[which(df[, 'fileName'] == 'BAS033_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_033_02'
+  df[which(df[, 'fileName'] == 'BAS033_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS_033_02'
+  df[which(df[, 'fileName'] == 'BAS033-2', arr.ind = TRUE), 'fileName'] <-
+    'BAS_033_02'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS056', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS056_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS056'
+  df[which(df[, 'fileName'] == 'BAS057_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS057_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS057_02', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS057_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS057-2', arr.ind = TRUE), 'fileName'] <-
+    'BAS_057_02'
+  df[which(df[, 'fileName'] == 'BAS070', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS070', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS070', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS070', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS070', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS070_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS070'
+  df[which(df[, 'fileName'] == 'BAS080', arr.ind = TRUE), 'fileName'] <-
+    'BAS080'
+  df[which(df[, 'fileName'] == 'BAS080', arr.ind = TRUE), 'fileName'] <-
+    'BAS080'
+  df[which(df[, 'fileName'] == 'BAS080', arr.ind = TRUE), 'fileName'] <-
+    'BAS080'
+  df[which(df[, 'fileName'] == 'BAS080', arr.ind = TRUE), 'fileName'] <-
+    'BAS080'
+  df[which(df[, 'fileName'] == 'BAS080', arr.ind = TRUE), 'fileName'] <-
+    'BAS080'
+  df[which(df[, 'fileName'] == 'BAS080_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS080'
+  df[which(df[, 'fileName'] == 'BAS083', arr.ind = TRUE), 'fileName'] <-
+    'BAS083'
+  df[which(df[, 'fileName'] == 'BAS083', arr.ind = TRUE), 'fileName'] <-
+    'BAS083'
+  df[which(df[, 'fileName'] == 'BAS083', arr.ind = TRUE), 'fileName'] <-
+    'BAS083'
+  df[which(df[, 'fileName'] == 'BAS083', arr.ind = TRUE), 'fileName'] <-
+    'BAS083'
+  df[which(df[, 'fileName'] == 'BAS083', arr.ind = TRUE), 'fileName'] <-
+    'BAS083'
+  df[which(df[, 'fileName'] == 'BAS083_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS083'
+  df[which(df[, 'fileName'] == 'BAS084', arr.ind = TRUE), 'fileName'] <-
+    'BAS084'
+  df[which(df[, 'fileName'] == 'BAS084', arr.ind = TRUE), 'fileName'] <-
+    'BAS084'
+  df[which(df[, 'fileName'] == 'BAS084', arr.ind = TRUE), 'fileName'] <-
+    'BAS084'
+  df[which(df[, 'fileName'] == 'BAS084', arr.ind = TRUE), 'fileName'] <-
+    'BAS084'
+  df[which(df[, 'fileName'] == 'BAS084', arr.ind = TRUE), 'fileName'] <-
+    'BAS084'
+  df[which(df[, 'fileName'] == 'BAS101', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BAS101', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BAS101', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BAS101', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BAS101', arr.ind = TRUE), 'fileName'] <-
+    'BAS101'
+  df[which(df[, 'fileName'] == 'BLT000214-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT000286-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00057_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057_04_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057_04'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00057-5_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00057-5'
+  df[which(df[, 'fileName'] == 'BLT00074_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074_4T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074-02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074-2'
+  df[which(df[, 'fileName'] == 'BLT00074-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00074-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00074_04'
+  df[which(df[, 'fileName'] == 'BLT00075_06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075_06'
+  df[which(df[, 'fileName'] == 'BLT00075_06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075_06'
+  df[which(df[, 'fileName'] == 'BLT00075_4T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-4_R1', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075-4'
+  df[which(df[, 'fileName'] == 'BLT00075-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075_06'
+  df[which(df[, 'fileName'] == 'BLT00075-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00075_06'
+  df[which(df[, 'fileName'] == 'BLT00092_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092_04_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092_4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092_04'
+  df[which(df[, 'fileName'] == 'BLT00092-06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00092-6_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00092-6'
+  df[which(df[, 'fileName'] == 'BLT00115', arr.ind = TRUE), 'fileName'] <-
+    'BLT00115'
+  df[which(df[, 'fileName'] == 'BLT00115', arr.ind = TRUE), 'fileName'] <-
+    'BLT00115'
+  df[which(df[, 'fileName'] == 'BLT00186_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186_06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186_2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186_9', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-09', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_02'
+  df[which(df[, 'fileName'] == 'BLT00186-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-6_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186-6'
+  df[which(df[, 'fileName'] == 'BLT00186-9', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-9', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-9', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-9', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-9', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00186-9_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00186_9'
+  df[which(df[, 'fileName'] == 'BLT00192_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00192_02'
+  df[which(df[, 'fileName'] == 'BLT00192_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00192_02'
+  df[which(df[, 'fileName'] == 'BLT00192_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00192_02'
+  df[which(df[, 'fileName'] == 'BLT00192_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00192_02'
+  df[which(df[, 'fileName'] == 'BLT00192_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00192_02'
+  df[which(df[, 'fileName'] == 'BLT00192-02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00192_02'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00195', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'BLT00198_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198_02T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198_2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198-02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00198-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00198_02'
+  df[which(df[, 'fileName'] == 'BLT00209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT00209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT00209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT00209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT00209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT00209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211'
+  df[which(df[, 'fileName'] == 'BLT00211-03', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-3 ', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-3_ T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-3'
+  df[which(df[, 'fileName'] == 'BLT00211-6 T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00211-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00211-6'
+  df[which(df[, 'fileName'] == 'BLT00214_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214-02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00214-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-2_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-2'
+  df[which(df[, 'fileName'] == 'BLT00214-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214_04'
+  df[which(df[, 'fileName'] == 'BLT00214-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00214-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00214-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00214-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00214-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00214-5_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00214-5'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00217', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00228_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00228'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00229', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230_04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230_04_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230'
+  df[which(df[, 'fileName'] == 'BLT00230-02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-2_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230-2'
+  df[which(df[, 'fileName'] == 'BLT00230-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00230-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00230_04'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00236', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'BLT00242_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00242_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00242_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00242_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00242_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00242-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00242-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243_05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243_05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243_05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243_05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243_05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243_05_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243'
+  df[which(df[, 'fileName'] == 'BLT00243-07', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243_05'
+  df[which(df[, 'fileName'] == 'BLT00243-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00243-7_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00243-7'
+  df[which(df[, 'fileName'] == 'BLT00244_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BLT00244-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-4_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-4'
+  df[which(df[, 'fileName'] == 'BLT00244-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00244-6_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244-6'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254'
+  df[which(df[, 'fileName'] == 'BLT00254-05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-07', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-5_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-5'
+  df[which(df[, 'fileName'] == 'BLT00254-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00254-7_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00254-7'
+  df[which(df[, 'fileName'] == 'BLT00258', arr.ind = TRUE), 'fileName'] <-
+    'BLT00258'
+  df[which(df[, 'fileName'] == 'BLT00258', arr.ind = TRUE), 'fileName'] <-
+    'BLT00258'
+  df[which(df[, 'fileName'] == 'BLT00258', arr.ind = TRUE), 'fileName'] <-
+    'BLT00258'
+  df[which(df[, 'fileName'] == 'BLT00258', arr.ind = TRUE), 'fileName'] <-
+    'BLT00258'
+  df[which(df[, 'fileName'] == 'BLT00258', arr.ind = TRUE), 'fileName'] <-
+    'BLT00258'
+  df[which(df[, 'fileName'] == 'BLT00261_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00261_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00261_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00261_2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00261_2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00261-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00261-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265'
+  df[which(df[, 'fileName'] == 'BLT00265-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-08', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-4_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-4'
+  df[which(df[, 'fileName'] == 'BLT00265-8 T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-8', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-8', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-8', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-8', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-8', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00265-8', arr.ind = TRUE), 'fileName'] <-
+    'BLT00265-8'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271'
+  df[which(df[, 'fileName'] == 'BLT00271-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-07', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-4_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-4'
+  df[which(df[, 'fileName'] == 'BLT00271-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-7', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00271-7_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00271-7'
+  df[which(df[, 'fileName'] == 'BLT00274_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274-05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274_02'
+  df[which(df[, 'fileName'] == 'BLT00274-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-5_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-05'
+  df[which(df[, 'fileName'] == 'BLT00274-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00274-6_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00274-6'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00275', arr.ind = TRUE), 'fileName'] <-
+    'BLT00275'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00278', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00282', arr.ind = TRUE), 'fileName'] <-
+    'BLT00282'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00284', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285'
+  df[which(df[, 'fileName'] == 'BLT00285-03', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-05', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-3', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-3_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-3'
+  df[which(df[, 'fileName'] == 'BLT00285-5 T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00285-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT00285-5'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286'
+  df[which(df[, 'fileName'] == 'BLT00286-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-04', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-06', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-4', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-4_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-5', arr.ind = TRUE), 'fileName'] <-
+    'BLT000286-4'
+  df[which(df[, 'fileName'] == 'BLT00286-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-6', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00286-6_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00286-6'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00287', arr.ind = TRUE), 'fileName'] <-
+    'BLT00287'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00290', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00291', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00293_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00293'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00296', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297_2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297'
+  df[which(df[, 'fileName'] == 'BLT00297-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00297-2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00297_2'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00300_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00300'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00304_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00304'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00305', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'BLT00306', arr.ind = TRUE), 'fileName'] <-
+    'BLT00306'
+  df[which(df[, 'fileName'] == 'BLT00306', arr.ind = TRUE), 'fileName'] <-
+    'BLT00306'
+  df[which(df[, 'fileName'] == 'BLT00306', arr.ind = TRUE), 'fileName'] <-
+    'BLT00306'
+  df[which(df[, 'fileName'] == 'BLT00306', arr.ind = TRUE), 'fileName'] <-
+    'BLT00306'
+  df[which(df[, 'fileName'] == 'BLT00306', arr.ind = TRUE), 'fileName'] <-
+    'BLT00306'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00307', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'BLT00308', arr.ind = TRUE), 'fileName'] <-
+    'BLT00308'
+  df[which(df[, 'fileName'] == 'BLT00308', arr.ind = TRUE), 'fileName'] <-
+    'BLT00308'
+  df[which(df[, 'fileName'] == 'BLT00308', arr.ind = TRUE), 'fileName'] <-
+    'BLT00308'
+  df[which(df[, 'fileName'] == 'BLT00308', arr.ind = TRUE), 'fileName'] <-
+    'BLT00308'
+  df[which(df[, 'fileName'] == 'BLT00308', arr.ind = TRUE), 'fileName'] <-
+    'BLT00308'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT00311_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00311'
+  df[which(df[, 'fileName'] == 'BLT0209', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'BLT0244_02', arr.ind = TRUE), 'fileName'] <-
+    'BLT00244_02'
+  df[which(df[, 'fileName'] == 'BUH00190_03', arr.ind = TRUE), 'fileName'] <-
+    'BUH00190_03'
+  df[which(df[, 'fileName'] == 'BUH00190_03', arr.ind = TRUE), 'fileName'] <-
+    'BUH00190_03'
+  df[which(df[, 'fileName'] == 'BUH00190_03', arr.ind = TRUE), 'fileName'] <-
+    'BUH00190_03'
+  df[which(df[, 'fileName'] == 'BUH00190_03_T2', arr.ind = TRUE), 'fileName'] <-
+    'BUH00190_03'
+  df[which(df[, 'fileName'] == 'BUH00190-3', arr.ind = TRUE), 'fileName'] <-
+    'BUH00190_03'
+  df[which(df[, 'fileName'] == 'HC_BAS084_T2', arr.ind = TRUE), 'fileName'] <-
+    'BAS084'
+  df[which(df[, 'fileName'] == 'HC_BLT00195_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00195'
+  df[which(df[, 'fileName'] == 'HC_BLT00209_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00209'
+  df[which(df[, 'fileName'] == 'HC_BLT00217_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00217'
+  df[which(df[, 'fileName'] == 'HC_BLT00229_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00229'
+  df[which(df[, 'fileName'] == 'HC_BLT00236_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00236'
+  df[which(df[, 'fileName'] == 'HC_BLT00242_02_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00242_02'
+  df[which(df[, 'fileName'] == 'HC_BLT00258_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00258'
+  df[which(df[, 'fileName'] == 'HC_BLT00261_2_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00261_2'
+  df[which(df[, 'fileName'] == 'HC_BLT00278_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00278'
+  df[which(df[, 'fileName'] == 'HC_BLT00284_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00284'
+  df[which(df[, 'fileName'] == 'HC_BLT00290_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00290'
+  df[which(df[, 'fileName'] == 'HC_BLT00291_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00291'
+  df[which(df[, 'fileName'] == 'HC_BLT00296_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00296'
+  df[which(df[, 'fileName'] == 'HC_BLT00305_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00305'
+  df[which(df[, 'fileName'] == 'HC_BLT00306_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00306'
+  df[which(df[, 'fileName'] == 'HC_BLT00307_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00307'
+  df[which(df[, 'fileName'] == 'HC_BLT00308_T2', arr.ind = TRUE), 'fileName'] <-
+    'BLT00308'
+  df[which(df[, 'fileName'] == 'QS_008', arr.ind = TRUE), 'fileName'] <-
+    'QS_008'
+  df[which(df[, 'fileName'] == 'QS_008', arr.ind = TRUE), 'fileName'] <-
+    'QS_008'
+  df[which(df[, 'fileName'] == 'QS_008', arr.ind = TRUE), 'fileName'] <-
+    'QS_008'
+  df[which(df[, 'fileName'] == 'QS_008', arr.ind = TRUE), 'fileName'] <-
+    'QS_008'
+  df[which(df[, 'fileName'] == 'QS_008', arr.ind = TRUE), 'fileName'] <-
+    'QS_008'
+  df[which(df[, 'fileName'] == 'QS_008_T2', arr.ind = TRUE), 'fileName'] <-
+    'QS_008'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_009_T2', arr.ind = TRUE), 'fileName'] <-
+    'QS_009'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_014_T2', arr.ind = TRUE), 'fileName'] <-
+    'QS_014'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_020_T2', arr.ind = TRUE), 'fileName'] <-
+    'QS_020'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024_T2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024'
+  df[which(df[, 'fileName'] == 'QS_024-02', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+  df[which(df[, 'fileName'] == 'QS_024-2_T2', arr.ind = TRUE), 'fileName'] <-
+    'QS_024-2'
+
+  message("All filenames correct?")
+
+  fileNamesList <- unique(df$fileName)
+
+  rawTest <-
+    fileNamesList %in% c(
+      'BAS_033_02',
+      'BAS_057_02',
+      'BAS101',
+      'BAS032_02',
+      'BAS056',
+      'BAS070',
+      'BAS080',
+      'BAS083',
+      'BAS084',
+      'BLT00214-5',
+      'BLT000286-4',
+      'BLT00057_04',
+      'BLT00057-5',
+      'BLT00074_04',
+      'BLT00074-2',
+      'BLT00075_06',
+      'BLT00075-4',
+      'BLT00092_04',
+      'BLT00092-6',
+      'BLT00115',
+      'BLT00186_02',
+      'BLT00186-6',
+      'BLT00186_9',
+      'BLT00192_02',
+      'BLT00195',
+      'BLT00198_02',
+      'BLT00209',
+      'BLT00211',
+      'BLT00211-3',
+      'BLT00211-6',
+      'BLT00214_04',
+      'BLT00214-2',
+      'BLT00217',
+      'BLT00228',
+      'BLT00229',
+      'BLT00230',
+      'BLT00230_04',
+      'BLT00230-2',
+      'BLT00236',
+      'BLT00242_02',
+      'BLT00243',
+      'BLT00243_05',
+      'BLT00243-7',
+      'BLT00244_02',
+      'BLT00244-4',
+      'BLT00244-6',
+      'BLT00254',
+      'BLT00254-5',
+      'BLT00254-7',
+      'BLT00258',
+      'BLT00261_2',
+      'BLT00265',
+      'BLT00265-4',
+      'BLT00265-8',
+      'BLT00271',
+      'BLT00271-4',
+      'BLT00271-7',
+      'BLT00274_02',
+      'BLT00274-05',
+      'BLT00274-6',
+      'BLT00275',
+      'BLT00278',
+      'BLT00282',
+      'BLT00284',
+      'BLT00285',
+      'BLT00285-3',
+      'BLT00285-5',
+      'BLT00286',
+      'BLT00286-6',
+      'BLT00287',
+      'BLT00290',
+      'BLT00291',
+      'BLT00293',
+      'BLT00296',
+      'BLT00297',
+      'BLT00297_2',
+      'BLT00300',
+      'BLT00304',
+      'BLT00305',
+      'BLT00306',
+      'BLT00307',
+      'BLT00308',
+      'BLT00311',
+      'BUH00190_03',
+      'QS_008',
+      'QS_009',
+      'QS_014',
+      'QS_020',
+      'QS_024',
+      'QS_024-2'
+    )
+
+  combinedTest <- all(rawTest)
+
+  message(combinedTest)
+
+  if(!combinedTest) {
+    message(fileNamesList[!rawTest])
+  }
+
+  return(df)
+}
+
 updateClinicalData <- function(experimentInfo, directoryName){
-  if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-09"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230-2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00244-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00254-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00254-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00265-8", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00265-08"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00271-7", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00271-07"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-03"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00285-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00285-05"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-04"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00286-6", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-06"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00244_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT0244_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "QS_024-2", arr.ind =
-                           TRUE), "sample_id"] <- "QS_024-02"
-  } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-4_R1"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00211-3", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00211-3 "
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214-5", arr.ind =
-                           TRUE), "sample_id"] <- "BLT000214-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00057_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00057-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00092_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00092_4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00198_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00198_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00214_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00214-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00230_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00230-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00242_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00242-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00243_05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00243-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-5"
-  } else if (directoryName == "gpr32TCells") {
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_033_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS033_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS_057_02", arr.ind =
-                           TRUE), "sample_id"] <- "BAS057_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00074_04", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00074-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00075_06", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00075-6"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_02", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186_2"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BAS101", arr.ind =
-                           TRUE), "sample_id"] <- "BAS00101"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00186_9", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00186-9"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00261_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00261_02"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00274-05", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00274-5"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT000286-4", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00286-4"
-    experimentInfo[which(experimentInfo[, "sample_id"] == "BLT00297_2", arr.ind =
-                           TRUE), "sample_id"] <- "BLT00297-2"
-  } else if (directoryName == "gpr18TCells") {
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
-  } else if (directoryName == "gpr18BCells") {
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-04'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-04'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_02'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-04'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
-    experimentInfo[which(experimentInfo[, 'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT0209'
+  if (directoryName == "gpr18BCells")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'BAS084'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS101'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT0209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'BLT00258'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'BLT00306'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'BLT00308'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2'
+  } else if (directoryName == "gpr18Monocytes")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032-02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'BAS084'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS101'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186_06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192-02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT00209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'BLT00258'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'BLT00306'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'BLT00308'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2'
+  } else if (directoryName == "gpr18Senescence")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198-02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT00209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2'
+  } else if (directoryName == "gpr18TCells")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'HC_BAS084_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_4T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_4T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00195_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00209_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3_ T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6 T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00217_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00229_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00236_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00242_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00258_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00261_2_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8 T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00278_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00284_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5 T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00290_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00291_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00296_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00305_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00306_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00307_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'HC_BLT00308_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024_T2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2_T2'
+  } else if (directoryName == "gpr32BCells")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS_033_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS_057_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'BAS084'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS101'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT000286-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- 'BLT00115'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186_9'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT00209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'BLT00258'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'BLT00306'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'BLT00308'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2'
+  } else if (directoryName == "gpr32Monocytes")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS_033_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'BAS084'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS101'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- 'BLT00075_06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-09'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT00209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-03'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-07'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT0244_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-07'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'BLT00258'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-08'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-07'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-03'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-06'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'BLT00306'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'BLT00308'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-02'
+  } else if (directoryName == "gpr32Senescence")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS_057_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS101'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-4_R1'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT00209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3 '
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT000214-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- ''
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2'
+  } else if (directoryName == "gpr32TCells")
+    {
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_033_02', arr.ind = TRUE), 'sample_id'] <- 'BAS033_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS_057_02', arr.ind = TRUE), 'sample_id'] <- 'BAS057_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS032_02', arr.ind = TRUE), 'sample_id'] <- 'BAS032_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS056', arr.ind = TRUE), 'sample_id'] <- 'BAS056'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS070', arr.ind = TRUE), 'sample_id'] <- 'BAS070'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS080', arr.ind = TRUE), 'sample_id'] <- 'BAS080'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS083', arr.ind = TRUE), 'sample_id'] <- 'BAS083'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS084', arr.ind = TRUE), 'sample_id'] <- 'BAS084'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BAS101', arr.ind = TRUE), 'sample_id'] <- 'BAS00101'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT000286-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00057_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00057-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00057-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00074-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00074-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075_06', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00075-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00075-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00092_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00092-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00092-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00115', arr.ind = TRUE), 'sample_id'] <- 'BLT00115'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00186_2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186_9', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-9'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00186-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00186-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00192_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00192_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00195', arr.ind = TRUE), 'sample_id'] <- 'BLT00195'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00198_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00198_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00209', arr.ind = TRUE), 'sample_id'] <- 'BLT00209'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211', arr.ind = TRUE), 'sample_id'] <- 'BLT00211'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00211-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00211-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00214_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00214-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00214-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00217', arr.ind = TRUE), 'sample_id'] <- 'BLT00217'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00228', arr.ind = TRUE), 'sample_id'] <- 'BLT00228'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00229', arr.ind = TRUE), 'sample_id'] <- 'BLT00229'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230', arr.ind = TRUE), 'sample_id'] <- 'BLT00230'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230_04', arr.ind = TRUE), 'sample_id'] <- 'BLT00230_04'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00230-2', arr.ind = TRUE), 'sample_id'] <- 'BLT00230-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00236', arr.ind = TRUE), 'sample_id'] <- 'BLT00236'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00242_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00242_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243', arr.ind = TRUE), 'sample_id'] <- 'BLT00243'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243_05', arr.ind = TRUE), 'sample_id'] <- 'BLT00243_05'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00243-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00243-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00244_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00244-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00244-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254', arr.ind = TRUE), 'sample_id'] <- 'BLT00254'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00254-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00254-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00258', arr.ind = TRUE), 'sample_id'] <- 'BLT00258'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00261_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00261_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265', arr.ind = TRUE), 'sample_id'] <- 'BLT00265'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00265-8', arr.ind = TRUE), 'sample_id'] <- 'BLT00265-8'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271', arr.ind = TRUE), 'sample_id'] <- 'BLT00271'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-4', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-4'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00271-7', arr.ind = TRUE), 'sample_id'] <- 'BLT00271-7'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274_02', arr.ind = TRUE), 'sample_id'] <- 'BLT00274_02'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-05', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00274-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00274-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00275', arr.ind = TRUE), 'sample_id'] <- 'BLT00275'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00278', arr.ind = TRUE), 'sample_id'] <- 'BLT00278'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00282', arr.ind = TRUE), 'sample_id'] <- 'BLT00282'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00284', arr.ind = TRUE), 'sample_id'] <- 'BLT00284'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285', arr.ind = TRUE), 'sample_id'] <- 'BLT00285'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-3', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-3'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00285-5', arr.ind = TRUE), 'sample_id'] <- 'BLT00285-5'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286', arr.ind = TRUE), 'sample_id'] <- 'BLT00286'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00286-6', arr.ind = TRUE), 'sample_id'] <- 'BLT00286-6'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00287', arr.ind = TRUE), 'sample_id'] <- 'BLT00287'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00290', arr.ind = TRUE), 'sample_id'] <- 'BLT00290'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00291', arr.ind = TRUE), 'sample_id'] <- 'BLT00291'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00293', arr.ind = TRUE), 'sample_id'] <- 'BLT00293'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00296', arr.ind = TRUE), 'sample_id'] <- 'BLT00296'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297', arr.ind = TRUE), 'sample_id'] <- 'BLT00297'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00297_2', arr.ind = TRUE), 'sample_id'] <- 'BLT00297-2'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00300', arr.ind = TRUE), 'sample_id'] <- 'BLT00300'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00304', arr.ind = TRUE), 'sample_id'] <- 'BLT00304'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00305', arr.ind = TRUE), 'sample_id'] <- 'BLT00305'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00306', arr.ind = TRUE), 'sample_id'] <- 'BLT00306'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00307', arr.ind = TRUE), 'sample_id'] <- 'BLT00307'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00308', arr.ind = TRUE), 'sample_id'] <- 'BLT00308'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BLT00311', arr.ind = TRUE), 'sample_id'] <- 'BLT00311'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'BUH00190_03', arr.ind = TRUE), 'sample_id'] <- 'BUH00190_03'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_008', arr.ind = TRUE), 'sample_id'] <- 'QS_008'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_009', arr.ind = TRUE), 'sample_id'] <- 'QS_009'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_014', arr.ind = TRUE), 'sample_id'] <- 'QS_014'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_020', arr.ind = TRUE), 'sample_id'] <- 'QS_020'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024', arr.ind = TRUE), 'sample_id'] <- 'QS_024'
+    experimentInfo[which(experimentInfo[,'sample_id'] == 'QS_024-2', arr.ind = TRUE), 'sample_id'] <- 'QS_024-2'
   }
   return(experimentInfo)
 }
@@ -2986,6 +4964,11 @@ performAllDifferentialAbundanceTests <-
            columnNames,
            clusterName,
            markersOrCell) {
+    message(directoryName)
+    message(clusterName)
+    message(markersOrCell)
+    message("")
+
     ### Case vs Controls for first visit for clusters
     samplesContributionToClustersThreshold <- 10
     differentialAbundanceThreshold <- 0.05
@@ -4012,7 +5995,7 @@ recalculatePValueAdjustments <-
           if (names(file) == "allCells") {
             if (directory == "gpr32BCells" | directory == "gpr18BCells") {
               df[, "typeOfCells"] <- "B Cells"
-            } else if (directory == "gpr32BMonocytes" | directory == "gpr18Monocytes") {
+            } else if (directory == "gpr32Monocytes" | directory == "gpr18Monocytes") {
               df[, "typeOfCells"] <- "Monocytes"
             } else if (directory == "gpr32TCells" | directory == "gpr18TCells") {
               df[, "typeOfCells"] <- "T Cells"
@@ -4269,6 +6252,9 @@ calculateClusterMarkers <-
            columnNames,
            cutoff,
            markersOrCell = "CellPopulations") {
+    message(clusterName)
+    message(markersOrCell)
+    message("")
     columnNamesMedian <- paste0(columnNames, "_median")
     columnNamesPositive <- paste0(columnNames, "_positive")
 
@@ -4311,10 +6297,10 @@ calculateClusterMarkers <-
 
     if (markersOrCell == "CellPopulations") {
       cellPopulationMarkers <-
-        read.csv(paste0("data/metadata/", directoryName, ".csv"))
+        as.data.frame(fread(paste0("data/metadata/", directoryName, ".csv")))
     } else if (markersOrCell == "Markers") {
       cellPopulationMarkers <-
-        read.csv(paste0("data/metadata/", directoryName, "Markers.csv"))
+        as.data.frame(fread(paste0("data/metadata/", directoryName, "Markers.csv")))
     }
 
     cellPopulationMarkers <-
@@ -4330,7 +6316,7 @@ calculateClusterMarkers <-
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "gpr32BMonocytes"  | directoryName == "gpr18Monocytes") {
+    } else if (directoryName == "gpr32Monocytes"  | directoryName == "gpr18Monocytes") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
@@ -4405,7 +6391,7 @@ consolidateFlowSomClusters <-
            clusterName,
            numberOfClusters) {
     df <-
-      read.csv(
+      as.data.frame(fread(
         paste0(
           "data/",
           directoryName,
@@ -4415,12 +6401,13 @@ consolidateFlowSomClusters <-
           ".csv"
         )
       )
+      )
 
     df <- df[, c(columnNames)]
 
     for (number in numberOfClusters) {
       x <-
-        read.csv(
+        as.data.frame(fread(
           paste0(
             "data/",
             directoryName,
@@ -4429,6 +6416,7 @@ consolidateFlowSomClusters <-
             number,
             ".csv"
           )
+        )
         )
 
       x <- list(x[, clusterName])
@@ -4454,12 +6442,12 @@ elbowPlot <-
            columnNames,
            numberOfClusters) {
     df <-
-      read.csv(paste0(
+      as.data.frame(fread(paste0(
         "data/",
         directoryName,
         "/clusteringOutput/",
         "clusteringOutputs.csv"
-      ))
+      )))
 
     data <- df[, columnNames]
     data[, "ID"] <- row.names(data)
@@ -4562,7 +6550,7 @@ generateHeatmap <-
     # markersOrCell <- "Markers"
 
     cellPopulationMarkers <-
-      read.csv(
+      as.data.frame(fread(
         paste0(
           "data/",
           directoryName,
@@ -4570,16 +6558,16 @@ generateHeatmap <-
           clusterName,
           "CellPopulations.csv"
         )
-      )
+      ))
 
     markerPopulationMarkers <-
-      read.csv(paste0(
+      as.data.frame(fread(paste0(
         "data/",
         directoryName,
         "/clusteringOutput/",
         clusterName,
         "Markers.csv"
-      ))
+      )))
 
     colnames(markerPopulationMarkers)[ncol(markerPopulationMarkers)] <-
       "marker_population"
@@ -4689,7 +6677,8 @@ calculateMediansValue <- function(directoryName,
                                   columnNames,
                                   markersOrCell,
                                   clusterName,
-                                  df) {
+                                  df,
+                                  markerName) {
   if (markersOrCell == "CellPopulations") {
     filePath <-
       paste0(
@@ -4700,7 +6689,7 @@ calculateMediansValue <- function(directoryName,
         "CellPopulations.csv"
       )
 
-    cellPopulationMarkers <- read.csv(filePath)
+    cellPopulationMarkers <- as.data.frame(fread(filePath))
   } else if (markersOrCell == "Markers") {
     markerFilePath <-
       paste0("data/",
@@ -4709,7 +6698,7 @@ calculateMediansValue <- function(directoryName,
              clusterName,
              "Markers.csv")
 
-    cellPopulationMarkers <- read.csv(markerFilePath)
+    cellPopulationMarkers <- as.data.frame(fread(markerFilePath))
   }
   if (markersOrCell != "Clusters") {
     df <-
@@ -4720,8 +6709,6 @@ calculateMediansValue <- function(directoryName,
     df[, clusterName] <- df[, "cell_population"]
   }
 
-
-
   columnNamesMedian <- paste0(columnNames, "_median")
 
 
@@ -4729,7 +6716,10 @@ calculateMediansValue <- function(directoryName,
     data.frame(matrix(ncol = length(columnNamesMedian) + 2,
                       nrow = 0))
   for (filename in unique(df[, "fileName"])) {
+    message(filename)
     for (cluster in unique(df[, clusterName])) {
+      message(cluster)
+
       new_row <- c(filename, cluster)
 
       df2 <-
@@ -4750,12 +6740,15 @@ calculateMediansValue <- function(directoryName,
       clusterName,
       columnNamesMedian)
 
+  results <- updateDfFileNames(results)
+
   fwrite(
     results,
     paste0(
       "data/",
       directoryName,
       "/clusteringOutput/",
+      markerName,
       clusterName,
       markersOrCell,
       "Medians.csv"
@@ -4778,7 +6771,7 @@ calculateCounts <- function(directoryName,
         "CellPopulations.csv"
       )
 
-    cellPopulationMarkers <- read.csv(filePath)
+    cellPopulationMarkers <- as.data.frame(fread(filePath))
   } else if (markersOrCell == "Markers") {
     markerFilePath <-
       paste0("data/",
@@ -4787,7 +6780,7 @@ calculateCounts <- function(directoryName,
              clusterName,
              "Markers.csv")
 
-    cellPopulationMarkers <- read.csv(markerFilePath)
+    cellPopulationMarkers <- as.data.frame(fread(markerFilePath))
   }
   if (markersOrCell != "Clusters") {
     df <-
@@ -4902,31 +6895,50 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
   }
 
   for(directoryName in directoryNames){
-    stability <- fread(paste0("data/", directoryName, "/clusteringOutput/", clusterName, "MarkerStability", ".csv"))
-    stability <- as.data.frame(stability)
-    numberOfColumns <- ncol(stability)
+    try({
+      stability <-
+        fread(
+          paste0(
+            "data/",
+            directoryName,
+            "/clusteringOutput/",
+            clusterName,
+            "MarkerStability",
+            ".csv"
+          )
+        )
+      stability <- as.data.frame(stability)
+      numberOfColumns <- ncol(stability)
 
-    stability$median <- NA
+      stability$median <- NA
 
-    for(row in seq(nrow(stability))) {
-      stability[row, "median"] <- median(as.double(stability[row, seq(from=numberOfColumns-99, to=numberOfColumns)]))
-    }
+      for (row in seq(nrow(stability))) {
+        stability[row, "median"] <-
+          median(as.double(stability[row, seq(from = numberOfColumns - 99, to = numberOfColumns)]))
+      }
 
-    clustermarkerName <- paste0(clusterName, "Marker")
+      clustermarkerName <- paste0(clusterName, "Marker")
 
-    if(!exists("combinedStability")){
-      combinedStability <- stability[,c(clustermarkerName, "median")]
-    } else {
-      combinedStability <- rbind(combinedStability, stability[,c(clustermarkerName, "median")])
-    }
+      try({
+        if (!exists("combinedStability")) {
+          combinedStability <- stability[, c(clustermarkerName, "median")]
+        } else {
+          combinedStability <-
+            rbind(combinedStability, stability[, c(clustermarkerName, "median")])
+        }
+      }
+      )
+    })
   }
 
-  combinedDf <- merge(combinedDf, combinedStability, by.x = "cluster_id", by.y = clustermarkerName, all.x = TRUE)
+  try(combinedDf <- merge(combinedDf, combinedStability, by.x = "cluster_id", by.y = clustermarkerName, all.x = TRUE))
 
   combinedDf[combinedDf$cluster_id == 1, "median"] <- 1
 
   combinedDf$jaccard <- NA
-  combinedDf$shape <- NA
+  combinedDf$shape <- 18
+
+  combinedDf <- combinedDf[combinedDf$panel %in% directoryNames,]
 
   combinedDf[is.na(combinedDf$median), "median"] <- 0
 
@@ -4948,30 +6960,70 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
   combinedDf <- combinedDf[combinedDf$typeOfCells %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "typeOfCells"], ]
   combinedDf <- combinedDf[combinedDf$cluster_id %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "cluster_id"], ]
   combinedDf <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "experiment"], ]
-  # combinedDf[combinedDf$cluster_id == "CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28- T Cells", "typeOfCells"] <- "Naïve CD8+ T Cells (Senescence Panel)"
-  # combinedDf[combinedDf$cluster_id == "CD8+ CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Naïve CD8+ T Cells"
-  # combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (FoxP3+)"
-  # combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (FoxP3-)"
-  # combinedDf[combinedDf$cluster_id == "CD27+ CD24- IgD- CD19+ B Cells", "typeOfCells"] <- "Switched Memory B Cells (CD24-)"
-  # combinedDf[combinedDf$cluster_id == "CD27+ CD24+ IgD- CD19+ B Cells", "typeOfCells"] <- "Switched Memory B Cells (CD24+)"
-  # combinedDf[combinedDf$cluster_id == "CD27+ CD24- IgD+ CD19+ B Cells", "typeOfCells"] <- "Unswitched Memory B Cells (CD24-)"
-  # combinedDf[combinedDf$cluster_id == "CD27+ CD24+ IgD+ CD19+ B Cells", "typeOfCells"] <- "Unswitched Memory B Cells (CD24+)"
-  # combinedDf[combinedDf$cluster_id == "HLA-DR-/low CD16+ CD14+ CD11b- CD11b Activated+ Monocytes", "typeOfCells"] <- "HLA-DR Negative/Low Activated CD11b+ Intermediate Monocytes (CD11b Low)"
-  # combinedDf[combinedDf$cluster_id == "HLA-DR-/low CD16+ CD14+ CD11b+ CD11b Activated+ Monocytes", "typeOfCells"] <- "HLA-DR Negative/Low Activated CD11b+ Intermediate Monocytes (CD11b High)"
-  # combinedDf[combinedDf$cluster_id == "CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells", "typeOfCells"] <- "Naïve CD8+ T Cells (Senescence Panel)"
-  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+ CD127+ FoxP3-)"
-  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+ CD127+ FoxP3+)"
-  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127+ FoxP3+)"
-  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127- FoxP3+)"
-  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127- FoxP3-)"
-  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25- CD127- FoxP3-)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+, CD127+, FoxP3-)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+, CD127+, FoxP3+)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127+, FoxP3+)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127-, FoxP3+)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127-, FoxP3-)"
+  combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127-, FoxP3-)"
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4- CD45RO+ CD25- CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Negative T Cells (CD25-, CD127+, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'Effector Memory CD4+ T Cells (CD27-, CD28-, KLRG1+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Effector Memory CD4+ T Cells (CD27-, CD28+, KLRG1+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Effector Memory CD4+ T Cells (CD27+, CD28-, KLRG1+)'
 
-  # message(unique(combinedDf$cluster_id))
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27-, CD28+, KLRG1-, CCR7+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27-, CD28+, KLRG1+, CCR7+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27-, CD28-, KLRG1+, CCR7+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27+, CD28+, KLRG1-, CCR7-)'
 
-  combinedDf$typeOfCells <- gsub(" CD11b\\+", " CD11b+\n", combinedDf$typeOfCells)
-  combinedDf$typeOfCells <- gsub("Memory Double Negative T Cells ", "Memory Double Negative T Cells\n", combinedDf$typeOfCells)
-  combinedDf$typeOfCells <- gsub("B Cells ", "B Cells\n", combinedDf$typeOfCells)
-  combinedDf$typeOfCells <- gsub("Memory Double Negative Regulatory ", "Memory Double Negative Regulatory\n", combinedDf$typeOfCells)
+
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD25-, CD127-, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD25-, CD127+, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD25-, CD127+, FoxP3+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25-, CD127-, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25-, CD127-, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25-, CD127+, FoxP3+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Positive T Cells (CD25-, CD127+, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Positive T Cells (CD25+, CD127+, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Positive T Cells (CD25+, CD127+, FoxP3+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive T Cells (CD25-, CD127-, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive T Cells (CD25-, CD127-, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive T Cells (CD25+, CD127+, FoxP3+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive Regulatory T Cells'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25+, CD127-, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25+, CD127+, FoxP3+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25-, CD127-, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25-, CD127-, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25-, CD127+, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25+, CD127+, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD27+, CD28+, KLRG1-, CCR7+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD27+, CD28+, KLRG1+, CCR7+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD25-, CD127-, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD25+, CD127+, FoxP3+)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1-, CCR7-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1-, CCR7+)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1+, CCR+-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1+, CCR7+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4- CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Negative T Cells (CD25-, CD127-, FoxP3-)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Negative T Cells (CD25-, CD127-, FoxP3+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Central Memory CD4+ T Cells (KLRG1-, CD28-)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Central Memory CD4+ T Cells (KLRG1-, CD28+)'
+  combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Central Memory CD4+ T Cells (KLRG1+, CD28+)'
+
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7- CD28- T Cells', 'typeOfCells'] <- 'Intermediate Senescent CD8+ T Cells 1 (KLRG1-)'
+  combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'Intermediate Senescent CD8+ T Cells 1 (KLRG1+)'
+
+  #combinedDf$typeOfCells <- gsub(" CD11b\\+", " CD11b+\n", combinedDf$typeOfCells)
+  # combinedDf$typeOfCells <- gsub("\\(", "\n\\(", combinedDf$typeOfCells)
 
   unique(combinedDf[combinedDf$cluster_id %in% c("CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells",
                                "CD8- CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells",
@@ -4998,7 +7050,7 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
   combinedDf[combinedDf$experiment == paste0(clusterName,"fastSlowVisits1AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Fast vs Slow"
   combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits12AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 2 vs Visit 1"
   combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits13AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 3 vs Visit 1"
-  combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits23AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 2 vs Visit 3"
+  combinedDf[combinedDf$experiment == paste0(clusterName,"visitVisits23AllCells", figureName, markersOrCell, ".csv"),"experiment"] <- "Visit 3 vs Visit 2"
 
   combinedDf$panel <- factor(combinedDf$panel)
   combinedDf <- combinedDf[order(combinedDf$typeOfCells),]
@@ -5006,12 +7058,6 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
 
   combinedDf$typeOfCells <- factor(combinedDf$typeOfCells, levels =  unique(combinedDf$typeOfCells))
 
-  #combinedDf[combinedDf$typeOfCells == "Memory Double Negative T Cells", ]
-
-  #combinedDf$typeOfCells <- unlist(lapply(combinedDf$typeOfCells, stringBreak, sep = " ", buffer = 50))
-
-  #dir.create("data/combinedFigures", showWarnings = FALSE)
-  #jpeg(filename = paste0("data/combinedFigures/", clusterName, figureName, markersOrCell, ".jpeg"))
   fig <-
     ggplot(
       combinedDf,
@@ -5030,7 +7076,7 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
       angle = 90,
       vjust = 0.5,
       hjust = 1,
-      size = 10
+      size = 8
     )) +
     xlab("Cell Populations") +
     ylab("-log10(Adjusted P-Value)") +
@@ -5039,6 +7085,45 @@ differentialCombinedManhattanPlot <- function(pattern, clusterName, figureName, 
     ) +
     geom_hline(yintercept = 0 - log10(0.05), linetype = "dashed") +
     scale_colour_viridis_c()
+
+  try({
+    combinedDf <- combinedDf[, c(
+      "cluster_id",
+      "typeOfCells",
+      "panel",
+      "experiment",
+      "logFC",
+      "logCPM",
+      "AveExpr",
+      "t",
+      "B",
+      "LR",
+      "p_val",
+      "fdr_adjusted_p_val",
+      "median"
+    )]
+
+    colnames(combinedDf) <- c(
+      "ID",
+      "Cell Population Name",
+      "Panel",
+      "Comparison",
+      "Log Fold Change",
+      "Log Counts Per Million",
+      "Average Expression",
+      "T Statistic",
+      "B Statistic (Log Odds)",
+      "Likelihood-Ratio",
+      "Raw P-Value",
+      "FDR Adjusted P-Value",
+      "Jaccard Similarity Coefficient"
+    )
+  })
+
+  dir.create("data/prettyResults", showWarnings = FALSE)
+
+  fwrite(combinedDf,
+         paste0("data/prettyResults/", markerName, clusterName, markersOrCell, figureName, ".csv"))
 
   #dev.off()
   return(fig)
@@ -5636,7 +7721,7 @@ identifyPhenographBoostrappedCellPopulations <- function(df,
           )[, clusterName], markerName] <-
             cellPopulationMarkers[cellPopulationMarkersRow, "name"]
         }
-      } else if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
+      } else if (directoryName == "gpr32Monocytes" | directoryName == "gpr18Monocytes") {
         for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
           markerResults[markerResults[, clusterName] %in% filter(
             markerResults,
@@ -5802,7 +7887,7 @@ identifyFlowSomBoostrappedCellPopulations <- function(df,
         )[, metaClustername], markerName] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "gpr32BMonocytes" | directoryName == "gpr18Monocytes") {
+    } else if (directoryName == "gpr32Monocytes" | directoryName == "gpr18Monocytes") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         markerResults[markerResults[, metaClustername] %in% filter(
           markerResults,

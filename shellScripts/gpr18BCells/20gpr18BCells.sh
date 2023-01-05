@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH --time=12:00:00
+#SBATCH --time=15:00:00
 #SBATCH -p cpu
 #SBATCH --mem=200G
 
@@ -34,4 +34,22 @@ singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstud
 ##singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstudio_4-2-0_latest.sif Rscript R/gpr18BCells/25_cluster_heatmap.R
 ##singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstudio_4-2-0_latest.sif Rscript R/gpr18BCells/26_calculate_median_expression.R
 
-sbatch shellScripts/gpr18BCells/21gpr18BCells.sh
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0
+sleep 1h
+sbatch shellScripts/gpr18BCells/21gpr18BCells.sh 0

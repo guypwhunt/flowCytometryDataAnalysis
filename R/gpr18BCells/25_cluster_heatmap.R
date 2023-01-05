@@ -32,11 +32,11 @@ markerType <- "Functional"
 
 columnNames <-
   c(
-    "GPR32"
+    "GPR18"
   )
 
 prettyColumnNames <-   c(
-  "GPR32"
+  "GPR18"
 )
 
 for (markersOrCell in markersOrCells) {

@@ -11,5 +11,6 @@ clusterName <- "clusters_phenograph"
 
 generateSubsampledPhenographClusters(directoryName,
                                      columnNames,
-                                     clusterName)
+                                     clusterName,
+                                     knn)
 

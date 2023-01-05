@@ -6,9 +6,9 @@ loadlibraries()
 directoryName <- "gpr32TCells"
 columnNames <- append("fileName", gpr32TCellsColumnNames)
 
-markersOrCells <- markersOrCellsClassification
+markersOrCells <- markersOrCellsClassification[3]
 
-clusterNames <- clusterColumns
+clusterNames <- clusterColumns[3:4]
 
 n.cores <- 1
 

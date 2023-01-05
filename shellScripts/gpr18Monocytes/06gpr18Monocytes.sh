@@ -34,5 +34,3 @@ singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstud
 ##singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstudio_4-2-0_latest.sif Rscript R/gpr18Monocytes/24_differential_abundance_testing.R
 ##singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstudio_4-2-0_latest.sif Rscript R/gpr18Monocytes/25_cluster_heatmap.R
 ##singularity exec --home /scratch/users/k20064105/flowCytometryDataAnalysis rstudio_4-2-0_latest.sif Rscript R/gpr18Monocytes/26_calculate_median_expression.R
-
-sbatch shellScripts/gpr18Monocytes/07gpr18Monocytes.sh

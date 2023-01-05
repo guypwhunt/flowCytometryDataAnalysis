@@ -8,30 +8,26 @@ loadlibraries()
 directoryName <- "gpr32TCells"
 columnNames <- gpr32TCellsColumnNames
 
-markersOrCells <- markersOrCellsClassification
+markersOrCells <- markersOrCellsClassification[3]
 
-clusterNames <- clusterColumns
-
-#markersOrCell <- markersOrCells[1]
-#clusterName <- clusterNames[3]
+clusterNames <- clusterColumns[3:4]
 
 df <-
-  fread(file=paste0(
+  fread(file = paste0(
     "data/",
     directoryName,
     "/clusteringOutput/clusteringOutputs.csv"
   ))
-  df <- as.data.frame(df)
+df <- as.data.frame(df)
 
-my.cluster <- parallel::makeCluster(n.cores)
-doParallel::registerDoParallel(cl = my.cluster)
-foreach::getDoParRegistered()
-foreach::getDoParWorkers()
+markerName <- "gpr32"
 
-foreach(clusterName = clusterNames, markersOrCell = markersOrCells) %dopar% {
-  try(source("R/01_functions.R"))
-  try(source("R/00_datasets.R"))
-
-  calculateMediansValue(directoryName, columnNames, markersOrCell,
-                        clusterName, df)
+for (clusterName in clusterNames) {
+  message(clusterName)
+  for (markersOrCell in markersOrCells) {
+    message(markersOrCell)
+    calculateMediansValue(directoryName, columnNames, markersOrCell,
+                          clusterName, df, markerName)
+  }
+  message("")
 }

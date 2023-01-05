@@ -6,9 +6,9 @@ loadlibraries()
 directoryName <- "gpr18BCells"
 columnNames <- append("fileName", gpr18BCellsColumnNames)
 
-markersOrCells <- markersOrCellsClassification
+markersOrCells <- markersOrCellsClassification[3]
 
-clusterNames <-  clusterColumns
+clusterNames <-  clusterColumns[3:4]
 
 n.cores <- 1
 

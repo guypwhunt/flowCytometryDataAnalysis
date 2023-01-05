@@ -6,8 +6,8 @@
         },
         {
             "columnIndex": 3,
-            "ascending": false
+            "ascending": true
         }
     ],
-    "path": "~/resolvinAnalysis/R"
+    "path": "~/resolvinAnalysis/R/combinedClusterStabilityAnalysis"
 }

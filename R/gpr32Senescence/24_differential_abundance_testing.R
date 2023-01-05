@@ -6,9 +6,9 @@ loadlibraries()
 directoryName <- "gpr32Senescence"
 columnNames <- append("fileName", gpr32SenescenceColumnNames)
 
-markersOrCells <- markersOrCellsClassification
+markersOrCells <- markersOrCellsClassification[3]
 
-clusterNames <- clusterColumns
+clusterNames <- clusterColumns[3:4]
 
 n.cores <- 1
 

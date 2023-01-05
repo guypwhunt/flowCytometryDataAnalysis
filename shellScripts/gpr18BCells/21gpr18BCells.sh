@@ -4,7 +4,7 @@
 ###SBATCH --mem=1000G
 #SBATCH --mem-per-cpu=250G
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=7
+#SBATCH --cpus-per-task=8
 
 PATH=$R_HOME/bin:$PATH
 
@@ -14,7 +14,7 @@ cd /scratch/users/k20064105/flowCytometryDataAnalysis
 
 iteration=${1}
 addition=1
-limit=12
+limit=21
 
 if [ "$iteration" -lt "$limit" ]; then
   echo "Iteration is less than limit"
