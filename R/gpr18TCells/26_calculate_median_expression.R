@@ -4,7 +4,7 @@ try(source("R/00_datasets.R"))
 loadlibraries()
 
 directoryName <- "gpr18TCells"
-columnNames <- gpr18TCellsClusteringColumnNames
+columnNames <- gpr18TCellsColumnNames
 
 markersOrCells <- markersOrCellsClassification[3]
 

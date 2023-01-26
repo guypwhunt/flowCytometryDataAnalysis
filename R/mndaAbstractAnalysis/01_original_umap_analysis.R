@@ -4,7 +4,7 @@ library(ggrepel)
 
 workingDirectory <- getwd()
 
-setwd("./data/monocytes/automatedCofactors_clusteringOutput/")
+setwd("./data/gpr32Monocytes/automatedCofactors_clusteringOutput/")
 
 df <- read.csv('umapDf.csv')
 
@@ -37,7 +37,7 @@ df$meta_flowsom_cell_population <- as.factor(df$meta_flowsom_cell_population)
 
 label_meta_flowsom_umap <-
   df %>% group_by(meta_clusters_flowsom, meta_flowsom_cell_population) %>%
-  select(umap_1, umap_2) %>% summarize_all(mean)
+  dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
 
 label_meta_flowsom_umap$meta_clusters_flowsom <- as.factor(as.character(label_meta_flowsom_umap$meta_clusters_flowsom))
 
@@ -87,7 +87,7 @@ ggplot(df, aes(
 
 label_meta_flowsom_umap <-
   df %>% group_by(meta_clusters_flowsom) %>%
-  select(umap_1, umap_2) %>% summarize_all(mean)
+  dplyr::select(umap_1, umap_2) %>% summarize_all(mean)
 
 
 gc()
@@ -96,7 +96,8 @@ plot <-
     x = umap_1,
     y = umap_2,
     color = as.factor(meta_clusters_flowsom)
-  )) + geom_point(size = 0.1) +
+  )) +
+  geom_point(size = 0.1) +
   theme_bw() +
   theme(
     panel.grid.major = element_blank(),

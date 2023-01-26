@@ -5,11 +5,9 @@ library(survminer)
 
 loadlibraries()
 
-clusterNames <- clusterColumns[3]
-markersOrCells <- markersOrCellsClassification[2]
-
-clusterName <- clusterNames[1]
-markersOrCell <- markersOrCells[1]
+clusterName <- clusterColumns[3]
+markersOrCell <- markersOrCellsClassification[3]
+markerName <- "GPR18"
 
 experimentInfo <- read_excel("data/metadata/clinicalData.xlsx")
 
@@ -28,6 +26,8 @@ fileNames <-
   fileNames[grep(clusterName, fileNames, fixed = FALSE)]
 fileNames <-
   fileNames[grep(markersOrCell, fileNames, fixed = FALSE)]
+fileNames <-
+  fileNames[grep(markerName, fileNames, fixed = FALSE)]
 
 fileNamesPath <- paste0(filePath, fileNames)
 
@@ -41,8 +41,11 @@ for (df in dfs) {
   }
 }
 
-#mergedDF <- mergedDF[mergedDF$fileName %in% experimentInfo$sample_id,]
-#experimentInfo <- experimentInfo[experimentInfo$sample_id %in% mergedDF$fileName,]
+mergedDF <- mergedDF[mergedDF$fileName %in%experimentInfo$sample_id,]
+
+message(nrow(mergedDF))
+mergedDF  <- mergedDF[, colSums(is.na(mergedDF))<ceiling(nrow(mergedDF)/10)]
+message(nrow(mergedDF))
 
 combinedDf <- merge(
   mergedDF,
@@ -80,18 +83,11 @@ combinedDf$ethnicityID <- as.numeric(combinedDf$ethnicity)
 combinedDf$BulbarLimb <- factor(combinedDf$BulbarLimb)
 combinedDf$onset <- as.numeric(combinedDf$BulbarLimb)
 
-clinicalCovariates <- c(
-  #"ageAtVisit",
-  "sex",
-  "ethnicityID",
-  "onset",
-  "alsfrsR",
-  #"timeFromOnsetToVisitInYears",
-  "diagnosticDelayInYears",
-  "ageAtOnset",
-  "riluzole",
-  "delataAlsfrsRScore"
-)
+clinicalCovariates <- c("ethnicityID",
+                        "alsfrsR",
+                        "ageAtOnset",
+                        "riluzole",
+                        "delataAlsfrsRScore")
 
 biologicalCovariates <- c(colnames(mergedDF)[colnames(mergedDF) != "fileName"])
 
@@ -108,6 +104,8 @@ minDF <-
                  "status",
                  clinicalAndBiologicalCovariates)]
 minDF <- na.omit(minDF)
+
+message(nrow(minDF))
 
 # Univariate Analysis
 univ_formulas <- sapply(clinicalAndBiologicalCovariates,
@@ -151,55 +149,14 @@ univ_results <- lapply(univ_models,
 univ_results$ethnicityID <- univ_results$ethnicityID[c(1, 2, 4, 5)]
 names(univ_results$ethnicityID) <- names(univ_results$sex)
 res <- t(as.data.frame(univ_results, check.names = FALSE))
-as.data.frame(res)
+res <- as.data.frame(res)
 
-res.cox <-
-  coxph(as.formula(
-    paste(
-      "Surv(diseaseDurationInYears, status) ~ 0",
-      sapply(list(clinicalCovariates), paste, collapse =
-               " + "),
+write.csv(res,
+          paste0("data/survivalAnalysis/",
+          markerName,
+          clusterName,
+          "UnivariateAnalysis.csv"))
 
-      sep = " + "
-    )
-  )
-  , data = minDF)
-
-library(MASS)
-step <- stepAIC(res.cox, direction = "both")
-step$anova
-
-censored.clinical.res.cox <-
-  coxph(
-    Surv(diseaseDurationInYears, status) ~ ethnicityID + alsfrsR +
-      ageAtOnset + delataAlsfrsRScore - 1,
-    data = minDF
-  )
-censored.clinical.res.cox.summary <-
-  summary(censored.clinical.res.cox)
-saveRDS(censored.clinical.res.cox, file = paste0(
-  "data/survivalAnalysis/",
-  clusterName,
-  "DiseaseDurationClinicalModel.rds"
-))
-write.csv(
-  as.data.frame(censored.clinical.res.cox.summary$coefficients),
-  paste0(
-    "data/survivalAnalysis/",
-    clusterName,
-    "DiseaseDurationClinicalModel.csv"
-  ),
-  row.names = TRUE
-)
-
-ggsurvplot(
-  survfit(censored.clinical.res.cox, data = minDF),
-  palette = "#2E9FDF",
-  ggtheme = theme_minimal()
-)
-
-clinicalCovariates <- clinicalCovariates[clinicalCovariates %in% c("ethnicityID", "alsfrsR",
-                                                                     "ageAtOnset", "delataAlsfrsRScore")]
 
 clinicalAndBiologicalCovariates <-
   append(clinicalCovariates, biologicalCovariates)
@@ -223,47 +180,28 @@ step$anova
 censored.clinical.biological.res.cox <-
   coxph(
     Surv(diseaseDurationInYears, status) ~ ethnicityID + alsfrsR +
-      ageAtOnset + delataAlsfrsRScore + GPR32_median_Positive_Follicular_B_Cells +
-      GPR32_median_Positive_Unswitched_Memory_B_Cells_.CD24_Positive_. +
-      GPR32_median_Positive_HLA_Negative_DR_Negative__Activated_CD11b_Positive__Classical_Monocytes_.CD11b_Low. +
-      GPR32_median_Positive_HLA_Negative_DR_Negative__Intermediate_Monocytes +
-      GPR32_median_Positive_HLA_Negative_DR_Negative__Activated_CD11b_Positive__Intermediate_Monocytes_.CD11b_Low. -
-      1,
+      delataAlsfrsRScore - 1,
     data = minDF
   )
+
 saveRDS(censored.clinical.biological.res.cox, file = paste0(
   "data/survivalAnalysis/",
+  markerName,
   clusterName,
   "DiseaseDurationBiologicalModel.rds"
 ))
+
 censored.clinical.biological.res.cox.summary <-
   summary(censored.clinical.biological.res.cox)
 write.csv(
   as.data.frame(censored.clinical.biological.res.cox.summary$coefficients),
   paste0(
     "data/survivalAnalysis/",
+    markerName,
     clusterName,
     "DiseaseDurationBiologicalModel.csv"
   ),
   row.names = TRUE
 )
 
-ggsurvplot(
-  survfit(censored.clinical.biological.res.cox, data = minDF),
-  palette = "#2E9FDF",
-  ggtheme = theme_minimal()
-)
-
-x <-
-  anova(censored.clinical.res.cox,
-        censored.clinical.biological.res.cox)
-write.csv(
-  as.data.frame(x),
-  paste0(
-    "data/survivalAnalysis/",
-    clusterName,
-    "DiseaseDurationClinicalVsBiologicalModel.csv"
-  ),
-  row.names = TRUE
-)
-print(x)
+rm(list=ls())

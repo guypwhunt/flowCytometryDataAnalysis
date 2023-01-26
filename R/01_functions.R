@@ -131,9 +131,13 @@ ungzipFiles <- function() {
   dataDirectorys <- c(
     # "/data/gpr32BCells",
     # "/data/gpr32Monocytes",
-    # "/data/gpr32BSenescence",
+    # "/data/gpr32Senescence",
     # "/data/gpr32TCells",
-    "/data/gpr18BCells"
+    # "/data/gpr18BCells",
+    # "/data/gpr18Monocytes",
+    # "/data/gpr18Senescence",
+    # "/data/gpr18TCells"
+    "/data/isotypesGPR18/senescence_ISO"
     )
 
   for (directory in dataDirectorys) {
@@ -158,10 +162,10 @@ gzipFiles <- function() {
     # "/data/gpr32Monocytes",
     # "/data/gpr32Senescence",
     # "/data/gpr32TCells",
-    # "/data/gpr18BCells",
+    "/data/gpr18BCells",
     "/data/gpr18Monocytes",
-    "/data/gpr18TCells",
-    "/data/gpr18Senescence"
+    "/data/gpr18Senescence",
+    "/data/gpr18TCells"
   )
 
   for (directory in dataDirectorys) {
@@ -2402,6 +2406,7 @@ differentialAbundanceAnalysis <- function(df,
 
   experimentInfo[, "group_id"] <-
     factor(experimentInfo[, group_id])
+  message(levels(experimentInfo[, "group_id"]))
   experimentInfo[, "patient_id"] <-
     factor(experimentInfo[, "patient_id"])
   experimentInfo[, "fastSlow"] <-
@@ -5982,7 +5987,7 @@ recalculatePValueAdjustments <-
     for (directory in directories) {
       i <- 1
       for (file in fileNames) {
-        try({
+        #try({
           names(file) <- names(fileNames)[i]
           i <- i + 1
           filePath <-
@@ -5995,11 +6000,11 @@ recalculatePValueAdjustments <-
           if (names(file) == "allCells") {
             if (directory == "gpr32BCells" | directory == "gpr18BCells") {
               df[, "typeOfCells"] <- "B Cells"
-            } else if (directory == "gpr32Monocytes" | directory == "gpr18Monocytes") {
+            } else if (directory == "gpr32Monocytes" | directory == "gpr18Monocytes" | directory == "chem23Monocytes") {
               df[, "typeOfCells"] <- "Monocytes"
             } else if (directory == "gpr32TCells" | directory == "gpr18TCells") {
               df[, "typeOfCells"] <- "T Cells"
-            } else if (directory == "gpr32BSenescence" | directory == "gpr18Senescence") {
+            } else if (directory == "gpr32Senescence" | directory == "gpr18Senescence") {
               df[, "typeOfCells"] <- "Senescent T Cells"
             }
           } else if (markersOrCell == "Clusters")
@@ -6087,7 +6092,7 @@ recalculatePValueAdjustments <-
           } else {
             combinedDf <- df
           }
-        })
+        #})
       }
     }
 
@@ -6341,7 +6346,7 @@ calculateClusterMarkers <-
         )[, clusterName], "cell_population"] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
+    } else if (directoryName == "gpr32Senescence" | directoryName == "gpr18Senescence") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         results[results[, clusterName] %in% filter(
           results,
@@ -6536,14 +6541,13 @@ elbowPlot <-
   }
 
 
-generateHeatmap <-
+generateHeatmapOld <-
   function(df,
            clusterName,
            directoryName,
            columnNames,
            markersOrCell,
-           markerType,
-           prettyColumnNames) {
+           markerType) {
     # clusterName <- "meta_clusters_flowsom"
     # directoryName <- "gpr32BCells"
     # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
@@ -6583,8 +6587,6 @@ generateHeatmap <-
 
     df[, columnNames] <- scale(df[, columnNames])
 
-    colnames(df)[1:length(columnNames)] <- prettyColumnNames
-
     colnames(df)[ncol(df)] <- "clusters"
 
     figureDirectory <- paste0("data/", directoryName, "/figures/")
@@ -6592,6 +6594,9 @@ generateHeatmap <-
     df <- df[df[, "clusters"] %in% populations[, clusterName],]
     populations <-
       populations[populations[, clusterName] %in% df[, "clusters"],]
+
+    colnames(populations) <- c(clusterName, "typeOfCells", "cluster_id")
+    populations <- updateMarkerNames(populations)
 
     jpeg(file = paste0(figureDirectory,
                        "na.jpeg"), quality = 100)
@@ -6601,11 +6606,11 @@ generateHeatmap <-
 
     names(metacluster_colours) <-
       populations[, if (markersOrCell == "CellPopulations") {
-        "cell_population"
+        "typeOfCells"
       } else if (markersOrCell == "Cluster") {
         clusterName
       } else {
-        "marker_population"
+        "typeOfCells"
       }]
 
     summarisedDf <- df %>%
@@ -6619,11 +6624,11 @@ generateHeatmap <-
     row_order <-
       populations[match(rownames(summarisedDf), populations[, clusterName]),
                   if (markersOrCell == "CellPopulations") {
-                    "cell_population"
+                    "typeOfCells"
                   } else if (markersOrCell == "Cluster") {
                     clusterName
                   } else {
-                    "marker_population"
+                    "typeOfCells"
                   }]
 
     left_anno <-
@@ -6667,6 +6672,287 @@ generateHeatmap <-
 
     print(fig)
     dev.off()
+  }
+
+generateHeatmap <-
+  function(df,
+           clusterName,
+           directoryName,
+           columnNames,
+           markersOrCell,
+           markerType) {
+    # clusterName <- "meta_clusters_flowsom"
+    # directoryName <- "gpr32BCells"
+    # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
+    # markersOrCell <- "Markers"
+    if(markerType == "Phenotypic") {
+      if(grepl("BCells", directoryName, fixed = TRUE)){
+        columnOrder <- c("CD27", "CD24", "IgD")
+      } else if(grepl("Monocytes", directoryName, fixed = TRUE)){
+        columnOrder <- c("CD16", "CD14", "CD11b", "CD11b activated", "HLA-DR")
+      } else if(grepl("Senescence", directoryName, fixed = TRUE)){
+        columnOrder <- c("CD4", "CD8", "CD45RA", "KLRG1", "CD27", "CD28", "KLRG1")
+      } else if(grepl("TCells", directoryName, fixed = TRUE)){
+        columnOrder <- c("CD4", "CD8", "CD45RO", "CD25", "CD127", "FoxP3")
+      }
+    }
+
+    cellPopulationMarkers <-
+      as.data.frame(fread(
+        paste0(
+          "data/",
+          directoryName,
+          "/clusteringOutput/",
+          clusterName,
+          "CellPopulations.csv"
+        )
+      ))
+
+    markerPopulationMarkers <-
+      as.data.frame(fread(paste0(
+        "data/",
+        directoryName,
+        "/clusteringOutput/",
+        clusterName,
+        "Markers.csv"
+      )))
+
+    colnames(markerPopulationMarkers)[ncol(markerPopulationMarkers)] <-
+      "marker_population"
+
+    populations <-
+      merge(cellPopulationMarkers, markerPopulationMarkers, by = clusterName,
+            all.x = TRUE)
+
+    populations <-
+      populations[, c(clusterName, "cell_population", "marker_population")]
+
+    df <- df[, c(columnNames, clusterName)]
+
+    # df[, columnNames] <- scale(df[, columnNames])
+
+    # colnames(df)[ncol(df)] <- "clusters"
+
+    figureDirectory <- paste0("data/", directoryName, "/figures/")
+
+    df <- df[df[, clusterName] %in% populations[, clusterName],]
+    populations <-
+      populations[populations[, clusterName] %in% df[, clusterName],]
+
+    colnames(populations) <- c(clusterName, "typeOfCells", "cluster_id")
+    populations <- updateMarkerNames(populations)
+    populations <- populations[order(populations$typeOfCells), ]
+
+    populations$typeOfCells <- paste0(populations$typeOfCells, " (", as.numeric(as.factor(populations$typeOfCells)) , ")")
+
+    df <- merge(df, populations, by = clusterName)
+    df <- df[order(df$typeOfCells), ]
+    df$typeOfCells <- as.factor(df$typeOfCells)
+
+    df <- df[,c("typeOfCells", columnNames)]
+
+    jpeg(file = paste0(figureDirectory,
+                       "na.jpeg"), quality = 100)
+    metacluster_colours <-
+      as.vector(colortools::wheel('#F8766D', num = length(unique(populations$typeOfCells)),
+                                  init.angle = floor(360 / length(unique(populations$typeOfCells)))))
+    dev.off()
+
+    names(metacluster_colours) <-
+      unique(populations[, if (markersOrCell == "CellPopulations") {
+        "typeOfCells"
+      } else if (markersOrCell == "Cluster") {
+        clusterName
+      } else {
+        "typeOfCells"
+      }])
+
+    summarisedDf <- df %>%
+      group_by(typeOfCells) %>%
+      summarise_all(median) %>%
+      remove_rownames() %>%
+      column_to_rownames('typeOfCells') %>%
+      as.matrix()
+
+    colnames(summarisedDf) <- str_replace_all(colnames(summarisedDf), "HLA_DR", "HLA-DR")
+    colnames(summarisedDf) <- str_replace_all(colnames(summarisedDf), "_", " ")
+
+    col_fun <- c("#0000FF", "#2E2EFF", "#5C5CFF", "#8A8AFF", "#ffffff",
+                 "#FF8A8A", "#FF5C5C", "#FF2E2E", "#FF0000")
+
+    row_order <-
+      populations[match(rownames(summarisedDf), populations[, "typeOfCells"]),
+                  if (markersOrCell == "CellPopulations") {
+                    "typeOfCells"
+                  } else if (markersOrCell == "Cluster") {
+                    clusterName
+                  } else {
+                    "typeOfCells"
+                  }]
+
+    left_anno <-
+      HeatmapAnnotation(
+        Celltype = row_order,
+        which = 'row',
+        col = list('Celltype' = metacluster_colours),
+        show_legend = F,
+        show_annotation_name = F
+      )
+
+    fig <- Heatmap(
+      summarisedDf,
+      name = "Marker\nExpression",
+      rect_gp = gpar(col = "white", lwd = 2),
+      col = col_fun,
+      column_title = paste0(markerType, " Markers"),
+      column_title_side = "bottom",
+      row_title = "Cell Populations",
+      row_title_side = "left",
+      row_names_side = "left",
+      row_dend_side = "left",
+      column_dend_side = "bottom",
+      row_order = order(as.numeric(as.factor(
+        rownames(summarisedDf)
+      ))),
+      column_order = match(columnOrder, colnames(summarisedDf)),
+      show_column_dend = FALSE,
+      show_row_dend = FALSE,
+      left_annotation = left_anno,
+      column_names_gp = gpar(fontsize = c(12)),
+      row_names_gp = gpar(fontsize = c(12)),
+      row_names_max_width = max_text_width(
+        rownames(summarisedDf),
+        gp = gpar(fontsize = 12)
+      )
+    )
+
+    png(
+      paste0(
+        figureDirectory,
+        "heatmap",
+        clusterName,
+        markersOrCell,
+        markerType,
+        ".jpeg"
+      ),
+      width = 4000,
+      height = 2000,
+      res = 320
+    )
+
+    print(fig)
+    dev.off()
+    print(fig)
+
+  }
+
+generateHeatmapGgplot2 <-
+  function(df,
+           clusterName,
+           directoryName,
+           columnNames,
+           markersOrCell,
+           markerType){
+    cellPopulationMarkers <-
+      as.data.frame(fread(
+        paste0(
+          "data/",
+          directoryName,
+          "/clusteringOutput/",
+          clusterName,
+          "CellPopulations.csv"
+        )
+      ))
+
+    markerPopulationMarkers <-
+      as.data.frame(fread(paste0(
+        "data/",
+        directoryName,
+        "/clusteringOutput/",
+        clusterName,
+        "Markers.csv"
+      )))
+
+    colnames(markerPopulationMarkers)[ncol(markerPopulationMarkers)] <-
+      "marker_population"
+
+    populations <-
+      merge(cellPopulationMarkers, markerPopulationMarkers, by = clusterName,
+            all.x = TRUE)
+
+    populations <-
+      populations[, c(clusterName, "cell_population", "marker_population")]
+
+    df <- df[, c(columnNames, clusterName)]
+
+    # df[, columnNames] <- scale(df[, columnNames])
+
+    figureDirectory <- paste0("data/", directoryName, "/figures/")
+
+    df <- df[df[, clusterName] %in% populations[, clusterName],]
+    populations <-
+      populations[populations[, clusterName] %in% df[, clusterName],]
+
+    colnames(populations) <- c(clusterName, "typeOfCells", "cluster_id")
+    populations <- updateMarkerNames(populations)
+
+    df <- merge(df, populations, by = clusterName)
+
+    df <- df[, c("typeOfCells", columnNames)]
+
+    df <- df[order(df$typeOfCells), ]
+
+    df$typeOfCells <- as.factor(df$typeOfCells)
+
+    summarisedDf <- df %>%
+      group_by(typeOfCells) %>%
+      summarise_all(median) %>%
+      remove_rownames() %>%
+      column_to_rownames('typeOfCells') %>%
+      as.matrix()
+
+    summarisedDf <- as.data.frame(summarisedDf)
+    summarisedDf$typeOfCells <- as.factor(rownames(summarisedDf))
+
+    summarisedDf <- melt(summarisedDf, id.vars=c("typeOfCells"))
+
+    summarisedDf$variable <- str_replace_all(summarisedDf$variable, "HLA_DR", "HLA-DR")
+    summarisedDf$variable <- str_replace_all(summarisedDf$variable, "_", " ")
+    # summarisedDf$variable <- str_replace_all(summarisedDf$variable, "[(]", "\n(")
+
+    fig <-
+      ggplot(summarisedDf, aes(x = variable, y = typeOfCells, fill = value)) +
+      geom_tile(color = "white",
+                lwd = 1.5,
+                linetype = 1) +
+      theme_bw() +
+      scale_fill_gradientn(
+        limits = c(0,1),
+        colours = c("#0000FF", "#2E2EFF", "#5C5CFF", "#8A8AFF", "#ffffff",
+                    "#FF8A8A", "#FF5C5C", "#FF2E2E", "#FF0000")
+      ) + xlab(paste0(markerType, " Markers")) +
+      ylab("Cell Populations") +
+      scale_y_discrete(limits=rev) +
+      guides(fill = guide_colourbar(title = "Expression"))
+
+
+    png(
+      paste0(
+        figureDirectory,
+        "heatmap",
+        clusterName,
+        markersOrCell,
+        markerType,
+        ".jpeg"
+      ),
+      width = 10000,
+      height = 5000,
+      res = 1200
+    )
+
+    print(fig)
+    dev.off()
+    print(fig)
   }
 
 minMaxScaling <- function(x, minValue, maxValue, na.rm = TRUE) {
@@ -7204,7 +7490,8 @@ generateSubsampledPhenographClusters <- function(directoryName,
   #  foreach(number = seq(from = iterationsMin, to = iterationsMax),
   #          .combine = 'cbind',
   #          .errorhandling = "remove") %dopar% {
-  for (number in seq(from = iterationsMin, to = iterationsMax)) {
+  # for (number in seq(from = iterationsMin, to = iterationsMax)) {
+    number <- iterationsMax
     try({
       # try(source("R/01_functions.R"))
       # try(source("R/00_datasets.R"))
@@ -7226,6 +7513,8 @@ generateSubsampledPhenographClusters <- function(directoryName,
         experimentInfo[!experimentInfo$sample_id %in% experimentInfo[experimentInfo$patient_id %in% unique(experimentInfo[, "patient_id"])[randomNumbers], "sample_id"], "sample_id"]
 
       df2 <- d_f[d_f[, "fileName"] %in% keptFileNames,]
+
+      numberOfRows <- nrow(d_f)
 
       gc(full = TRUE)
 
@@ -7273,26 +7562,28 @@ generateSubsampledPhenographClusters <- function(directoryName,
         })
       }
 
-      d_f[, paste0(clusterName, clusterNumber)] <- NA
+      if(nrow(d_f) == numberOfRows) {
+        d_f[, paste0(clusterName, clusterNumber)] <- NA
 
-      try({
-        d_f[d_f[, "fileName"] %in% keptFileNames, paste0(clusterName, clusterNumber)] <-
-          clusters_phenograph
-      })
+        try({
+          d_f[d_f[, "fileName"] %in% keptFileNames, paste0(clusterName, clusterNumber)] <-
+            clusters_phenograph
+        })
 
-      fwrite(
-        d_f,
-        paste0(
-          "data/",
-          directoryName,
-          "/clusteringOutput/phenographClusterStability.csv"
-        ),
-        row.names = FALSE
-      )
-
+        fwrite(
+          d_f,
+          paste0(
+            "data/",
+            directoryName,
+            "/clusteringOutput/phenographClusterStability.csv"
+          ),
+          row.names = FALSE
+        )
+      }
       #return(d_f[, paste0(clusterName, number)])
     })
-  }
+
+    # }
 
   # clusterResults <- as.data.frame(clusterResults)
   # try(colnames(clusterResults) <- paste0(clusterName, seq(from = iterationsMin, to = ncol(clusterResults) - 1 + iterationsMin)))
@@ -7746,7 +8037,7 @@ identifyPhenographBoostrappedCellPopulations <- function(df,
           )[, clusterName], markerName] <-
             cellPopulationMarkers[cellPopulationMarkersRow, "name"]
         }
-      } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
+      } else if (directoryName == "gpr32Senescence" | directoryName == "gpr18Senescence") {
         for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
           markerResults[markerResults[, clusterName] %in% filter(
             markerResults,
@@ -7912,7 +8203,7 @@ identifyFlowSomBoostrappedCellPopulations <- function(df,
         )[, metaClustername], markerName] <-
           cellPopulationMarkers[cellPopulationMarkersRow, "name"]
       }
-    } else if (directoryName == "gpr32BSenescence" | directoryName == "gpr18Senescence") {
+    } else if (directoryName == "gpr32Senescence" | directoryName == "gpr18Senescence") {
       for (cellPopulationMarkersRow in seq(nrow(cellPopulationMarkers))) {
         markerResults[markerResults[, metaClustername] %in% filter(
           markerResults,
@@ -8057,4 +8348,110 @@ reduceBoostrappedDataSize <- function(directoryName, iterations) {
 
   fwrite(results, paste0("./data/", directoryName, '/clusteringOutput/', 'meta_clusters_flowsom_Stability.csv'), row.names =  FALSE)
   fwrite(df, paste0("./data/", directoryName, '/clusteringOutput/flowsomClusterStability.csv'), row.names =  FALSE)
+}
+
+updateMarkerNames <- function(df) {
+
+  df[df$typeOfCells == 'T Cells', 'typeOfCells'] <- 'T'
+  df[df$typeOfCells == 'Senescent T Cells', 'typeOfCells'] <- 'S'
+  df[df$typeOfCells == 'Monocytes', 'typeOfCells'] <- 'M'
+  df[df$typeOfCells == 'B Cells', 'typeOfCells'] <- 'B'
+  df[df$cluster_id == 'CD27- CD24- IgD- CD19+ B Cells', 'typeOfCells'] <- 'LM-B'
+  df[df$cluster_id == 'CD27- CD24- IgD+ CD19+ B Cells', 'typeOfCells'] <- 'N-B'
+  df[df$cluster_id == 'CD27- CD24+ IgD- CD19+ B Cells', 'typeOfCells'] <- 'I-B'
+  df[df$cluster_id == 'CD27- CD24+ IgD+ CD19+ B Cells', 'typeOfCells'] <- 'F-B'
+  df[df$cluster_id == 'CD27+ CD24- IgD- CD19+ B Cells', 'typeOfCells'] <- 'S-B (CD24-)'
+  df[df$cluster_id == 'CD27+ CD24- IgD+ CD19+ B Cells', 'typeOfCells'] <- 'US-B (CD24-)'
+  df[df$cluster_id == 'CD27+ CD24+ IgD- CD19+ B Cells', 'typeOfCells'] <- 'S-B (CD24+)'
+  df[df$cluster_id == 'CD27+ CD24+ IgD+ CD19+ B Cells', 'typeOfCells'] <- 'US-B (CD24+)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdn (CD25-, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdn (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tdn (CD25-, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdn (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25- CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tdn (CD25-, CD127+, FoxP3-)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdn (CD25-, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdnregs'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tdn (CD25+, CD127+, FoxP3-)'
+  df[df$cluster_id == 'CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdn (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'M-Th (CD27-, CD28+, KLRG1-, CCR7+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'EM-Th (CD27-, CD28-, KLRG1+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'EM-Th (CD27-, CD28+, KLRG1+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'M-Th (CD27-, CD28-, KLRG1+, CCR7+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'M-Th (CD27-, CD28+, KLRG1+, CCR7+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27- CD45RA+ KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Viral-S Th'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'M-Th (CD27+, CD28+, KLRG1-, CCR7-)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7+ CD28- T Cells', 'typeOfCells'] <- 'CM-Th (KLRG1-, CD28-)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'CM-Th  (KLRG1-, CD28+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'EM-Th (CD27+, CD28-, KLRG1+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'CM-Th (KLRG1+, CD28+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1- CCR7+ CD28- T Cells', 'typeOfCells'] <- 'N-Th (CD27+, CD28-, KLRG1-, CCR7+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'N-Th (CD27+, CD28+, KLRG1-, CCR7+)'
+  df[df$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'N-Th (CD27+, CD28+, KLRG1+, CCR7+)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Th (CD25-, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Th (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Th (CD25-, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO- CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Thregs'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Th (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Th (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Th (CD25-, CD127+, FoxP3-)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Th (CD25-, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO+ CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Thregs'
+  df[df$cluster_id == 'CD8- CD4+ CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Th (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4- CD27- CD45RA+ KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'LS-Tc'
+  df[df$cluster_id == 'CD8+ CD4- CD27- CD45RA+ KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'IS2-Tc'
+  df[df$cluster_id == 'CD8+ CD4- CD27- CD45RA+ KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Viral-S Tc (CD28-)'
+  df[df$cluster_id == 'CD8+ CD4- CD27- CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Viral-S Tc (CD28+)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'M-Tc (CD27+, KLRG1-, CCR7-, CD28+)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'EM-Tc'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'CM-Tc'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7- CD28- T Cells', 'typeOfCells'] <- 'IS1-Tc (KLRG1-)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'N-Tc (CD27+, CD28+, KLRG1-, CCR7-)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28- T Cells', 'typeOfCells'] <- 'N-Tc (CD27+, CD28-, KLRG1-, CCR7+)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'N-Tc (CD27+, CD28+, KLRG1-, CCR7+)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'IS1-Tc (KLRG1+)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'ES-Tc'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'N-Tc (CD27+, CD28+, KLRG1+, CCR+-)'
+  df[df$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'N-Tc (CD27+, CD28+, KLRG1+, CCR7+)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tc (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO- CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tc (CD25+, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO- CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tcregs'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tc (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tc (CD25-, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tc (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tc (CD25-, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tc (CD25+, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tcregs'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tc (CD25+, CD127+, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tc (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4+ CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'M-Tdp'
+  df[df$cluster_id == 'CD8+ CD4+ CD27+ CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'EM-Tdp'
+  df[df$cluster_id == 'CD8+ CD4+ CD27+ CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'CM-Tdp'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25-, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25+, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdpregs'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdp (CD25-, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tdp (CD25+, CD127+, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdp (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'HLA-DR-/low CD16- CD14+ CD11b- CD11b Activated- Monocytes', 'typeOfCells'] <- 'C-M (HLA-DR-)'
+  df[df$cluster_id == 'HLA-DR-/low CD16- CD14+ CD11b- CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+C-M (HLA-DR-, CD11b Low)'
+  df[df$cluster_id == 'HLA-DR-/low CD16- CD14+ CD11b+ CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+C-M (HLA-DR-, CD11b High)'
+  df[df$cluster_id == 'HLA-DR-/low CD16+ CD14- CD11b- CD11b Activated- Monocytes', 'typeOfCells'] <- 'NC-M (HLA-DR-)'
+  df[df$cluster_id == 'HLA-DR-/low CD16+ CD14- CD11b- CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+NC-M (HLA-DR-, CD11b Low)'
+  df[df$cluster_id == 'HLA-DR-/low CD16+ CD14+ CD11b- CD11b Activated- Monocytes', 'typeOfCells'] <- 'IM-M (HLA-DR-)'
+  df[df$cluster_id == 'HLA-DR-/low CD16+ CD14+ CD11b- CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+IM-M (HLA-DR-, CD11b Low)'
+  df[df$cluster_id == 'HLA-DR-/low CD16+ CD14+ CD11b+ CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+IM-M (HLA-DR-, CD11b High)'
+  df[df$cluster_id == 'HLA-DR+ CD16- CD14+ CD11b+ CD11b Activated- Monocytes', 'typeOfCells'] <- 'CD11b+C-M'
+  df[df$cluster_id == 'HLA-DR+ CD16- CD14+ CD11b+ CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+C-M (CD11b High)'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14- CD11b- CD11b Activated- Monocytes', 'typeOfCells'] <- 'NC-M'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14- CD11b- CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+NC-M (CD11b Low)'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14- CD11b+ CD11b Activated- Monocytes', 'typeOfCells'] <- 'CD11b+NC-M'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14- CD11b+ CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+NC-M (CD11b High)'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14+ CD11b- CD11b Activated- Monocytes', 'typeOfCells'] <- 'IM-M'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14+ CD11b- CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+IM-M (CD11b Low)'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14+ CD11b+ CD11b Activated- Monocytes', 'typeOfCells'] <- 'CD11b+IM-M'
+  df[df$cluster_id == 'HLA-DR+ CD16+ CD14+ CD11b+ CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+IM-M (CD11b High)'
+
+  return(df)
 }

@@ -3,7 +3,7 @@ try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-directories <- c("gpr32BCells", "gpr32Monocytes", "gpr32TCells", "gpr32Senescence")
+directories <- c("gpr18BCells", "gpr18Monocytes", "gpr18TCells", "gpr18Senescence")
 
 clusterNames <- c(#"clusters_flowsom", "meta_clusters_flowsom",
   "meta_clusters_flowsomMarker",
@@ -27,8 +27,8 @@ for (clusterName in clusterNames) {
     if(clusterName=="meta_clusters_flowsomMarker"){
       df[, clusterName] <- as.integer(rownames(df))
 
-    } else if (clusterName=="clusters_phenographMarker")
-    {df[, clusterName] <- as.integer(rownames(df))}
+    } else if (clusterName=="clusters_phenographMarker") {
+      df[, clusterName] <- as.integer(rownames(df))}
 
     df <- df[, !colSums(is.na(df)) == nrow(df)]
 
@@ -55,10 +55,10 @@ for (clusterName in clusterNames) {
       combinedDf <- longDf
     }
   }
-  combinedDf[combinedDf$panel == "gpr32BCells", "panel"] <- "B Cells"
-  combinedDf[combinedDf$panel == "gpr32TCells", "panel"] <- "T Cells"
-  combinedDf[combinedDf$panel == "gpr32Monocytes", "panel"] <- "Monocytes"
-  combinedDf[combinedDf$panel == "gpr32Senescence", "panel"] <- "Senescent T Cells"
+  combinedDf[combinedDf$panel == "gpr18BCells", "panel"] <- "B Cells"
+  combinedDf[combinedDf$panel == "gpr18TCells", "panel"] <- "T Cells"
+  combinedDf[combinedDf$panel == "gpr18Monocytes", "panel"] <- "Monocytes"
+  combinedDf[combinedDf$panel == "gpr18Senescence", "panel"] <- "Senescent T Cells"
   combinedDf$value <- combinedDf$value
 
   for (directory in unique(combinedDf$panel)) {

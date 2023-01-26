@@ -26,15 +26,7 @@ for(df in dfs){
   }
 }
 
-summary(combinedDf$X)
-
-combinedDf <- combinedDf[grep("Rv", combinedDf$X),]
-combinedDf <- combinedDf[nchar(combinedDf$X) == 4,]
-combinedDf$lipid <- combinedDf$X
-
-combinedDf <- combinedDf[combinedDf$experiment %in%
-                           combinedDf[combinedDf$P.Value < 0.05 , "experiment"], ]
-
+unique(combinedDf$experiment)
 
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupFastBulbarEarly.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupFastBulbarEarly.csv",]
@@ -95,6 +87,17 @@ combinedDf <- combinedDf[combinedDf$experiment != "BulbarVsLimbBulbarLateVsLimbE
 combinedDf <- combinedDf[combinedDf$experiment != "BulbarVsLimbLimbEarlyVsBulbarLate.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupSlowLimbEarlyVsgroupFastLimbEarly.csv",]
 combinedDf <- combinedDf[combinedDf$experiment != "ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupFastBulbarLate.csv",]
+combinedDf <- combinedDf[!combinedDf$experiment %in%
+                           c("BulbarVsLimbBulbarEarlyVsLimbLate.csv",
+                             "BulbarVsLimbLimbEarlyVsBulbarEarly.csv",
+                             "BulbarVsLimbLimbLateVsBulbarEarly.csv",
+                             "BulbarVsLimbLimbLateVsBulbarLate.csv",
+                             "BulbarVsLimbLimbLateVsLimbEarly.csv",
+                             "FastVsSlowFastEarlyVsSlowLate.csv",
+                             "FastVsSlowSlowEarlyVsSlowLate.csv",
+                             "FastVsSlowSlowLateVsFastEarly.csv",
+                             "FastVsSlowSlowLateVsSlowEarly.csv"
+                           ),]
 
 
 combinedDf <- combinedDf[!grepl("ControlVs", combinedDf$experiment, fixed = TRUE),]
@@ -105,17 +108,16 @@ combinedDf[combinedDf$experiment == "FastVsSlowFastEarlyVsFastLate.csv", "experi
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupSlowBulbarLate.csv", "experiment"] <- "Late Fast Bulbar vs Late Slow Bulbar"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupFastLimbLate.csv", "experiment"] <- "Late Slow Limb vs Late Fast Limb"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupSlowLimbLate.csv","experiment"] <- "Late Fast Limb vs Late Slow Limb"
-combinedDf[combinedDf$experiment == "SightOfOnsetVsControlLimbLateVsControl.csv","experiment"] <- "Late Limb vs Control"
-combinedDf[combinedDf$experiment == "SightOfOnsetVsControlLimbEarlyVsControl.csv","experiment"] <- "Early Limb vs Control"
-combinedDf[combinedDf$experiment == "SightOfOnsetVsControlLimbEarlyVsControl.csv","experiment"] <- "Early Limb vs Control"
-combinedDf[combinedDf$experiment == "SightOfOnsetVsControlBulbarLateVsControl.csv","experiment"] <- "Late Bulbar vs Control"
-combinedDf[combinedDf$experiment == "SightOfOnsetVsControlBulbarLateVsControl.csv","experiment"] <- "Early Bulbar vs Control"
-combinedDf[combinedDf$experiment == "ProgressionVsControlSlowLateVsControl.csv","experiment"] <- "Late Slow vs Control"
-combinedDf[combinedDf$experiment == "ProgressionVsControlSlowEarlyVsControl.csv","experiment"] <- "Early Slow vs Control"
-combinedDf[combinedDf$experiment == "ProgressionVsControlFastLateVsControl.csv","experiment"] <- "Late Fast vs Control"
-combinedDf[combinedDf$experiment == "ProgressionVsControlFastEarlyVsControl.csv","experiment"] <- "Early Fast vs Control"
-combinedDf[combinedDf$experiment == "ProgressionVsControlFastEarlyVsControl.csv","experiment"] <- "Early Fast vs Control"
-combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlFastLimbLateVsControl.csv","experiment"] <- "Late Fast Limb vs Control"
+combinedDf[combinedDf$experiment == "SightOfOnsetVsControlLimbLateVsControl.csv","experiment"] <- "Late Limb vs Controls"
+combinedDf[combinedDf$experiment == "SightOfOnsetVsControlLimbEarlyVsControl.csv","experiment"] <- "Early Limb vs Controls"
+combinedDf[combinedDf$experiment == "SightOfOnsetVsControlBulbarLateVsControl.csv","experiment"] <- "Late Bulbar vs Controls"
+combinedDf[combinedDf$experiment == "SightOfOnsetVsControlBulbarEarlyVsControl.csv","experiment"] <- "Early Bulbar vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionVsControlSlowLateVsControl.csv","experiment"] <- "Late Slow vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionVsControlSlowEarlyVsControl.csv","experiment"] <- "Early Slow vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionVsControlFastLateVsControl.csv","experiment"] <- "Late Fast vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionVsControlFastEarlyVsControl.csv","experiment"] <- "Early Fast vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionVsControlFastEarlyVsControl.csv","experiment"] <- "Early Fast vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlFastLimbLateVsControl.csv","experiment"] <- "Late Fast Limb vs Controls"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowBulbarEarly.csv","experiment"] <- "Early Fast Bulbar vs Early Slow Bulbar"
 #combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv","experiment"] <- "Early Fast Bulbar vs Early Fast Limb"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupFastBulbarEarly.csv","experiment"] <- "Early Fast Limb vs Early Fast Bulbar"
@@ -129,36 +131,55 @@ combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupSlowBulbarLa
 combinedDf[combinedDf$experiment == "FastVsSlowFastEarlyVsSlowEarly.csv" ,"experiment"] <- "Early Fast vs Early Slow"
 combinedDf[combinedDf$experiment == "FastVsSlowFastLateVsSlowLate.csv" ,"experiment"] <- "Late Fast vs Late Slow"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupSlowBulbarEarlyVsgroupSlowLimbEarly.csv" ,"experiment"] <- "Early Slow Bulbar vs Early Slow Limb"
-combinedDf[combinedDf$experiment == "SightOfOnsetVsControlBulbarEarlyVsControl.csv" ,"experiment"] <- "Early Bulbar vs Heatlhy Controls"
-combinedDf[combinedDf$experiment == "CaseVsControlEarlyVsControl.csv" ,"experiment"] <- "Early vs Heatlhy Controls"
+combinedDf[combinedDf$experiment == "CaseVsControlEarlyVsControl.csv" ,"experiment"] <- "Early vs Controls"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastBulbarLate.csv" ,"experiment"] <- "Early Fast Bulbar vs Late Fast Bulbar"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastLimbLate.csv" ,"experiment"] <- "Late Fast Bulbar vs Late Fast Limb"
 combinedDf[combinedDf$experiment == "EarlyVsLateEarlyVsLate.csv" ,"experiment"] <- "Early vs Late"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupSlowLimbEarlyVsgroupSlowLimbLate.csv" ,"experiment"] <- "Early Slow Limb vs Late Slow Limb"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupSlowLimbEarly.csv" ,"experiment"] <- "Early Fast Limb vs Early Slow Limb"
 combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlSlowBulbarLateVsControl.csv" ,"experiment"] <- "Slow Bulbar vs Controls"
+combinedDf[combinedDf$experiment == "BulbarVsLimbBulbarEarlyVsLimbEarly.csv" ,"experiment"] <- "Early Bulbar vs Early Limb"
+combinedDf[combinedDf$experiment == "BulbarVsLimbBulbarLateVsLimbLate.csv" ,"experiment"] <- "Late Bulbar vs Late Limb"
+combinedDf[combinedDf$experiment == "BulbarVsLimbLimbEarlyVsLimbLate.csv" ,"experiment"] <- "Early Limb vs Late Limb"
+combinedDf[combinedDf$experiment == "CaseVsControlLateVsControl.csv" ,"experiment"] <- "Late vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlFastBulbarEarlyVsControl.csv" ,"experiment"] <- "Early Fast Bulbar vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlFastBulbarLateVsControl.csv" ,"experiment"] <- "Late Fast Bulbar vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlFastLimbEarlyVsControl.csv" ,"experiment"] <- "Early Fast Limb vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlSlowLimbEarlyVsControl.csv" ,"experiment"] <- "Early Slow Limb vs Controls"
+combinedDf[combinedDf$experiment == "ProgressionAndSightOfOnsetVsControlSlowLimbLateVsControl.csv" ,"experiment"] <- "Late Slow Limb vs Controls"
 
 
-RvD1 <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$lipid == "RvD1" & combinedDf$P.Value < 0.05, "experiment"],]
-RvD2 <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$lipid == "RvD2" & combinedDf$P.Value < 0.05, "experiment"],]
-RvD4 <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$lipid == "RvD4" & combinedDf$P.Value < 0.05, "experiment"],]
-RvD6 <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$lipid == "RvD6" & combinedDf$P.Value < 0.05, "experiment"],]
-RvE1 <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$lipid == "RvE1" & combinedDf$P.Value < 0.05, "experiment"],]
+colnames(combinedDf)
 
-resolvins <- list(RvD1, RvD2, RvD4, RvD6, RvE1)
+combinedDf <- combinedDf[, c(
+  "X",
+  "experiment",
+  "logFC",
+  "AveExpr",
+  "t",
+  "B",
+  "P.Value",
+  "adj.P.Val"
+)]
 
-for (resolvin in resolvins) {
-  print({ggplot(resolvin, aes(x = as.factor(lipid), y = -log10(P.Value),
-                                color = logFC)) +
-      geom_point(alpha = 0.75, size=5) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size=12)) +
-      xlab("Resolvins") + ylab("-log10(P-Value)") +
-      ylim(0, 3.5) + guides(color=guide_legend(title="Comparison")) +
-      geom_hline(yintercept=0 - log10(0.05), linetype="dashed") +
-      facet_wrap(~experiment) +
-      guides(color = guide_colourbar(title="log2(Fold Change)")) +
-      scale_colour_viridis_c()})
-}
+combinedDf$logPValue = 0-log10(combinedDf$P.Value)
+combinedDf$logFDRPValue = 0-log10(combinedDf$adj.P.Val)
 
-unique(combinedDf$experiment)
 
+colnames(combinedDf) <- c(
+  "Lipid",
+  "Comparison",
+  "Log Fold Change",
+  "Average Expression",
+  "T Statistic",
+  "B Statistic (Log Odds)",
+  "Raw P-Value",
+  "FDR Adjusted P-Value",
+  "Minus Log (Raw P-Value)",
+  "Minus Log (FDR Adjusted P-Value)"
+)
+
+dir.create("data/pValueAdjustmentsResults", showWarnings = FALSE)
+
+fwrite(combinedDf,
+       paste0("data/pValueAdjustmentsResults/lipidomics.csv"))

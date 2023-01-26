@@ -5,16 +5,16 @@ loadlibraries()
 
 clusterNames <- clusterColumns
 
-markerNames <- c("gpr18", "gpr32")
+markerNames <- c("gpr18", "gpr32", "chem23")
 
 markersOrCells <- markersOrCellsClassification
 figureNames <-
-  c(#"DifferentialStatesStatisticscsv"#,
+  c("DifferentialStatesStatisticscsv",
     "DifferentialAbundanceStatisticscsv"
   )
 
 markersOrCells <- markersOrCells[3]
-clusterNames <- clusterNames[4]
+clusterNames <- clusterNames[3:4]
 
 directoryNames <- c(
   "BCells",
@@ -107,6 +107,8 @@ for (clusterName in clusterNames) {
 
       combinedDf[grepl("gpr18", combinedDf$panel), "Marker"] <- "GPR18"
       combinedDf[grepl("gpr32", combinedDf$panel), "Marker"] <- "GPR32"
+      combinedDf[grepl("chem23", combinedDf$panel), "Marker"] <- "Chem23"
+
 
       try(combinedDf <- merge(combinedDf, combinedStability, by.x = c("cluster_id", "Marker"), by.y = c(clustermarkerName, "marker"), all.x = TRUE))
 
@@ -177,77 +179,7 @@ for (clusterName in clusterNames) {
       combinedDf$minus_log_fdr_adjusted_p_val <- 0 - log10(combinedDf$fdr_adjusted_p_val)
       combinedDf$minus_log_p_val <- 0 - log10(combinedDf$p_val)
 
-      # combinedDf <- combinedDf[combinedDf$typeOfCells %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "typeOfCells"], ]
-      # combinedDf <- combinedDf[combinedDf$cluster_id %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "cluster_id"], ]
-      # combinedDf <- combinedDf[combinedDf$experiment %in% combinedDf[combinedDf$fdr_adjusted_p_val<0.05, "experiment"], ]
-      combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+, CD127+, FoxP3-)"
-      combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25+, CD127+, FoxP3+)"
-      combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127+, FoxP3+)"
-      combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127-, FoxP3+)"
-      combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127-, FoxP3-)"
-      combinedDf[combinedDf$cluster_id == "CD8- CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells", "typeOfCells"] <- "Memory Double Negative T Cells (CD25-, CD127-, FoxP3-)"
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4- CD45RO+ CD25- CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Negative T Cells (CD25-, CD127+, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'Effector Memory CD4+ T Cells (CD27-, CD28-, KLRG1+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Effector Memory CD4+ T Cells (CD27-, CD28+, KLRG1+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Effector Memory CD4+ T Cells (CD27+, CD28-, KLRG1+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27-, CD28+, KLRG1-, CCR7+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27-, CD28+, KLRG1+, CCR7+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27- CD45RA- KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27-, CD28-, KLRG1+, CCR7+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD27+, CD28+, KLRG1-, CCR7-)'
-
-
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD25-, CD127-, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD25-, CD127+, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD4+ T Cells (CD25-, CD127+, FoxP3+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25-, CD127-, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25-, CD127-, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25-, CD127+, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25+, CD127-, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25+, CD127+, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD25+, CD127+, FoxP3-)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Positive T Cells (CD25-, CD127+, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Positive T Cells (CD25+, CD127+, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Memory Double Positive T Cells (CD25+, CD127+, FoxP3+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive T Cells (CD25-, CD127-, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive T Cells (CD25-, CD127-, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive T Cells (CD25+, CD127+, FoxP3+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Positive Regulatory T Cells'
-
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25-, CD127-, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25-, CD127-, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25-, CD127+, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD25+, CD127+, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD27+, CD28+, KLRG1-, CCR7+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD4+ T Cells (CD27+, CD28+, KLRG1+, CCR7+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD25-, CD127-, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD25+, CD127+, FoxP3+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1-, CCR7-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1-, CCR7+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1+, CCR+-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Naive CD8+ T Cells (CD27+, CD28+, KLRG1+, CCR7+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4- CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Negative T Cells (CD25-, CD127-, FoxP3-)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4- CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'Naive Double Negative T Cells (CD25-, CD127-, FoxP3+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Central Memory CD4+ T Cells (KLRG1-, CD28-)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1- CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Central Memory CD4+ T Cells (KLRG1-, CD28+)'
-      combinedDf[combinedDf$cluster_id == 'CD8- CD4+ CD27+ CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Central Memory CD4+ T Cells (KLRG1+, CD28+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1- CCR7- CD28- T Cells', 'typeOfCells'] <- 'Intermediate Senescent CD8+ T Cells 1 (KLRG1-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA+ KLRG1+ CCR7- CD28- T Cells', 'typeOfCells'] <- 'Intermediate Senescent CD8+ T Cells 1 (KLRG1+)'
-
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27- CD45RA+ KLRG1+ CCR7+ CD28- T Cells', 'typeOfCells'] <- 'Viral Associated Senescent CD8+ T Cells (CD28-)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27- CD45RA+ KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'Viral Associated Senescent CD8+ T Cells (CD28+)'
-      combinedDf[combinedDf$cluster_id == 'CD8+ CD4- CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'Memory CD8+ T Cells (CD27+, CD45RA-, KLRG1-, CCR7-, CD28+)'
-
-      #combinedDf$typeOfCells <- gsub(" CD11b\\+", " CD11b+\n", combinedDf$typeOfCells)
-      # combinedDf$typeOfCells <- gsub("\\(", "\n\\(", combinedDf$typeOfCells)
+      combinedDf <- updateMarkerNames(combinedDf)
 
       combinedDf[combinedDf$experiment == paste0(clusterName,"BulbarLimbVisits1AllCells", figureName, markersOrCell, ".csv"), "experiment"] <- "Bulbar vs Limb"
       combinedDf[combinedDf$experiment == paste0(clusterName,"caseControlVisits1AllCells", figureName, markersOrCell, ".csv"), "experiment"] <- "ALS vs Control"
@@ -269,36 +201,6 @@ for (clusterName in clusterNames) {
       combinedDf <- combinedDf[order(combinedDf$panel),]
 
       combinedDf$typeOfCells <- factor(combinedDf$typeOfCells, levels =  unique(combinedDf$typeOfCells))
-
-      # fig <-
-      #   ggplot(
-      #     combinedDf,
-      #     aes(
-      #       x = as.factor(typeOfCells),
-      #       y = minus_log_fdr_adjusted_p_val,
-      #       color = logFC,
-      #       shape = jaccard
-      #     )
-      #   ) +
-      #   geom_point(alpha = 0.75, size=5) +
-      #   scale_shape_manual(values=unique(combinedDf$shape)) +
-      #   facet_wrap(~experiment) +
-      #   guides(color = guide_colourbar(title="log2(Fold Change)", order = 1)) +
-      #   theme(axis.text.x = element_text(
-      #     angle = 90,
-      #     vjust = 0.5,
-      #     hjust = 1,
-      #     size = 8
-      #   )) +
-      #   xlab("Cell Populations") +
-      #   ylab("-log10(Adjusted P-Value)") +
-      #   ylim(0, NA) + guides(
-      #     shape = guide_legend(title = "Stability")
-      #   ) +
-      #   geom_hline(yintercept = 0 - log10(0.05), linetype = "dashed") +
-      #   scale_colour_viridis_c()
-      #
-      # print(fig)
 
       try({
         combinedDf <- combinedDf[, c(
@@ -345,7 +247,12 @@ for (clusterName in clusterNames) {
       fwrite(combinedDf,
              paste0("data/pValueAdjustmentsResults/", clusterName, markersOrCell, figureName, ".csv"))
 
-      rm(combinedDf)
+      rm(list=ls()[!ls() %in% c("clusterNames", "markerNames", "markersOrCells",
+                     "figureNames", "directoryNames",
+                     "clusterName", "markersOrCell", "figureName")])
+
+      try(source("R/01_functions.R"))
+      try(source("R/00_datasets.R"))
     }
   }
 }

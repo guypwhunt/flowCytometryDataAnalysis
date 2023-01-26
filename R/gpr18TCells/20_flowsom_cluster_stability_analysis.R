@@ -5,7 +5,8 @@ loadlibraries()
 
 directoryName <- "gpr18TCells"
 
-clusterNames <- c("clusters_flowsom", "meta_clusters_flowsom", "meta_clusters_flowsomMarker")
+clusterNames <- c("clusters_flowsom", "meta_clusters_flowsom",
+  "meta_clusters_flowsomMarker")
 
 markersOrCells <- markersOrCellsClassification
 
@@ -13,6 +14,8 @@ df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/flowsomClus
 df <- as.data.frame(df)
 
 results <- read.csv(paste0("./data/", directoryName, '/clusteringOutput/', 'meta_clusters_flowsom_Stability.csv'))
+
+# clusterName <- clusterNames[3]
 
 for (clusterName in clusterNames) {
   identifyFlowsomClusterSimilarity(df,

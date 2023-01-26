@@ -3,8 +3,8 @@ try(source("R/00_datasets.R"))
 
 loadlibraries()
 
-directoryName <- "gpr18BCells"
-columnNames <- append("fileName", gpr18BCellsColumnNames)
+directoryName <- "chem23Monocytes"
+columnNames <- append("fileName", chem23MonocytesColumnNames)
 
 markersOrCells <- markersOrCellsClassification[3]
 
@@ -13,15 +13,14 @@ clusterNames <-  clusterColumns[3:4]
 n.cores <- 1
 
 # clusterName <- clusterNames[1]
-# clusterNames <- c("clusters_phenograph")
-# markersOrCell <- markersOrCells[1]
-my.cluster <- parallel::makeCluster(5)
+# markersOrCell <- markersOrCells[2]
+my.cluster <- parallel::makeCluster(n.cores)
 doParallel::registerDoParallel(cl = my.cluster)
 foreach::getDoParRegistered()
 foreach::getDoParWorkers()
 
 df <-
-  fread(file=paste0(
+  fread(file = paste0(
     "./data/",
     directoryName,
     '/clusteringOutput/clusteringOutputs.csv'

@@ -10,8 +10,8 @@ directoryNames <- c(
   # "gpr18TCells",
   # "gpr32BCells",
   # "gpr32Monocytes",
-  "gpr32Senescence",
-  "gpr32TCells"
+  "gpr32Senescence"#,
+  #"gpr32TCells"
 )
 
 for (directoryName in directoryNames) {

@@ -23,6 +23,9 @@ clinical <-
 rownames(clinical) <- clinical$classification
 clinical <- clinical[colnames(ex), ]
 
+clinical[is.na(clinical$fastSlow), "fastSlow"] <- "Control"
+clinical[is.na(clinical$BulbarLimb), "BulbarLimb"] <- "Control"
+
 all(colnames(ex) == row.names(clinical))
 
 performDifferentialExpression <-
@@ -179,8 +182,6 @@ design <- model.matrix(
 
 # set up contrasts of interest and recalculate model coefficients
 cont.matrix <- makeContrasts(
-  ControlVsEarly = groupControl - groupEarly,
-  ControlVsLate = groupControl - groupLate,
   EarlyVsControl = groupEarly - groupControl,
   LateVsControl = groupLate - groupControl,
   levels = design
@@ -244,10 +245,6 @@ design <- model.matrix(
 
 # set up contrasts of interest and recalculate model coefficients
 cont.matrix <- makeContrasts(
-  ControlVsSlowLate =   groupControl - groupSlowLate,
-  ControlVsSlowEarly = groupControl - groupSlowEarly,
-  ControlVsFastEarly = groupControl - groupFastEarly,
-  ControlVsFastLate = groupControl - groupFastLate,
   SlowLateVsControl = groupSlowLate - groupControl,
   FastEarlyVsControl = groupFastEarly - groupControl,
   SlowEarlyVsControl = groupSlowEarly - groupControl,
@@ -320,10 +317,6 @@ design <- model.matrix(
 
 # set up contrasts of interest and recalculate model coefficients
 cont.matrix <- makeContrasts(
-  ControlVsBulbarLate =   groupControl - groupBulbarLate,
-  ControlVsBulbarEarly =   groupControl - groupBulbarEarly,
-  ControlVsLimbLate =   groupControl - groupLimbLate,
-  ControlVsLimbEarly =   groupControl - groupLimbEarly,
   BulbarLateVsControl =   groupBulbarLate - groupControl,
   BulbarEarlyVsControl =   groupBulbarEarly - groupControl,
   LimbLateVsControl =   groupLimbLate - groupControl,
@@ -397,14 +390,6 @@ design <- model.matrix(
 
 # set up contrasts of interest and recalculate model coefficients
 cont.matrix <- makeContrasts(
-  ControlVsFastBulbarEarly =   groupControl - groupFastBulbarEarly,
-  ControlVsFastBulbarLate =   groupControl - groupFastBulbarLate,
-  ControlVsFastLimbEarly =   groupControl - groupFastLimbEarly,
-  ControlVsFastLimbLate =   groupControl - groupFastLimbLate,
-  ControlVsSlowBulbarEarly =   groupControl - groupSlowBulbarEarly,
-  ControlVsSlowBulbarLate =   groupControl - groupSlowBulbarLate,
-  ControlVsSlowLimbEarly =   groupControl - groupSlowLimbEarly,
-  ControlVsSlowLimbLate =   groupControl - groupSlowLimbLate,
   FastBulbarEarlyVsControl =   groupFastBulbarEarly - groupControl,
   FastBulbarLateVsControl =   groupFastBulbarLate - groupControl,
   FastLimbEarlyVsControl =   groupFastLimbEarly - groupControl,

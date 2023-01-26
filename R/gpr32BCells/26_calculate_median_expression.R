@@ -9,8 +9,10 @@ directoryName <- "gpr32BCells"
 columnNames <- gpr32BCellsColumnNames
 
 markersOrCells <- markersOrCellsClassification[3]
+markersOrCell <- markersOrCells[1]
 
 clusterNames <- clusterColumns[3:4]
+clusterName <- clusterNames[1]
 
 df <-
   fread(file=paste0(
