@@ -209,4 +209,20 @@ write.csv(
   row.names = TRUE
 )
 
-rm(list=ls())
+ggsurvplot(
+  survfit(censored.clinical.biological.res.cox, data = minDF),
+  palette = "#2E9FDF",
+  ggtheme = theme_minimal()
+)
+
+# rm(list=ls())
+
+# listObject <- list(censored.clinical.biological.res.cox.1, censored.clinical.biological.res.cox.2)
+# names(listObject) <- list("1", "2")
+#
+# ggsurvplot_combine(fit = listObject[1], data = minDF)
+
+cox_surv_obj <- censored.clinical.biological.res.cox
+data <- minDF
+
+coxCoefTable(censored.clinical.biological.res.cox, minDF)

@@ -210,4 +210,10 @@ write.csv(
   row.names = TRUE
 )
 
+ggsurvplot(
+  survfit(censored.clinical.biological.res.cox, data = minDF),
+  palette = "#2E9FDF",
+  ggtheme = theme_minimal()
+)
+
 rm(list=ls())

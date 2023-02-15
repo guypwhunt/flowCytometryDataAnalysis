@@ -8,7 +8,7 @@ columnNames <- gpr18TCellsClusteringColumnNames
 
 prettyColumnNames <- gpr18TCellsClusteringColumnNames
 
-clusterNames <- clusterColumns[3:4]
+clusterNames <- clusterColumns[4]
 
 markersOrCells <- markersOrCellsClassification[3]
 

@@ -5,7 +5,7 @@ loadlibraries()
 
 clusterNames <- clusterColumns
 
-markerNames <- c("gpr18", "gpr32", "chem23")
+markerNames <- c("gpr18", "gpr32")
 
 markersOrCells <- markersOrCellsClassification
 figureNames <-
@@ -241,6 +241,8 @@ for (clusterName in clusterNames) {
           "Minus Log (FDR Adjusted P-Value)"
         )
       })
+
+      combinedDf <- filterFlowCytometryComparisons(combinedDf)
 
       dir.create("data/pValueAdjustmentsResults", showWarnings = FALSE)
 

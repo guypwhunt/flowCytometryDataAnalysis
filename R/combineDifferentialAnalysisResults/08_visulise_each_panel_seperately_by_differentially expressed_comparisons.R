@@ -7,32 +7,25 @@ clusterNames <- clusterColumns
 
 markersOrCells <- markersOrCellsClassification
 figureNames <-
-  c("DifferentialStatesStatisticscsv"#,
-    #"DifferentialAbundanceStatisticscsv"
+  c(
+    "DifferentialStatesStatisticscsv"#,
+    # "DifferentialAbundanceStatisticscsv"
     )
 
 markersOrCells <- markersOrCells[3]
-clusterNames <- clusterNames[4]
+clusterNames <- clusterNames[3]
 
 directoryNames <- c(
-  # "BCells"#,
-  "Monocytes"#,
-  # "Senescence",
+  "BCells"#,
+  # "Monocytes"#,
+  # "Senescence"#,
   # "TCells"
   )
 
 clusterName <- "clusters_phenograph"
 markersOrCell <- "Markers"
 figureName <- "DifferentialStatesStatisticscsv"
-directoryName <- "TCells"
-
-comparisons <- c(
-  "ALS vs Control" = 21,
-  "Fast vs Controls"  = 22,
-  "Fast vs Slow"  = 23,
-  "Slow vs Control"  = 24,
-  "Bulbar vs Control" = 25
-)
+directoryName <- "Senescence"
 
 regulation <- c(
   "Upregulated"  = "Red",
@@ -76,6 +69,7 @@ for (directoryName in directoryNames) {
 
         combinedDf <- combinedDf[!is.na(combinedDf$LogFoldChange), ]
 
+        yLimit <- ceiling(max(combinedDf$MinusLogFDRAdjustedPValue))
 
         scaleLimits <-
           ceiling(max(abs(min(
@@ -105,8 +99,7 @@ for (directoryName in directoryNames) {
             levels = names(regulation)
           )
 
-        combinedDf <-
-          combinedDf[combinedDf$Comparison %in% names(comparisons),]
+        combinedDf <- filterFlowCytometryComparisons(combinedDf)
 
         combinedDf[combinedDf$JaccardSimilarityCoefficient < 0.65, "jaccard"] <-
           "Low"
@@ -140,6 +133,13 @@ for (directoryName in directoryNames) {
             combinedDf2 <-
               combinedDf2[combinedDf2$Panel %in% paste0(tolower(marker), directoryName),]
 
+            combinedDf2 <- combinedDf2[combinedDf2$Comparison %in% unique(combinedDf2[combinedDf2$FDRAdjustedPValue< 0.05 , "Comparison"]),]
+
+            comaprisonNames <- unique(combinedDf2$Comparison)
+            comaprisonNames <- comaprisonNames[order(comaprisonNames)]
+
+            numberOfPlots <- ceiling(length(comaprisonNames)/5)
+
             combinedDf2 <- combinedDf2[order(combinedDf2$typeOfCells), ]
 
             parentCells <- c("B", "M", "S", "T")
@@ -156,9 +156,25 @@ for (directoryName in directoryNames) {
 
             combinedDf2$typeOfCells <- factor(combinedDf2$typeOfCells, levels = unique(combinedDf2$typeOfCells))
 
+            combinedDfGoldenSource <- combinedDf2
+
+            for(number in seq(numberOfPlots)){
+              message(number)
+              combinedDf3 <- combinedDfGoldenSource
+
+              selectedComparisons <- comaprisonNames[seq((number-1)*5 + 1, min(number * 5, length(comaprisonNames)))]
+
+              combinedDf3 <- combinedDf3[combinedDf3$Comparison %in% selectedComparisons, ]
+
+              combinedDf3$Comparison <- factor(combinedDf3$Comparison, levels = selectedComparisons)
+
+              comparisons <- seq(length(selectedComparisons)) + 20
+
+              names(comparisons) <- selectedComparisons
+
             fig <-
               ggplot(
-                combinedDf2,
+                combinedDf3,
                 aes(
                   x = as.factor(typeOfCells),
                   y = MinusLogFDRAdjustedPValue,
@@ -208,16 +224,17 @@ for (directoryName in directoryNames) {
               ) +
               xlab("Cell Populations") +
               ylab("-log10(Adjusted P-Value)") +
-              ylim(0, ceiling(max(combinedDf$MinusLogFDRAdjustedPValue))) +
-              geom_hline(yintercept = 0 - log10(0.05),
-                         linetype = "dashed") +
+              ylim(0, yLimit) +
               scale_fill_gradientn(
                 limits = c(0 - scaleLimits, scaleLimits),
                 colours = c("#0000FF", "#2E2EFF", "#5C5CFF", "#8A8AFF", "#ffffff",
                             "#FF8A8A", "#FF5C5C", "#FF2E2E", "#FF0000")
-              )
+              ) +
+              geom_hline(yintercept = 0 - log10(0.05),
+                         linetype = "dashed")
 
             print(fig)
+            }
           })
         }
 

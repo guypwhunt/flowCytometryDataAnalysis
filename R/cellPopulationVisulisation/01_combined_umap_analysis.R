@@ -7,14 +7,14 @@ directoryNames <- c(
   # "gpr18BCells"#,
   # "gpr18Monocytes"#,
   # "gpr18Senescence",
-  "gpr18TCells",
+  "gpr18TCells"#,
   # "gpr32BCells"#,
   # "gpr32Monocytes"#,
   # "gpr32Senescence"#,
-  "gpr32TCells"
+  # "gpr32TCells"
 )
 
-clusterNames <- clusterColumns[3:4]
+clusterNames <- clusterColumns[4]
 
 # clusterName <- clusterNames[1]
 #
@@ -23,6 +23,9 @@ clusterNames <- clusterColumns[3:4]
 for (directoryName in directoryNames) {
   message()
   message(directoryName)
+
+  cellPopulationOrder <- identifyCellPopulationOrder(directoryName)
+
   for (clusterName in clusterNames) {
     message(clusterName)
     try({
@@ -78,7 +81,9 @@ for (directoryName in directoryNames) {
 
       df <- updateMarkerNames(df)
 
-      df <- df[order(df$typeOfCells),]
+      df <- left_join(data.frame(typeOfCells = cellPopulationOrder), df, by = "typeOfCells")
+
+      df <- na.omit(df)
 
       df$ID <- as.factor(as.numeric(factor(df$typeOfCells, levels = unique(df$typeOfCells))))
 
@@ -110,13 +115,14 @@ for (directoryName in directoryNames) {
               panel.grid.minor = element_blank()) +
         geom_label_repel(
           aes(label = as.integer(ID)),
-          data = label
-          ,
-          size = 2,
+          data = label,
+          segment.colour = "black",
+          size = 4,
           force_pull = 0,
           max.time = 2,
           show.legend = FALSE,
-          max.overlaps = Inf
+          max.overlaps = Inf,
+          fontface = "bold"
         ) +
         labs(y = "UMAP 2", x = "UMAP 1")  +
         scale_color_manual(values = metacluster_colours) +

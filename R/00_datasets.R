@@ -44,7 +44,7 @@ gpr32MonocytesCutoff <- c(0.6, 0.5, 0.5, 0.35, 0.5)
 
 # GPR18 T Cells
 gpr18TCellsColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
-                            "CD45RO", "CD4", "Chem23")
+                            "CD45RO", "CD4", "GPR18")
 
 gpr18TCellsClusteringColumnNames <- c("CD127", "CD8", "CD25", "FoxP3",
                                       "CD45RO", "CD4")
@@ -128,3 +128,145 @@ cutOff <- 0.4
 iterations <- 100
 
 clusterStabilityCutoff <- 0.85
+
+# Comparisons
+
+# ALS vs Controls
+alsAndSubGroupsVsControlsComparisons <- c(
+  "ALS vs HC" = 21,
+  "A-F vs HC"  = 22,
+  "A-S vs HC" = 23,
+  "A-B vs HC"  = 24,
+  "A-L vs HC" = 25
+)
+
+progressionSubGroupsVsControlsComparisons <- c(
+  "A-FB vs HC" = 21,
+  "A-FL vs HC"  = 22,
+  "A-SB vs HC" = 23,
+  "A-SL vs HC"  = 24
+  )
+
+progressionSubGroupsVsSubGroupsComparisons <- c(
+  "A-F vs A-S" = 21,
+  "A-B vs A-L"  = 22
+)
+
+londitudinalComparisons <- c(
+  "V2-ALS vs V1-ALS" = 21,
+  "V3-ALS vs V1-ALS"  = 22,
+  "V3-ALS vs V2-ALS" = 23
+)
+
+bCellsOrder <- c(
+  'B',
+  'N-B',
+  'LM-B',
+  'I-B',
+  'F-B',
+  'S-B (CD24-)',
+  'S-B (CD24+)',
+  'US-B (CD24-)',
+  'US-B (CD24+)'
+)
+
+monocytesOrder <- c(
+  'M',
+  'NC-M',
+  'NC-M (HLA-DR-)',
+  'CD11b+NC-M',
+  'aCD11b+NC-M (CD11b High)',
+  'aCD11b+NC-M (CD11b Low)',
+  'aCD11b+NC-M (HLA-DR-, CD11b Low)',
+  'IM-M',
+  'IM-M (HLA-DR-)',
+  'CD11b+IM-M',
+  'aCD11b+IM-M (CD11b High)',
+  'aCD11b+IM-M (CD11b Low)',
+  'aCD11b+IM-M (HLA-DR-, CD11b High)',
+  'aCD11b+IM-M (HLA-DR-, CD11b Low)',
+  'C-M (HLA-DR-)',
+  'CD11b+C-M',
+  'aCD11b+C-M (CD11b High)',
+  'aCD11b+C-M (HLA-DR-, CD11b High)',
+  'aCD11b+C-M (HLA-DR-, CD11b Low)'
+)
+
+
+tCellsOrder <- c(
+  'T',
+  'N-Tc (CD25-, CD127-, FoxP3+)',
+  'N-Tc (CD25+, CD127-, FoxP3-)',
+  'N-Tc (CD25+, CD127+, FoxP3+)',
+  'M-Tc (CD25-, CD127-, FoxP3-)',
+  'M-Tc (CD25-, CD127-, FoxP3+)',
+  'M-Tc (CD25-, CD127+, FoxP3+)',
+  'M-Tc (CD25+, CD127-, FoxP3-)',
+  'M-Tc (CD25+, CD127+, FoxP3-)',
+  'M-Tc (CD25+, CD127+, FoxP3+)',
+  'N-Tcregs',
+  'M-Tcregs',
+  'N-Th (CD25-, CD127-, FoxP3-)',
+  'N-Th (CD25-, CD127-, FoxP3+)',
+  'N-Th (CD25-, CD127+, FoxP3+)',
+  'N-Th (CD25+, CD127+, FoxP3+)',
+  'M-Th (CD25-, CD127-, FoxP3+)',
+  'M-Th (CD25-, CD127+, FoxP3-)',
+  'M-Th (CD25-, CD127+, FoxP3+)',
+  'M-Th (CD25+, CD127+, FoxP3+)',
+  'N-Thregs',
+  'M-Thregs',
+  'N-Tdp (CD25-, CD127-, FoxP3-)',
+  'N-Tdp (CD25-, CD127-, FoxP3+)',
+  'N-Tdp (CD25+, CD127-, FoxP3-)',
+  'N-Tdp (CD25+, CD127+, FoxP3+)',
+  'M-Tdp (CD25-, CD127+, FoxP3+)',
+  'M-Tdp (CD25+, CD127+, FoxP3-)',
+  'M-Tdp (CD25+, CD127+, FoxP3+)',
+  'N-Tdpregs',
+  'N-Tdn (CD25-, CD127-, FoxP3-)',
+  'N-Tdn (CD25-, CD127-, FoxP3+)',
+  'M-Tdn (CD25-, CD127-, FoxP3-)',
+  'M-Tdn (CD25-, CD127-, FoxP3+)',
+  'M-Tdn (CD25-, CD127+, FoxP3-)',
+  'M-Tdn (CD25-, CD127+, FoxP3+)',
+  'M-Tdn (CD25+, CD127+, FoxP3-)',
+  'M-Tdn (CD25+, CD127+, FoxP3+)',
+  'M-Tdnregs'
+)
+
+senescenceOrder <- c(
+  'S',
+  'Viral-S Tc (CD28-)',
+  'Viral-S Tc (CD28+)',
+  'Viral-S Th',
+  'IS2-Tc',
+  'LS-Tc',
+  'IS1-Tc (KLRG1-)',
+  'IS1-Tc (KLRG1+)',
+  'ES-Tc',
+  'N-Tc (CD27+, CD28-, KLRG1-, CCR7+)',
+  'N-Tc (CD27+, CD28+, KLRG1-, CCR7-)',
+  'N-Tc (CD27+, CD28+, KLRG1-, CCR7+)',
+  'N-Tc (CD27+, CD28+, KLRG1+, CCR+-)',
+  'N-Tc (CD27+, CD28+, KLRG1+, CCR7+)',
+  'M-Tc (CD27+, KLRG1-, CCR7-, CD28+)',
+  'CM-Tc',
+  'EM-Tc',
+  'N-Th (CD27+, CD28-, KLRG1-, CCR7+)',
+  'N-Th (CD27+, CD28+, KLRG1-, CCR7+)',
+  'N-Th (CD27+, CD28+, KLRG1+, CCR7+)',
+  'M-Th (CD27-, CD28-, KLRG1+, CCR7+)',
+  'M-Th (CD27-, CD28+, KLRG1-, CCR7+)',
+  'M-Th (CD27-, CD28+, KLRG1+, CCR7+)',
+  'M-Th (CD27+, CD28+, KLRG1-, CCR7-)',
+  'CM-Th  (KLRG1-, CD28+)',
+  'CM-Th (KLRG1-, CD28-)',
+  'CM-Th (KLRG1+, CD28+)',
+  'EM-Th (CD27-, CD28-, KLRG1+)',
+  'EM-Th (CD27-, CD28+, KLRG1+)',
+  'EM-Th (CD27+, CD28-, KLRG1+)',
+  'M-Tdp',
+  'CM-Tdp',
+  'EM-Tdp'
+)

@@ -35,65 +35,6 @@ for (clusterName in clusterNames) {
 
     loadlibraries()
 
-    # if (markersOrCell == "Markers") {
-    #   if (clusterName == "meta_clusters_flowsom") {
-    #     cutoffDf <- fread(
-    #       file =
-    #         paste0(
-    #           "data/",
-    #           directoryName,
-    #           "/clusteringOutput/meta_clusters_flowsomMarkerStability.csv"
-    #         )
-    #     )
-    #
-    #     cutoffDf <- as.data.frame(cutoffDf)
-    #
-    #     cutoffDf$rowMedian <- apply(cutoffDf[,-1], 1, median)
-    #
-    #     colnames(cutoffDf)[1] <- clusterName
-    #
-    #     cutoffDf <- cutoffDf[, c(clusterName, "rowMedian")]
-    #
-    #     cutoffDf <<-
-    #       cutoffDf[cutoffDf$rowMedian < clusterStabilityCutoff, ]
-    #   } else if (clusterName == "clusters_phenograph") {
-    #     cutoffDf <- fread(
-    #       file =
-    #         paste0(
-    #           "data/",
-    #           directoryName,
-    #           #"/clusteringOutput/meta_clusters_flowsomMarkerStability.csv"
-    #           "/clusteringOutput/clusters_phenographMarkerStability.csv"
-    #         )
-    #     )
-    #     cutoffDf <- as.data.frame(cutoffDf)
-    #
-    #     cutoffDf$rowMedian <- apply(cutoffDf[,-1], 1, median)
-    #
-    #     colnames(cutoffDf)[1] <- clusterName
-    #
-    #     cutoffDf <- cutoffDf[, c(clusterName, "rowMedian")]
-    #
-    #     cutoffDf <-
-    #       cutoffDf[cutoffDf$rowMedian < clusterStabilityCutoff, ]
-    #
-    #   }
-    # } else if (markersOrCell != "Markers") {
-    #   cutoffDf <- fread(
-    #     file =
-    #       paste0(
-    #         "data/",
-    #         directoryName,
-    #         "/clusteringOutput/",
-    #         clusterName,
-    #         markersOrCell,
-    #         "CountsOverCutoff.csv"
-    #       )
-    #   )
-    #
-    #   cutoffDf <- as.data.frame(cutoffDf)
-    # }
-
     performAllDifferentialAbundanceTests(df,
                                          directoryName,
                                          columnNames,

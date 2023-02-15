@@ -6,16 +6,10 @@ loadlibraries()
 # Define if it is Differential States or Differential Abundance Aanlaysis
 clusterNames <- clusterColumns[3:4]
 
-# clusterName <- clusterNames[1]
-# clusterNames <- c(clusterNames[1])
-
 markersOrCells <- markersOrCellsClassification[3]
 
 directories <- c("gpr32BCells", "gpr32Monocytes", "gpr32TCells", "gpr32Senescence")
 markerName <- "gpr32"
-
-# markersOrCell <- markersOrCells[1]
-# markersOrCells <- markersOrCells[3]
 
 for(clusterName in clusterNames) {
   for (markersOrCell in markersOrCells) {

@@ -39,7 +39,7 @@ installlibraries <- function() {
 
   library(withr)
   library(devtools)
-  with_libpaths(new = "R/x86_64-pc-linux-gnu-library/4.2/", install_github("igraph/rigraph@master"))
+  with_libpaths(new = "R/x86_64-pc-linux-gnu-library/4.2/", install_github("igraph/rigraph"))
   with_libpaths(new = "R/x86_64-pc-linux-gnu-library/4.2/", install_github("gastonstat/colortools"))
 
   BiocManager::install(
@@ -82,6 +82,7 @@ installlibraries <- function() {
 }
 
 loadlibraries <- function() {
+  try(library(rlang))
   try(library(pkgconfig))
   try(library(data.table))
   try(library(statmod))
@@ -2430,6 +2431,12 @@ differentialAbundanceAnalysis <- function(df,
   # Extract only the relevant columns
   minimalDf <- df[, c(clusterName, "fileID", columnNames)]
 
+  experimentInfo$count <- NA
+
+  for(filename in unique(experimentInfo$sample_id)){
+    experimentInfo[experimentInfo$sample_id == filename, "count"] <- nrow(df[df$fileName == filename,])
+  }
+
   # split the dataframe into a dataframe for each file
   listOfDfs <- list()
   for (file in unique(minimalDf[, "fileName"])) {
@@ -2489,7 +2496,7 @@ differentialAbundanceAnalysis <- function(df,
 
   rowData(d_se)[, "cluster_id"] <- as.factor(rowData(d_se)[, "cluster_id"])
 
-  # Calculate cluster cell counts
+  # CalcuV2 cluster cell counts
   d_counts <- calcCounts(d_se)
   #rowData(d_counts)[, "cluster_id"] <-
   #  as.factor(rownames(rowData(d_counts)))
@@ -2549,14 +2556,14 @@ differentialAbundanceAnalysis <- function(df,
     }
   }
 
-  # Calculate cluster medians
+  # CalcuV2 cluster medians
   d_medians <- calcMedians(d_se)
   #rowData(d_medians)[, "cluster_id"] <-
   #  as.factor(rownames(rowData(d_counts)))
 
   # Create experiment design
   design <-
-    createDesignMatrix(experimentInfo, cols_design = c("group_id", covariants))
+    createDesignMatrix(experimentInfo, cols_design = c("group_id", covariants, "count"))
 
   # Create contrast (the 1 indicates the columns in the design to test)
   contrast <- createContrast(c(0, 1, rep(0, ncol(design) - 2)))
@@ -2646,7 +2653,7 @@ differentialAbundanceAnalysis <- function(df,
   # display table of results for top DA clusters
   topTable(res_DA, format_vals = TRUE)
 
-  # calculate number of significant detected DA clusters at 10% false discovery
+  # calcuV2 number of significant detected DA clusters at 10% false discovery
   # rate (FDR)
   table(topTable(res_DA, all = TRUE)$p_adj <= differentialAbundanceThreshold)
 
@@ -2665,6 +2672,9 @@ differentialAbundanceAnalysis <- function(df,
 
   dir.create(dsDiagnosticPlotDirectory, showWarnings = FALSE)
 
+  # Create experiment design
+  design <-
+    createDesignMatrix(experimentInfo, cols_design = c("group_id", covariants, "count"))
 
   # Test for differential states (DS) within clusters
   if (is.null(blocking)) {
@@ -6157,33 +6167,33 @@ recalculatePValueAdjustments <-
     figureDirectory <- paste0(getwd(), "/figures/")
 
     if (DA) {
-      jpeg(file = paste0(
-        figureDirectory,
-        "fdr",
-        str_replace_all(str_replace_all(
-          str_replace_all(fileNames, " ", ""), ",", ""
-        ), "\\.", "")[1],
-        markersOrCell,
-        ".jpeg"
-      ), quality = 100)
-      par(mar = c(1, 1, 1, 1))
-      p <- ggplot(
-        data = combinedDf,
-        aes(
-          x = logFC,
-          y = minus_log_p_val,
-          col = fdr_diff_expressed,
-          label = fdr_label
-        )
-      ) +
-        geom_point() +
-        theme_minimal() +
-        scale_colour_manual(values = mycolors) +
-        geom_text_repel() +
-        ggtitle("Differential Abundance of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log P-Value")
-      print(p)
-      dev.off()
+      # jpeg(file = paste0(
+      #   figureDirectory,
+      #   "fdr",
+      #   str_replace_all(str_replace_all(
+      #     str_replace_all(fileNames, " ", ""), ",", ""
+      #   ), "\\.", "")[1],
+      #   markersOrCell,
+      #   ".jpeg"
+      # ), quality = 100)
+      # par(mar = c(1, 1, 1, 1))
+      # p <- ggplot(
+      #   data = combinedDf,
+      #   aes(
+      #     x = logFC,
+      #     y = minus_log_p_val,
+      #     col = fdr_diff_expressed,
+      #     label = fdr_label
+      #   )
+      # ) +
+      #   geom_point() +
+      #   theme_minimal() +
+      #   scale_colour_manual(values = mycolors) +
+      #   geom_text_repel() +
+      #   ggtitle("Differential Abundance of Clusters") +
+      #   xlab("Log Fold Change") + ylab("0 - Log P-Value")
+      # print(p)
+      # dev.off()
       gc()
     } else {
       # Update marker columsn
@@ -6196,39 +6206,39 @@ recalculatePValueAdjustments <-
       combinedDf[combinedDf[, "marker_id"] == "FPRL1.AF647.A", "marker_id"] <-
         "FPRL1"
 
-      # fdr figures
-      jpeg(
-        file = paste0(
-          figureDirectory,
-          "gpr32",
-          "fdr",
-          str_replace_all(str_replace_all(
-            str_replace_all(fileNames, " ", ""), ",", ""
-          ), "\\.", "")[1],
-          markersOrCell,
-          ".jpeg"
-        ), quality = 100
-      )
-      par(mar = c(1, 1, 1, 1))
-      p <- ggplot(
-        data =
-          combinedDf[combinedDf[, "marker_id"] == "GPR32", ],
-        aes(
-          x = logFC,
-          y = minus_log_p_val,
-          col = fdr_diff_expressed,
-          label = fdr_label
-        )
-      ) +
-        geom_point() +
-        theme_minimal() +
-        scale_colour_manual(values = mycolors) +
-        geom_text_repel() +
-        ggtitle("Differential States of Clusters") +
-        xlab("Log Fold Change") + ylab("0 - Log P-Value")
-      print(p)
-      dev.off()
-      gc()
+      # # fdr figures
+      # jpeg(
+      #   file = paste0(
+      #     figureDirectory,
+      #     "gpr32",
+      #     "fdr",
+      #     str_replace_all(str_replace_all(
+      #       str_replace_all(fileNames, " ", ""), ",", ""
+      #     ), "\\.", "")[1],
+      #     markersOrCell,
+      #     ".jpeg"
+      #   ), quality = 100
+      # )
+      # par(mar = c(1, 1, 1, 1))
+      # p <- ggplot(
+      #   data =
+      #     combinedDf[combinedDf[, "marker_id"] == "GPR32", ],
+      #   aes(
+      #     x = logFC,
+      #     y = minus_log_p_val,
+      #     col = fdr_diff_expressed,
+      #     label = fdr_label
+      #   )
+      # ) +
+      #   geom_point() +
+      #   theme_minimal() +
+      #   scale_colour_manual(values = mycolors) +
+      #   geom_text_repel() +
+      #   ggtitle("Differential States of Clusters") +
+      #   xlab("Log Fold Change") + ylab("0 - Log P-Value")
+      # print(p)
+      # dev.off()
+      # gc()
     }
 
     fwrite(
@@ -6547,11 +6557,8 @@ generateHeatmapOld <-
            directoryName,
            columnNames,
            markersOrCell,
-           markerType) {
-    # clusterName <- "meta_clusters_flowsom"
-    # directoryName <- "gpr32BCells"
-    # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
-    # markersOrCell <- "Markers"
+           markerType,
+           cellPopulationOrder) {
 
     cellPopulationMarkers <-
       as.data.frame(fread(
@@ -6680,11 +6687,12 @@ generateHeatmap <-
            directoryName,
            columnNames,
            markersOrCell,
-           markerType) {
-    # clusterName <- "meta_clusters_flowsom"
-    # directoryName <- "gpr32BCells"
-    # columnNames <- c("IgD...PerCP.Cy5.5.A", "CD24...BV605.A", "CD27...BV650.A")
-    # markersOrCell <- "Markers"
+           markerType,
+           cellPopulationOrder = NULL
+           ) {
+
+    cellPopulationOrder <- identifyCellPopulationOrder(directoryName)
+
     if(markerType == "Phenotypic") {
       if(grepl("BCells", directoryName, fixed = TRUE)){
         columnOrder <- c("CD27", "CD24", "IgD")
@@ -6729,10 +6737,6 @@ generateHeatmap <-
 
     df <- df[, c(columnNames, clusterName)]
 
-    # df[, columnNames] <- scale(df[, columnNames])
-
-    # colnames(df)[ncol(df)] <- "clusters"
-
     figureDirectory <- paste0("data/", directoryName, "/figures/")
 
     df <- df[df[, clusterName] %in% populations[, clusterName],]
@@ -6741,13 +6745,19 @@ generateHeatmap <-
 
     colnames(populations) <- c(clusterName, "typeOfCells", "cluster_id")
     populations <- updateMarkerNames(populations)
-    populations <- populations[order(populations$typeOfCells), ]
 
-    populations$typeOfCells <- paste0(populations$typeOfCells, " (", as.numeric(as.factor(populations$typeOfCells)) , ")")
+    populations <- left_join(data.frame(typeOfCells = cellPopulationOrder), populations, by = "typeOfCells")
+    populations <- na.omit(populations)
+
+    populations$typeOfCells <- paste0(populations$typeOfCells, " (", as.numeric(factor(populations$typeOfCells, levels = unique(populations$typeOfCells))), ")")
+
+    cellPopulationOrder <- unique(populations$typeOfCells)
 
     df <- merge(df, populations, by = clusterName)
-    df <- df[order(df$typeOfCells), ]
-    df$typeOfCells <- as.factor(df$typeOfCells)
+
+    df <- left_join(data.frame(typeOfCells = cellPopulationOrder), df, by = "typeOfCells")
+
+    df$typeOfCells <- factor(df$typeOfCells, levels = cellPopulationOrder)
 
     df <- df[,c("typeOfCells", columnNames)]
 
@@ -6811,9 +6821,10 @@ generateHeatmap <-
       row_names_side = "left",
       row_dend_side = "left",
       column_dend_side = "bottom",
-      row_order = order(as.numeric(as.factor(
-        rownames(summarisedDf)
-      ))),
+      row_order = seq(nrow(summarisedDf)),
+      #   order(as.numeric(as.factor(
+      #   rownames(summarisedDf)
+      # ))),
       column_order = match(columnOrder, colnames(summarisedDf)),
       show_column_dend = FALSE,
       show_row_dend = FALSE,
@@ -8426,11 +8437,11 @@ updateMarkerNames <- function(df) {
   df[df$cluster_id == 'CD8+ CD4+ CD27+ CD45RA- KLRG1- CCR7- CD28+ T Cells', 'typeOfCells'] <- 'M-Tdp'
   df[df$cluster_id == 'CD8+ CD4+ CD27+ CD45RA- KLRG1+ CCR7- CD28+ T Cells', 'typeOfCells'] <- 'EM-Tdp'
   df[df$cluster_id == 'CD8+ CD4+ CD27+ CD45RA- KLRG1+ CCR7+ CD28+ T Cells', 'typeOfCells'] <- 'CM-Tdp'
-  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25-, CD127-, FoxP3-)'
-  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25-, CD127-, FoxP3+)'
-  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25+, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdp (CD25-, CD127-, FoxP3-)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25- CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdp (CD25-, CD127-, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'N-Tdp (CD25+, CD127-, FoxP3-)'
   df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127- FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdpregs'
-  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdps (CD25+, CD127+, FoxP3+)'
+  df[df$cluster_id == 'CD8+ CD4+ CD45RO- CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'N-Tdp (CD25+, CD127+, FoxP3+)'
   df[df$cluster_id == 'CD8+ CD4+ CD45RO+ CD25- CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdp (CD25-, CD127+, FoxP3+)'
   df[df$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3- CD3+ T Cells', 'typeOfCells'] <- 'M-Tdp (CD25+, CD127+, FoxP3-)'
   df[df$cluster_id == 'CD8+ CD4+ CD45RO+ CD25+ CD127+ FoxP3+ CD3+ T Cells', 'typeOfCells'] <- 'M-Tdp (CD25+, CD127+, FoxP3+)'
@@ -8454,4 +8465,85 @@ updateMarkerNames <- function(df) {
   df[df$cluster_id == 'HLA-DR+ CD16+ CD14+ CD11b+ CD11b Activated+ Monocytes', 'typeOfCells'] <- 'aCD11b+IM-M (CD11b High)'
 
   return(df)
+}
+
+filterLipidomicsComparisons <- function(df){
+  df[df$experiment == 'BulbarVsLimbBulbarEarlyVsLimbEarly.csv' ,'experiment'] <- 'A-B vs A-L'
+  df[df$experiment == 'BulbarVsLimbBulbarLateVsBulbarEarly.csv','experiment'] <- 'V2-A-B vs V1-A-B'
+  df[df$experiment == 'BulbarVsLimbBulbarLateVsLimbLate.csv' ,'experiment'] <- 'V2-A-B vs V2-A-L'
+  df[df$experiment == 'BulbarVsLimbLimbLateVsLimbEarly.csv' ,'experiment'] <- 'V2-A-L vs V1-A-L'
+  df[df$experiment == 'CaseVsControlEarlyVsControl.csv' ,'experiment'] <- 'ALS vs HC'
+  df[df$experiment == 'CaseVsControlLateVsControl.csv' ,'experiment'] <- 'V2-ALS vs HC'
+  df[df$experiment == 'EarlyVsLateLateVsEarly.csv' ,'experiment'] <- 'V2-ALS vs V1-ALS'
+  df[df$experiment == 'FastVsSlowFastEarlyVsSlowEarly.csv' ,'experiment'] <- 'A-F vs A-S'
+  df[df$experiment == 'FastVsSlowFastLateVsFastEarly.csv', 'experiment'] <- 'V2-A-F vs V1-A-F'
+  df[df$experiment == 'FastVsSlowFastLateVsSlowLate.csv' ,'experiment'] <- 'V2-A-F vs V2-A-S'
+  df[df$experiment == 'FastVsSlowSlowLateVsSlowEarly.csv' ,'experiment'] <- 'V2-A-S vs V1-A-S'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv','experiment'] <- 'A-FB vs A-FL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowBulbarEarly.csv','experiment'] <- 'A-FB vs A-SB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastBulbarEarly.csv' ,'experiment'] <- 'V2-A-FB vs V1-A-FB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastLimbLate.csv' ,'experiment'] <- 'V2-A-FB vs V2-A-FL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupSlowBulbarLate.csv', 'experiment'] <- 'V2-A-FB vs V2-A-SB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'A-FL vs A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupFastLimbEarly.csv','experiment'] <- 'V2-A-FL vs V1-A-FL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupSlowLimbLate.csv','experiment'] <- 'V2-A-FL vs V2-A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarEarlyVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'A-SB vs A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowBulbarEarly.csv','experiment'] <- 'V2-A-SB vs V1-A-SB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowLimbLate.csv' ,'experiment'] <- 'V2-A-SB vs V2-A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowLimbLate.csv' ,'experiment'] <- 'V2-A-SB vs V2-A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'V2-A-SL vs V1-A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastBulbarEarlyVsControl.csv','experiment'] <- 'A-FB vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastBulbarLateVsControl.csv','experiment'] <- 'V2-A-FB vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastLimbEarlyVsControl.csv','experiment'] <- 'A-FL vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastLimbLateVsControl.csv','experiment'] <- 'V2-A-FL vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowBulbarEarlyVsControl.csv','experiment'] <- 'A-SB vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowBulbarLateVsControl.csv' ,'experiment'] <- 'V2-A-SB vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowLimbEarlyVsControl.csv','experiment'] <- 'A-SL vs HC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowLimbLateVsControl.csv','experiment'] <- 'V2-A-SL vs HC'
+  df[df$experiment == 'ProgressionVsControlFastEarlyVsControl.csv','experiment'] <- 'A-F vs HC'
+  df[df$experiment == 'ProgressionVsControlFastLateVsControl.csv','experiment'] <- 'V2-A-F vs HC'
+  df[df$experiment == 'ProgressionVsControlSlowEarlyVsControl.csv','experiment'] <- 'A-S vs HC'
+  df[df$experiment == 'ProgressionVsControlSlowLateVsControl.csv','experiment'] <- 'V2-A-S vs HC'
+  df[df$experiment == 'SightOfOnsetVsControlBulbarEarlyVsControl.csv' ,'experiment'] <- 'A-B vs HC'
+  df[df$experiment == 'SightOfOnsetVsControlBulbarLateVsControl.csv','experiment'] <- 'V2-A-B vs HC'
+  df[df$experiment == 'SightOfOnsetVsControlLimbEarlyVsControl.csv','experiment'] <- 'A-L vs HC'
+  df[df$experiment == 'SightOfOnsetVsControlLimbLateVsControl.csv','experiment'] <- 'V2-A-L vs HC'
+
+  df <- df[!grepl(".csv", df$experiment, fixed = TRUE),]
+
+
+  return(df)
+}
+
+filterFlowCytometryComparisons <- function(df){
+  df[df$Comparison == 'ALS vs Control', 'Comparison' ] <- 'ALS vs HC'
+  df[df$Comparison == 'Bulbar vs Control', 'Comparison' ] <- 'A-B vs HC'
+  df[df$Comparison == 'Bulbar vs Limb', 'Comparison' ] <- 'A-B vs A-L'
+  df[df$Comparison == 'Fast Bulbar vs Control', 'Comparison' ] <- 'A-FB vs HC'
+  df[df$Comparison == 'Fast Limb vs Control', 'Comparison' ] <- 'A-FL vs HC'
+  df[df$Comparison == 'Fast vs Controls', 'Comparison' ] <- 'A-F vs HC'
+  df[df$Comparison == 'Fast vs Slow', 'Comparison' ] <- 'A-F vs A-S'
+  df[df$Comparison == 'Limb vs Control', 'Comparison' ] <- 'A-L vs HC'
+  df[df$Comparison == 'Slow Bulbar vs Control', 'Comparison' ] <- 'A-SB vs HC'
+  df[df$Comparison == 'Slow Limb vs Control', 'Comparison' ] <- 'A-SL vs HC'
+  df[df$Comparison == 'Slow vs Control', 'Comparison' ] <- 'A-S vs HC'
+  df[df$Comparison == 'Visit 2 vs Visit 1', 'Comparison' ] <- 'V2-ALS vs V1-ALS'
+  df[df$Comparison == 'Visit 3 vs Visit 1', 'Comparison' ] <- 'V3-ALS vs V1-ALS'
+  df[df$Comparison == 'Visit 3 vs Visit 2', 'Comparison' ] <- 'V3-ALS vs V2-ALS'
+
+  return(df)
+}
+
+
+identifyCellPopulationOrder <- function(directoryName){
+  if(grepl("BCells", directoryName)){
+    cellPopulationOrder <- bCellsOrder
+  } else if (grepl("Monocytes", directoryName)){
+    cellPopulationOrder <- monocytesOrder
+  } else if (grepl("TCells", directoryName)){
+    cellPopulationOrder <- tCellsOrder
+  } else {
+    cellPopulationOrder <- senescenceOrder
+  }
+  return(cellPopulationOrder)
 }

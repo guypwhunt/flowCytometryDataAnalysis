@@ -8,42 +8,21 @@ columnNames <- gpr32MonocytesClusteringColumnNames
 
 prettyColumnNames <- gpr32MonocytesClusteringColumnNames
 
-clusterNames <- clusterColumns[3:4]
+clusterNames <- clusterColumns[4]
 
 markersOrCells <- markersOrCellsClassification[3]
 
 markerType <- "Phenotypic"
 
-#clusterNames <-c(clusterNames[4])
-#clusterName <- clusterNames[1]
-#markersOrCellS <- c(markersOrCells[3])
-#markersOrCell <- c(markersOrCells[1])
-
 df <- fread(file=paste0("./data/", directoryName, '/clusteringOutput/umapDf.csv'))
 df <- as.data.frame(df)
+cellPopulationOrder <- monocytesOrder
 
 for (markersOrCell in markersOrCells) {
   for (clusterName in clusterNames) {
     message(markersOrCell)
     message(clusterName)
     try(source("R/01_functions.R"))
-    generateHeatmap(df, clusterName, directoryName, columnNames, markersOrCell, markerType)
+    generateHeatmap(df, clusterName, directoryName, columnNames, markersOrCell, markerType, cellPopulationOrder)
   }
 }
-
-# markerType <- "Functional"
-#
-# columnNames <-
-#   c(
-#     "GPR32"
-#   )
-#
-# prettyColumnNames <-   c(
-#   "GPR32"
-# )
-#
-# for (markersOrCell in markersOrCells) {
-#   for (clusterName in clusterNames) {
-#     generateHeatmap(df, clusterName, directoryName, columnNames, markersOrCell, markerType)
-#   }
-# }

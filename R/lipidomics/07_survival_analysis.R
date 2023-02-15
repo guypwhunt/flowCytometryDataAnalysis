@@ -18,12 +18,23 @@ experimentInfo <- experimentInfo[experimentInfo$visit == 1, ]
 experimentInfo <-
   experimentInfo[experimentInfo$caseControl == "Case", ]
 
+experimentInfo <-
+  experimentInfo[experimentInfo$experiment == "lipidomics", ]
+
 mergedDF <- read.csv(
   "data/lipidomics/normalisedasinhTransformedExpressionDataRawOutliersAndDuplicatesRemoved.csv",
   row.names = 1
 )
 
-mergedDF <- mergedDF[rownames(mergedDF) %in% c("RvD1", "PGD2", "15R-LXB4", "7S,14S-diHDHA"), ]
+# mergedDF <- mergedDF[rownames(mergedDF) %in% c("RvD1", "PGD2", "15R-LXB4", "7S,14S-diHDHA"), ]
+mergedDF <- mergedDF[grep("Rv", rownames(mergedDF)), ]
+mergedDF <- mergedDF[nchar(rownames(mergedDF)) == 4, ]
+mergedDF <- mergedDF[rownames(mergedDF) %in% c('RvD1',
+                                             'RvD6',
+                                             'RvD4',
+                                             'RvD2',
+                                             'RvE1',
+                                             'RvE2'), ]
 
 mergedDF <- t(mergedDF)
 mergedDF <- as.data.frame(mergedDF)
@@ -45,13 +56,13 @@ colnames(mergedDF) <- str_replace_all(colnames(mergedDF), "0", "zero")
 
 combinedDf <- experimentInfo
 
-#combinedDf <- merge(
-#  experimentInfo,
-#  mergedDF,
-#  by.x = "classification",
-#  by.y = "classification",
-#  all.x = TRUE
-#)
+combinedDf <- merge(
+ experimentInfo,
+ mergedDF,
+ by.x = "classification",
+ by.y = "classification",
+ all.x = TRUE
+)
 
 dateOfLateOutCome <-
   combinedDf[is.na(combinedDf$outcomeDeathDate), c("outcomeLastVisitDate", "visitDate")]
@@ -86,6 +97,7 @@ clinicalCovariates <- c(
   "alsfrsR",
   "diagnosticDelayInYears",
   "ageAtOnset",
+  #"riluzole",
   "delataAlsfrsRScore"
 )
 
@@ -101,14 +113,11 @@ combinedDf$onset <- as.factor(combinedDf$onset)
 
 # Censored Analysis
 minDF <-
-  #combinedDf[, c("diseaseDurationInYears",
-  #               "status",
-  #               clinicalAndBiologicalCovariates)]
   combinedDf[, c("diseaseDurationInYears",
-                 "status",
-                 clinicalCovariates)]
+                "status",
+                clinicalAndBiologicalCovariates)]
 
-minDF <- minDF[rowSums(is.na(minDF)) < 1,]
+minDF <- na.omit(minDF)
 
 clinicalAndBiologicalCovariates <- colnames(minDF)[!colnames(minDF) %in% c("diseaseDurationInYears",
                                                                           "status")]
@@ -173,8 +182,8 @@ step$anova
 
 censored.clinical.res.cox <-
   coxph(
-    Surv(diseaseDurationInYears, status) ~ 0 + sex + ethnicityID +
-      onset + alsfrsR + diagnosticDelayInYears + ageAtOnset + delataAlsfrsRScore,
+    Surv(diseaseDurationInYears, status) ~ 0 + ethnicityID + alsfrsR +
+      ageAtOnset + delataAlsfrsRScore - 1,
     data = minDF
   )
 saveRDS(censored.clinical.res.cox, file = paste0(
@@ -201,8 +210,8 @@ ggsurvplot(
   ggtheme = theme_minimal()
 )
 
-clinicalCovariates <- clinicalCovariates[clinicalCovariates %in% c("sex",  "ethnicityID",
-                                                                     "onset", "alsfrsR", "diagnosticDelayInYears", "ageAtOnset", "delataAlsfrsRScore")]
+clinicalCovariates <- clinicalCovariates[clinicalCovariates %in% c("ethnicityID",
+                                                                     "alsfrsR", "ageAtOnset", "riluzole", "delataAlsfrsRScore")]
 biologicalCovariates <- biologicalCovariates[biologicalCovariates %in% colnames(mergedDF)]
 
 clinicalAndBiologicalCovariates <-
@@ -224,9 +233,9 @@ step$anova
 
 censored.clinical.biological.res.cox <-
   coxph(
-    Surv(diseaseDurationInYears, status) ~ sex + ethnicityID + onset +
-      alsfrsR + diagnosticDelayInYears + ageAtOnset + delataAlsfrsRScore +
-      RvDone + sevenSonefourSdiHDHA - 1,
+    Surv(diseaseDurationInYears, status) ~ ethnicityID + alsfrsR +
+      ageAtOnset + delataAlsfrsRScore + RvDtwo + RvDthree + RvDfour +
+      RvDfive + RvDsix + RvEthree - 1,
     data = minDF
   )
 
