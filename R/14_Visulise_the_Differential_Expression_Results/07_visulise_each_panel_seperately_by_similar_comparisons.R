@@ -21,9 +21,9 @@ markers <- c(
 
 directoryNames <- c(
       # "BCells"#,
-      # "Monocytes"#,
+      "Monocytes"#,
       # "Senescence"#,
-      "TCells"
+      # "TCells"
       )
 
 clusterName <- "clusters_phenograph"

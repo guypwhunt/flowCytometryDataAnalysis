@@ -39,7 +39,15 @@ for (clusterName in clusterNames) {
                markersOrCell,
                ".csv")
 
-      directory <- paste0("data/", markerNames, "pValueAdjustmentsResults/")
+      directory <-
+        if (figureName == "DifferentialStatesStatisticscsv") {
+          paste0("data/", markerNames, "pValueAdjustmentsResults_latestBackup/")
+          # paste0("data/", markerNames, "pValueAdjustmentsResults/")
+          } else {
+            paste0("data/", markerNames, "pValueAdjustmentsResults_latestBackup/")
+          # paste0("data/", markerNames, "pValueAdjustmentsResults/")
+        }
+
 
       fileNames <- list.files(directory, pattern = pattern)
 

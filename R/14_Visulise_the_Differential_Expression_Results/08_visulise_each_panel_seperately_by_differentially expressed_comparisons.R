@@ -13,12 +13,29 @@ figureNames <-
     )
 
 markersOrCells <- markersOrCells[3]
-clusterNames <- clusterNames[3]
+clusterNames <- clusterNames[4]
+
+comparisonOrder <- c(
+  "Baseline pwALS vs NNC",
+  "Baseline A-B vs Baseline A-L",
+  "Baseline A-B vs NNC",
+  "Baseline A-F vs Baseline A-S",
+  "Baseline A-F vs NNC",
+  "Baseline A-FB vs NNC",
+  "Baseline A-FL vs NNC",
+  "V2 pwALS vs Baseline pwALS",
+  "Baseline A-L vs NNC",
+  "Baseline A-S vs NNC",
+  "Baseline A-SB vs NNC",
+  "Baseline A-SL vs NNC",
+  "V3 pwALS vs Baseline pwALS",
+  "V3 pw vs V2 pwALS"
+)
 
 directoryNames <- c(
-  "BCells"#,
+  # "BCells"#,
   # "Monocytes"#,
-  # "Senescence"#,
+  "Senescence"#,
   # "TCells"
   )
 
@@ -34,6 +51,8 @@ regulation <- c(
 )
 
 for (directoryName in directoryNames) {
+  cellPopulationOrder <- identifyCellPopulationOrder(directoryName)
+
   for (clusterName in clusterNames) {
     for (markersOrCell in markersOrCells) {
       for (figureName in figureNames) {
@@ -89,9 +108,17 @@ for (directoryName in directoryNames) {
 
         combinedDf <- updateMarkerNames(combinedDf)
 
-        combinedDf$typeOfCells <- gsub("\\(", "\n\\(", combinedDf$typeOfCells)
 
-        combinedDf <- combinedDf[order(combinedDf$typeOfCells),]
+
+        combinedDf <- left_join(data.frame(Comparison = comparisonOrder), combinedDf, by = "Comparison", multiple =
+                                  "all")
+
+        combinedDf <- left_join(data.frame(typeOfCells = cellPopulationOrder), combinedDf, by = "typeOfCells", multiple =
+                                  "all")
+
+        combinedDf <- combinedDf[!is.na(combinedDf), ]
+
+        combinedDf$typeOfCells <- gsub("\\(", "\n\\(", combinedDf$typeOfCells)
 
         combinedDf$regulation <-
           factor(
@@ -99,33 +126,11 @@ for (directoryName in directoryNames) {
             levels = names(regulation)
           )
 
-        combinedDf <- filterFlowCytometryComparisons(combinedDf)
-
-        combinedDf[combinedDf$JaccardSimilarityCoefficient < 0.65, "jaccard"] <-
-          "Low"
-        combinedDf[combinedDf$JaccardSimilarityCoefficient > 0.65, "jaccard"] <-
-          "Moderate"
-        combinedDf[combinedDf$JaccardSimilarityCoefficient > 0.75, "jaccard"] <-
-          "High"
-        combinedDf[combinedDf$JaccardSimilarityCoefficient > 0.85, "jaccard"] <-
-          "Very High"
+        try(combinedDf <- filterFlowCytometryComparisons(combinedDf))
 
         combinedDf$Panel <- factor(combinedDf$Panel)
-        combinedDf <-
-          combinedDf[order(combinedDf$JaccardSimilarityCoefficient), ]
-        combinedDf$jaccard <-
-          factor(combinedDf$jaccard,
-                 levels = c("Very High", "High", "Moderate", "Low"))
-        combinedDf <-
-          combinedDf[order(combinedDf$typeOfCells), ]
-        combinedDf <-
-          combinedDf[order(gsub(
-            "[0123456789]",
-            "",
-            gsub("gpr", "", combinedDf$Panel, fixed = TRUE)
-          )), ]
 
-        for (marker in unique(combinedDf$Marker)) {
+        for (marker in na.omit(unique(combinedDf$Marker))) {
           try({
             message(marker)
             combinedDf2 <- combinedDf[combinedDf$Marker == marker,]
@@ -136,23 +141,13 @@ for (directoryName in directoryNames) {
             combinedDf2 <- combinedDf2[combinedDf2$Comparison %in% unique(combinedDf2[combinedDf2$FDRAdjustedPValue< 0.05 , "Comparison"]),]
 
             comaprisonNames <- unique(combinedDf2$Comparison)
-            comaprisonNames <- comaprisonNames[order(comaprisonNames)]
 
             numberOfPlots <- ceiling(length(comaprisonNames)/5)
 
-            combinedDf2 <- combinedDf2[order(combinedDf2$typeOfCells), ]
-
             parentCells <- c("B", "M", "S", "T")
 
-            typeOfCellsFinalLevel <- parentCells[parentCells %in% unique(combinedDf2$typeOfCells)]
-            typeOfCellsLevels <- unique(combinedDf2$typeOfCells)[!unique(combinedDf2$typeOfCells) %in% c("B", "M", "S", "T")]
-
-            typeOfCellsLevels <- c(typeOfCellsLevels, typeOfCellsFinalLevel)
-
-            combinedDf2 <- left_join(data.frame(typeOfCells = typeOfCellsLevels), combinedDf2, by = "typeOfCells")
-
             combinedDf2$typeOfCells <-
-              paste0(combinedDf2$typeOfCells, " (", as.numeric(factor(combinedDf2$typeOfCells, levels = typeOfCellsLevels)), ")")
+              paste0(combinedDf2$typeOfCells, " (", as.numeric(factor(combinedDf2$typeOfCells, levels = unique(combinedDf2$typeOfCells))) - 1, ")")
 
             combinedDf2$typeOfCells <- factor(combinedDf2$typeOfCells, levels = unique(combinedDf2$typeOfCells))
 
@@ -166,11 +161,30 @@ for (directoryName in directoryNames) {
 
               combinedDf3 <- combinedDf3[combinedDf3$Comparison %in% selectedComparisons, ]
 
-              combinedDf3$Comparison <- factor(combinedDf3$Comparison, levels = selectedComparisons)
+              comparisons <- c(
+                "Baseline pwALS vs NNC" = 21,
+                "Baseline A-F vs NNC" = 22,
+                "Baseline A-B vs NNC" = 23,
+                "Baseline A-FB vs NNC" = 24,
+                "V2 pwALS vs Baseline pwALS" = 25
+              )
 
-              comparisons <- seq(length(selectedComparisons)) + 20
+              comparisons <- comparisons[names(comparisons) %in% selectedComparisons]
 
-              names(comparisons) <- selectedComparisons
+              newComparisons <- selectedComparisons[!selectedComparisons %in% names(comparisons)]
+
+              shapesList <- c(21,22,23,24,25)
+
+              if(length(newComparisons) > 0) {
+                for(newComparison in newComparisons) {
+                  value <-
+                    min(shapesList[!shapesList %in% comparisons])
+                  names(value) <- newComparison
+                  comparisons <- c(comparisons, value)
+                }
+              }
+
+              combinedDf3$Comparison <- factor(combinedDf3$Comparison, levels = names(comparisons))
 
             fig <-
               ggplot(
@@ -212,13 +226,13 @@ for (directoryName in directoryNames) {
                     "Counts"
                   }
                   ,
-                  order = 1,
+                  order = 2,
                   override.aes = list(shape = 1, size = 4)
                 ),
-                fill = guide_colourbar(title = "log2(Fold Change)", order = 2),
+                fill = guide_colourbar(title = "log2(Fold Change)", order = 3),
                 shape = guide_legend(
                   title = "Comparison",
-                  order = 3,
+                  order = 1,
                   override.aes = list(size = 4)
                 )
               ) +

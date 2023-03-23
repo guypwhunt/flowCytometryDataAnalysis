@@ -89,6 +89,72 @@ for(number in seq(numberOfPlots)){
   combinedDf$experiment <-
     factor(combinedDf$experiment, levels = names(comparisons))
 
+  # print(
+  #   ggplot(
+  #     combinedDf,
+  #     aes(
+  #       x = lipid,
+  #       y = -log10(P.Value),
+  #       fill = logFC,
+  #       color = regulation,
+  #       shape = experiment
+  #     )
+  #   ) +
+  #     geom_point(
+  #       alpha = 1,
+  #       size = 5,
+  #       stroke = 1,
+  #       position = position_jitter(width = 0.1, height = 0)
+  #     ) +
+  #     theme_bw() +
+  #     theme(
+  #       axis.text.x = element_text(
+  #         angle = 90,
+  #         vjust = 0.5,
+  #         hjust = 1,
+  #         size = 8
+  #       ),
+  #       legend.title = element_text(size = 9),
+  #       legend.text = element_text(size = 8),
+  #       legend.justification = "top"
+  #     ) +
+  #     scale_shape_manual(values = comparisons, drop = FALSE) +
+  #     scale_colour_manual(values = regulation, drop = FALSE) +
+  #     xlab("Resolvins") + ylab("-log10(P-Value)") +
+  #     guides(color = guide_legend(title = "Comparison")) +
+  #     geom_hline(yintercept = 0 - log10(0.05), linetype = "dashed") +
+  #     guides(
+  #       fill = guide_colourbar(title = "log2(Fold Change)", order = 3),
+  #       color = guide_legend(
+  #         title = "Expression",
+  #         order = 2,
+  #         override.aes = list(shape = 1, size = 4)
+  #       ),
+  #       shape = guide_legend(
+  #         title = "Comparison",
+  #         order = 1,
+  #         override.aes = list(size = 4)
+  #       )
+  #     ) +
+  #     ylim(0, ceiling(max(
+  #       0 - log10(df$P.Value)
+  #     ))) +
+  #     scale_fill_gradientn(
+  #       limits = c(0 - scaleLimits, scaleLimits),
+  #       colours = c(
+  #         "#0000FF",
+  #         "#2E2EFF",
+  #         "#5C5CFF",
+  #         "#8A8AFF",
+  #         "#ffffff",
+  #         "#FF8A8A",
+  #         "#FF5C5C",
+  #         "#FF2E2E",
+  #         "#FF0000"
+  #       )
+  #     )
+  # )
+
   print(
     ggplot(
       combinedDf,
@@ -96,15 +162,15 @@ for(number in seq(numberOfPlots)){
         x = lipid,
         y = -log10(P.Value),
         fill = logFC,
-        color = regulation,
-        shape = experiment
+        color = regulation
       )
     ) +
       geom_point(
         alpha = 1,
         size = 5,
         stroke = 1,
-        position = position_jitter(width = 0.1, height = 0)
+        #position = position_jitter(width = 0.1, height = 0),
+        shape = 21
       ) +
       theme_bw() +
       theme(
@@ -118,21 +184,20 @@ for(number in seq(numberOfPlots)){
         legend.text = element_text(size = 8),
         legend.justification = "top"
       ) +
-      scale_shape_manual(values = comparisons, drop = FALSE) +
       scale_colour_manual(values = regulation, drop = FALSE) +
       xlab("Resolvins") + ylab("-log10(P-Value)") +
       guides(color = guide_legend(title = "Comparison")) +
       geom_hline(yintercept = 0 - log10(0.05), linetype = "dashed") +
       guides(
-        fill = guide_colourbar(title = "log2(Fold Change)", order = 2),
+        fill = guide_colourbar(title = "log2(Fold Change)", order = 3),
         color = guide_legend(
           title = "Expression",
-          order = 1,
+          order = 2,
           override.aes = list(shape = 1, size = 4)
         ),
         shape = guide_legend(
           title = "Comparison",
-          order = 3,
+          order = 1,
           override.aes = list(size = 4)
         )
       ) +
@@ -152,6 +217,7 @@ for(number in seq(numberOfPlots)){
           "#FF2E2E",
           "#FF0000"
         )
-      )
+      ) +
+      facet_wrap(~experiment)
   )
 }

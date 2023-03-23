@@ -8468,46 +8468,46 @@ updateMarkerNames <- function(df) {
 }
 
 filterLipidomicsComparisons <- function(df){
-  df[df$experiment == 'BulbarVsLimbBulbarEarlyVsLimbEarly.csv' ,'experiment'] <- 'A-B vs A-L'
-  df[df$experiment == 'BulbarVsLimbBulbarLateVsBulbarEarly.csv','experiment'] <- 'V2-A-B vs V1-A-B'
-  df[df$experiment == 'BulbarVsLimbBulbarLateVsLimbLate.csv' ,'experiment'] <- 'V2-A-B vs V2-A-L'
-  df[df$experiment == 'BulbarVsLimbLimbLateVsLimbEarly.csv' ,'experiment'] <- 'V2-A-L vs V1-A-L'
-  df[df$experiment == 'CaseVsControlEarlyVsControl.csv' ,'experiment'] <- 'ALS vs HC'
-  df[df$experiment == 'CaseVsControlLateVsControl.csv' ,'experiment'] <- 'V2-ALS vs HC'
-  df[df$experiment == 'EarlyVsLateLateVsEarly.csv' ,'experiment'] <- 'V2-ALS vs V1-ALS'
-  df[df$experiment == 'FastVsSlowFastEarlyVsSlowEarly.csv' ,'experiment'] <- 'A-F vs A-S'
-  df[df$experiment == 'FastVsSlowFastLateVsFastEarly.csv', 'experiment'] <- 'V2-A-F vs V1-A-F'
-  df[df$experiment == 'FastVsSlowFastLateVsSlowLate.csv' ,'experiment'] <- 'V2-A-F vs V2-A-S'
-  df[df$experiment == 'FastVsSlowSlowLateVsSlowEarly.csv' ,'experiment'] <- 'V2-A-S vs V1-A-S'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv','experiment'] <- 'A-FB vs A-FL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowBulbarEarly.csv','experiment'] <- 'A-FB vs A-SB'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastBulbarEarly.csv' ,'experiment'] <- 'V2-A-FB vs V1-A-FB'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastLimbLate.csv' ,'experiment'] <- 'V2-A-FB vs V2-A-FL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupSlowBulbarLate.csv', 'experiment'] <- 'V2-A-FB vs V2-A-SB'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'A-FL vs A-SL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupFastLimbEarly.csv','experiment'] <- 'V2-A-FL vs V1-A-FL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupSlowLimbLate.csv','experiment'] <- 'V2-A-FL vs V2-A-SL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarEarlyVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'A-SB vs A-SL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowBulbarEarly.csv','experiment'] <- 'V2-A-SB vs V1-A-SB'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowLimbLate.csv' ,'experiment'] <- 'V2-A-SB vs V2-A-SL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowLimbLate.csv' ,'experiment'] <- 'V2-A-SB vs V2-A-SL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'V2-A-SL vs V1-A-SL'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastBulbarEarlyVsControl.csv','experiment'] <- 'A-FB vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastBulbarLateVsControl.csv','experiment'] <- 'V2-A-FB vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastLimbEarlyVsControl.csv','experiment'] <- 'A-FL vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastLimbLateVsControl.csv','experiment'] <- 'V2-A-FL vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowBulbarEarlyVsControl.csv','experiment'] <- 'A-SB vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowBulbarLateVsControl.csv' ,'experiment'] <- 'V2-A-SB vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowLimbEarlyVsControl.csv','experiment'] <- 'A-SL vs HC'
-  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowLimbLateVsControl.csv','experiment'] <- 'V2-A-SL vs HC'
-  df[df$experiment == 'ProgressionVsControlFastEarlyVsControl.csv','experiment'] <- 'A-F vs HC'
-  df[df$experiment == 'ProgressionVsControlFastLateVsControl.csv','experiment'] <- 'V2-A-F vs HC'
-  df[df$experiment == 'ProgressionVsControlSlowEarlyVsControl.csv','experiment'] <- 'A-S vs HC'
-  df[df$experiment == 'ProgressionVsControlSlowLateVsControl.csv','experiment'] <- 'V2-A-S vs HC'
-  df[df$experiment == 'SightOfOnsetVsControlBulbarEarlyVsControl.csv' ,'experiment'] <- 'A-B vs HC'
-  df[df$experiment == 'SightOfOnsetVsControlBulbarLateVsControl.csv','experiment'] <- 'V2-A-B vs HC'
-  df[df$experiment == 'SightOfOnsetVsControlLimbEarlyVsControl.csv','experiment'] <- 'A-L vs HC'
-  df[df$experiment == 'SightOfOnsetVsControlLimbLateVsControl.csv','experiment'] <- 'V2-A-L vs HC'
+  df[df$experiment == 'BulbarVsLimbBulbarEarlyVsLimbEarly.csv' ,'experiment'] <- 'Baseline A-B vs Baseline A-L'
+  df[df$experiment == 'BulbarVsLimbBulbarLateVsBulbarEarly.csv','experiment'] <- 'V2 A-B vs Baseline A-B'
+  df[df$experiment == 'BulbarVsLimbBulbarLateVsLimbLate.csv' ,'experiment'] <- 'V2 A-B vs V2 A-L'
+  df[df$experiment == 'BulbarVsLimbLimbLateVsLimbEarly.csv' ,'experiment'] <- 'V2 A-L vs Baseline A-L'
+  df[df$experiment == 'CaseVsControlEarlyVsControl.csv' ,'experiment'] <- 'Baseline pwALS vs NNC'
+  df[df$experiment == 'CaseVsControlLateVsControl.csv' ,'experiment'] <- 'V2 pwALS vs NNC'
+  df[df$experiment == 'EarlyVsLateLateVsEarly.csv' ,'experiment'] <- 'V2 pwALS vs Baseline pwALS'
+  df[df$experiment == 'FastVsSlowFastEarlyVsSlowEarly.csv' ,'experiment'] <- 'Baseline A-F vs Baseline A-S'
+  df[df$experiment == 'FastVsSlowFastLateVsFastEarly.csv', 'experiment'] <- 'V2 A-F vs Baseline A-F'
+  df[df$experiment == 'FastVsSlowFastLateVsSlowLate.csv' ,'experiment'] <- 'V2 A-F vs V2 A-S'
+  df[df$experiment == 'FastVsSlowSlowLateVsSlowEarly.csv' ,'experiment'] <- 'V2 A-S vs Baseline A-S'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupFastLimbEarly.csv','experiment'] <- 'Baseline A-FB vs Baseline A-FL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarEarlyVsgroupSlowBulbarEarly.csv','experiment'] <- 'Baseline A-FB vs Baseline A-SB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastBulbarEarly.csv' ,'experiment'] <- 'V2 A-FB vs Baseline A-FB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupFastLimbLate.csv' ,'experiment'] <- 'V2 A-FB vs V2 A-FL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastBulbarLateVsgroupSlowBulbarLate.csv', 'experiment'] <- 'V2 A-FB vs V2 A-SB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbEarlyVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'Baseline A-FL vs Baseline A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupFastLimbEarly.csv','experiment'] <- 'V2 A-FL vs Baseline A-FL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupFastLimbLateVsgroupSlowLimbLate.csv','experiment'] <- 'V2 A-FL vs V2 A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarEarlyVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'Baseline A-SB vs Baseline A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowBulbarEarly.csv','experiment'] <- 'V2 A-SB vs Baseline A-SB'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowLimbLate.csv' ,'experiment'] <- 'V2 A-SB vs V2 A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowBulbarLateVsgroupSlowLimbLate.csv' ,'experiment'] <- 'V2 A-SB vs V2 A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetgroupSlowLimbLateVsgroupSlowLimbEarly.csv' ,'experiment'] <- 'V2 A-SL vs Baseline A-SL'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastBulbarEarlyVsControl.csv','experiment'] <- 'Baseline A-FB vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastBulbarLateVsControl.csv','experiment'] <- 'V2 A-FB vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastLimbEarlyVsControl.csv','experiment'] <- 'Baseline A-FL vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlFastLimbLateVsControl.csv','experiment'] <- 'V2 A-FL vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowBulbarEarlyVsControl.csv','experiment'] <- 'Baseline A-SB vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowBulbarLateVsControl.csv' ,'experiment'] <- 'V2 A-SB vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowLimbEarlyVsControl.csv','experiment'] <- 'Baseline A-SL vs NNC'
+  df[df$experiment == 'ProgressionAndSightOfOnsetVsControlSlowLimbLateVsControl.csv','experiment'] <- 'V2 A-SL vs NNC'
+  df[df$experiment == 'ProgressionVsControlFastEarlyVsControl.csv','experiment'] <- 'Baseline A-F vs NNC'
+  df[df$experiment == 'ProgressionVsControlFastLateVsControl.csv','experiment'] <- 'V2 A-F vs NNC'
+  df[df$experiment == 'ProgressionVsControlSlowEarlyVsControl.csv','experiment'] <- 'Baseline A-S vs NNC'
+  df[df$experiment == 'ProgressionVsControlSlowLateVsControl.csv','experiment'] <- 'V2 A-S vs NNC'
+  df[df$experiment == 'SightOfOnsetVsControlBulbarEarlyVsControl.csv' ,'experiment'] <- 'Baseline A-B vs NNC'
+  df[df$experiment == 'SightOfOnsetVsControlBulbarLateVsControl.csv','experiment'] <- 'V2 A-B vs NNC'
+  df[df$experiment == 'SightOfOnsetVsControlLimbEarlyVsControl.csv','experiment'] <- 'Baseline A-L vs NNC'
+  df[df$experiment == 'SightOfOnsetVsControlLimbLateVsControl.csv','experiment'] <- 'V2 A-L vs NNC'
 
   df <- df[!grepl(".csv", df$experiment, fixed = TRUE),]
 
@@ -8516,20 +8516,20 @@ filterLipidomicsComparisons <- function(df){
 }
 
 filterFlowCytometryComparisons <- function(df){
-  df[df$Comparison == 'ALS vs Control', 'Comparison' ] <- 'ALS vs HC'
-  df[df$Comparison == 'Bulbar vs Control', 'Comparison' ] <- 'A-B vs HC'
-  df[df$Comparison == 'Bulbar vs Limb', 'Comparison' ] <- 'A-B vs A-L'
-  df[df$Comparison == 'Fast Bulbar vs Control', 'Comparison' ] <- 'A-FB vs HC'
-  df[df$Comparison == 'Fast Limb vs Control', 'Comparison' ] <- 'A-FL vs HC'
-  df[df$Comparison == 'Fast vs Controls', 'Comparison' ] <- 'A-F vs HC'
-  df[df$Comparison == 'Fast vs Slow', 'Comparison' ] <- 'A-F vs A-S'
-  df[df$Comparison == 'Limb vs Control', 'Comparison' ] <- 'A-L vs HC'
-  df[df$Comparison == 'Slow Bulbar vs Control', 'Comparison' ] <- 'A-SB vs HC'
-  df[df$Comparison == 'Slow Limb vs Control', 'Comparison' ] <- 'A-SL vs HC'
-  df[df$Comparison == 'Slow vs Control', 'Comparison' ] <- 'A-S vs HC'
-  df[df$Comparison == 'Visit 2 vs Visit 1', 'Comparison' ] <- 'V2-ALS vs V1-ALS'
-  df[df$Comparison == 'Visit 3 vs Visit 1', 'Comparison' ] <- 'V3-ALS vs V1-ALS'
-  df[df$Comparison == 'Visit 3 vs Visit 2', 'Comparison' ] <- 'V3-ALS vs V2-ALS'
+  df[df$Comparison == 'ALS vs Control', 'Comparison' ] <- 'Baseline pwALS vs NNC'
+  df[df$Comparison == 'Bulbar vs Control', 'Comparison' ] <- 'Baseline A-B vs NNC'
+  df[df$Comparison == 'Bulbar vs Limb', 'Comparison' ] <- 'Baseline A-B vs Baseline A-L'
+  df[df$Comparison == 'Fast Bulbar vs Control', 'Comparison' ] <- 'Baseline A-FB vs NNC'
+  df[df$Comparison == 'Fast Limb vs Control', 'Comparison' ] <- 'Baseline A-FL vs NNC'
+  df[df$Comparison == 'Fast vs Controls', 'Comparison' ] <- 'Baseline A-F vs NNC'
+  df[df$Comparison == 'Fast vs Slow', 'Comparison' ] <- 'Baseline A-F vs Baseline A-S'
+  df[df$Comparison == 'Limb vs Control', 'Comparison' ] <- 'Baseline A-L vs NNC'
+  df[df$Comparison == 'Slow Bulbar vs Control', 'Comparison' ] <- 'Baseline A-SB vs NNC'
+  df[df$Comparison == 'Slow Limb vs Control', 'Comparison' ] <- 'Baseline A-SL vs NNC'
+  df[df$Comparison == 'Slow vs Control', 'Comparison' ] <- 'Baseline A-S vs NNC'
+  df[df$Comparison == 'Visit 2 vs Visit 1', 'Comparison' ] <- 'V2 pwALS vs Baseline pwALS'
+  df[df$Comparison == 'Visit 3 vs Visit 1', 'Comparison' ] <- 'V3 ALS vs Baseline pwALS'
+  df[df$Comparison == 'Visit 3 vs Visit 2', 'Comparison' ] <- 'V3 ALS vs V2 pwALS'
 
   return(df)
 }
@@ -8546,4 +8546,487 @@ identifyCellPopulationOrder <- function(directoryName){
     cellPopulationOrder <- senescenceOrder
   }
   return(cellPopulationOrder)
+}
+
+calculateSurvivalFoldername <- function(scaleData, robust) {
+  folderName <- "SurvivalAnalysis"
+
+  folderName <- if(scaleData) {
+    paste0("Scaled", folderName)
+  }  else {
+    folderName
+  }
+
+  folderName <- if(robust) {
+    paste0("robust", folderName)
+  } else {
+    folderName
+  }
+
+  return(folderName)
+}
+
+survivalModelAnalysis <- function(fileName, clinicalCovariates, clinicalColumnsToScale, robust = TRUE, scaleData = FALSE, clusterName = NULL, markersOrCell = NULL, markerName = NULL){
+  folderName <- calculateSurvivalFoldername(scaleData, robust)
+
+  dir.create(paste0("data/", folderName), showWarnings = FALSE)
+
+  experimentInfo <- read_excel("data/metadata/clinicalData.xlsx") %>%
+    as.data.frame() %>% filter(visit == 1) %>%
+    filter(experiment == "flowCytometry")  %>%
+    filter(caseControl == "Case")
+
+  if(is.null(clusterName)) {
+    combinedDf <-
+      experimentInfo
+
+    clinicalAndBiologicalCovariates <-
+      clinicalCovariates
+  } else {
+    filePath <- "data/medianValues/"
+
+    fileNames <- list.files(filePath)
+    fileNames <-
+      fileNames[grep(clusterName, fileNames, fixed = FALSE)]
+    fileNames <-
+      fileNames[grep(markersOrCell, fileNames, fixed = FALSE)]
+    if(length(markerName) == 1) {
+      fileNames <-
+        fileNames[grep(markerName, fileNames, fixed = FALSE)]
+    }
+
+    fileNamesPath <- paste0(filePath, fileNames)
+
+    dfs <- lapply(fileNamesPath, read.csv)
+
+    for (df in dfs) {
+      if (exists("mergedDF")) {
+        mergedDF <- merge(mergedDF, df, by = "fileName", all = TRUE)
+      } else {
+        mergedDF <- df
+      }
+    }
+
+    mergedDF <- mergedDF[mergedDF$fileName %in% experimentInfo$sample_id,]
+
+    mergedDF  <- mergedDF[, colSums(is.na(mergedDF))<ceiling(nrow(mergedDF)/10)]
+
+    combinedDf <- merge(
+      mergedDF,
+      experimentInfo,
+      by.x = "fileName",
+      by.y = "sample_id",
+      all.x = TRUE
+    )
+
+    biologicalCovariates <-
+      c(colnames(mergedDF)[colnames(mergedDF) != "fileName"])
+
+    clinicalAndBiologicalCovariates <-
+      append(clinicalCovariates, biologicalCovariates)
+  }
+
+  dateOfLateOutCome <-
+    combinedDf[is.na(combinedDf$outcomeDeathDate), c("outcomeLastVisitDate", "visitDate")]
+
+  dateOfLateOutCome <-
+    (dateOfLateOutCome$outcomeLastVisitDate - dateOfLateOutCome$visitDate) /
+    (24 * 60 * 60 * 365.25)
+
+  combinedDf[is.na(combinedDf$outcomeDeathDate), "diseaseDurationInYears"] <-
+    dateOfLateOutCome
+
+  combinedDf$fileName <- factor(combinedDf$patient_id)
+
+  combinedDf$diseaseDurationInYears <-
+    combinedDf$diseaseDurationInYears * 365.25
+
+  combinedDf$outcome <- factor(combinedDf$outcome)
+  combinedDf$status <- as.numeric(combinedDf$outcome)
+  combinedDf$status <- ifelse(combinedDf$status == 2, 1, 0)
+
+  combinedDf$gender <- factor(combinedDf$gender)
+  combinedDf$sex <- as.numeric(combinedDf$gender)
+
+  combinedDf$ethnicity <- factor(combinedDf$ethnicity)
+  combinedDf$ethnicityID <- as.numeric(combinedDf$ethnicity)
+
+  combinedDf$BulbarLimb <- factor(combinedDf$BulbarLimb)
+  combinedDf$onset <- as.numeric(combinedDf$BulbarLimb)
+
+  combinedDf$sex <- as.factor(combinedDf$sex)
+  combinedDf$ethnicityID <- as.factor(combinedDf$ethnicityID)
+  combinedDf$onset <- as.factor(combinedDf$onset)
+
+  # Censored Analysis
+  minDF <-
+    combinedDf[, c("diseaseDurationInYears",
+                   "status",
+                   clinicalAndBiologicalCovariates)]
+
+  minDF <- na.omit(minDF)
+
+  if (scaleData) {
+    if(is.null(clusterName)) {
+      columnsToScale <- clinicalColumnsToScale
+    } else {
+      columnsToScale <- append(clinicalColumnsToScale, biologicalCovariates)
+    }
+    minDF[, columnsToScale] <- scale(minDF[, columnsToScale])
+  }
+
+  # Univariate Analysis
+  univ_formulas <- sapply(clinicalAndBiologicalCovariates,
+                          function(x)
+                            as.formula(paste(
+                              'Surv(diseaseDurationInYears, status)~', x
+                            )))
+
+  univ_models <-
+    lapply(univ_formulas, function(x) {
+      coxph(x, data = minDF)
+    })
+  # Extract data
+  univ_results <- lapply(univ_models,
+                         function(x) {
+                           x <- summary(x)
+                           p.value <-
+                             signif(x$wald["pvalue"], digits = 2)
+                           wald.test <-
+                             signif(x$wald["test"], digits = 2)
+                           beta <-
+                             signif(x$coef[1], digits = 2)
+                           #coeficient beta
+                           HR <-
+                             signif(x$coef[2], digits = 2)
+                           #exp(beta)
+                           HR.confint.lower <-
+                             signif(x$conf.int[, "lower .95"], 2)
+                           HR.confint.upper <-
+                             signif(x$conf.int[, "upper .95"], 2)
+                           HR <- paste0(HR, " (",
+                                        HR.confint.lower, "-", HR.confint.upper, ")")
+                           res <- c(beta, HR, wald.test, p.value)
+                           names(res) <-
+                             c("beta", "HR (95% CI for HR)", "wald.test",
+                               "p.value")
+                           return(res)
+                         })
+
+  univ_results$ethnicityID <- univ_results$ethnicityID[c(1, 2, 4, 5)]
+  names(univ_results$ethnicityID) <- names(univ_results$sex)
+  res <- t(as.data.frame(univ_results, check.names = FALSE))
+  res <- as.data.frame(res)
+
+
+  write.csv(res,
+            paste0("data/", folderName, "/Univariate", fileName, ".csv"))
+
+  res.cox <-
+    coxph(as.formula(
+      paste(
+        "Surv(diseaseDurationInYears, status) ~ 0",
+        sapply(list(clinicalAndBiologicalCovariates), paste, collapse =
+                 " + "),
+
+        sep = " + "
+      )
+    )
+    , data = minDF,
+    robust = robust)
+
+  library(MASS)
+  step <- stepAIC(res.cox, direction = "both")
+  print(step$anova)
+
+  return(minDF)
+}
+
+saveSurvivalModel <- function(minDF, coxModelForumla, fileName, robust = TRUE, scaleData = FALSE) {
+  folderName <- calculateSurvivalFoldername(scaleData, robust)
+
+  censored.clinical.res.cox <-
+    coxph(as.formula(coxModelForumla),
+      data = minDF,
+      robust = robust
+    )
+  censored.clinical.res.cox.summary <-
+    summary(censored.clinical.res.cox)
+  saveRDS(
+    censored.clinical.res.cox,
+    file = paste0(
+      "data/",
+      folderName,
+      "/",
+      fileName,
+      ".rds"
+    )
+  )
+
+  x <- as.data.frame(censored.clinical.res.cox.summary$coefficients)
+
+  x <- cbind(x, censored.clinical.res.cox.summary$conf.int)
+
+  x <- x[, !duplicated(colnames(x))]
+
+  if (robust) {
+    colnames(x) <- c(
+      "Regression Coefficient",
+      "Hazard Ratio",
+      "Regression Coefficient Standard Error",
+      "Regression Coefficient Robust Standard Error",
+      "Statistical Significance",
+      "Global Significance (P-Value)",
+      "Inverted Hazard Ratio",
+      "Lower Confidence Interval (95%)",
+      "Upper Confidence Interval (95%)"
+    )
+  } else {
+    colnames(x) <- c(
+      "Regression Coefficient",
+      "Hazard Ratio",
+      "Regression Coefficient Standard Error",
+      "Statistical Significance",
+      "Global Significance (P-Value)",
+      "Inverted Hazard Ratio",
+      "Lower Confidence Interval (95%)",
+      "Upper Confidence Interval (95%)"
+    )
+  }
+
+  write.csv(
+    x,
+    paste0(
+      "data/",
+      folderName,
+      "/",
+      fileName,
+      ".csv"
+    ),
+    row.names = TRUE
+  )
+
+  print(ggsurvplot(
+    survfit(censored.clinical.res.cox, data = minDF),
+    palette = "#2E9FDF",
+    ggtheme = theme_minimal()
+  ))
+}
+
+
+performLDA <- function(sampleInformation, columnName, visit, factorLevels, resolvinsOnly) {
+  sampleInformation[is.na(sampleInformation)] <- "NCC"
+  sampleInformation[grepl("H", sampleInformation$classification), columnName] <- "NCC"
+
+  if (visit == 1) {
+    sampleInformation[sampleInformation[, columnName] == "Fast", columnName] <- "Baseline A-F"
+    sampleInformation[sampleInformation[, columnName] == "Slow", columnName] <- "Baseline A-S"
+  } else {
+    sampleInformation[sampleInformation[, columnName] == "Fast", columnName] <- "V2 A-F"
+    sampleInformation[sampleInformation[, columnName] == "Slow", columnName] <- "V2 A-S"
+  }
+
+  sampleInformation[sampleInformation[, columnName] == "Early", columnName] <- "Baseline pwALS"
+  sampleInformation[sampleInformation[, columnName] == "Late", columnName] <- "V2 pwALS"
+
+  expressionData <- fread(
+    "data/lipidomics/expressionDataRaw.csv"
+  ) %>%
+    as.data.frame() %>%
+    column_to_rownames(var = "V1") %>%
+    asinh() %>%
+    normalizeBetweenArrays() %>%
+    na.omit() %>%
+    t()
+
+  if(resolvinsOnly){
+    expressionData <- expressionData[ ,grepl("Rv", colnames(expressionData))]
+  }
+
+  sampleInformation <- sampleInformation %>%
+    filter(classification %in% rownames(expressionData)) %>%
+    column_to_rownames(var="classification")
+
+  expressionData <- expressionData[rownames(sampleInformation),]
+
+  rownames(sampleInformation) == rownames(expressionData)
+
+  # Split the data into training (80%) and test set (20%)
+  set.seed(123)
+
+  training.dataset <- cbind(sampleInformation, expressionData)
+
+  training.dataset[, columnName] <- factor(training.dataset[,columnName], levels = factorLevels)
+
+  training.individuals <- training.dataset[, columnName] %>%
+    createDataPartition(p = 0.8, list = FALSE)
+
+  train.data <- training.dataset#[training.individuals, ]
+  test.data <- training.dataset#[#-training.individuals,]
+
+  # Estimate preprocessing parameters
+  preproc.parameter <- train.data %>%
+    preProcess(method = c("center", "scale"))
+
+  # Transform the data using the estimated parameters
+  train.transform <- preproc.parameter %>% predict(train.data)
+  test.transform <- preproc.parameter %>% predict(test.data)
+
+  # Fit the model
+  model <- lda(as.formula(paste0(columnName, "~.")), data = train.transform)
+
+  # Within group correlations
+  predicted <- predict(model)
+
+  dataframe <- cbind(train.transform, predicted$x)
+
+  ld_corr <- psych::statsBy(dataframe,group= columnName, cors=TRUE)
+
+  colnames(ld_corr$rwg) <- str_replace_all(colnames(ld_corr$rwg), ".wg", "")
+  rownames(ld_corr$rwg) <- str_replace_all(rownames(ld_corr$rwg), ".wg", "")
+
+  ld_corr$rwg %>%
+    as.data.frame() %>%
+    fwrite(paste0("data/lipidomics/Results/pcaAnalysis/",columnName, "Visit", visit,
+                  if(resolvinsOnly) {"Resolvins"} else {"Spms"},
+                  "LdCorrelationResults.csv"),
+           row.names = TRUE)
+
+  # Make predictions
+  predictions <- model %>% predict(test.transform)
+
+  predictionsForPlot <- predictions$x %>%
+    as.data.frame() %>%
+    cbind(sampleInformation[, columnName]) %>%
+    cbind(as.data.frame(predictions$class)) %>%
+    rename(category = 3, prediction = 4) %>%
+    mutate(across(c(category,
+                    prediction),
+                  factor,
+                  levels = factorLevels))
+
+  print({ggplot(predictionsForPlot, aes_string(x="LD1", y="LD2", colour = "category")) +
+      geom_point(size = 3) + guides(colour=guide_legend(title="Classification")) +
+      theme(legend.justification = "top")
+  })
+
+  predictionsForSPMPlot <- model$scaling %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("spm")
+
+  predictionsForSPMPlot$spm <- str_replace_all(predictionsForSPMPlot$spm, "`", "")
+
+  spmNames <- unique(predictionsForSPMPlot$spm)
+
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("Rv", spmNames)], "group"] <- "Resolvins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("PD", spmNames)], "group"] <- "Protectins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("diHDHA", spmNames)], "group"] <- "Maresins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("MaR1", spmNames)], "group"] <- "Maresins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("LX", spmNames)], "group"] <- "Lipoxins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("5S,15,S-diHETE", spmNames)], "group"] <- "Lipoxins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("LT", spmNames)], "group"] <- "Leukotriene B4 Metabolome"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("5S,12S-diHETE", spmNames)], "group"] <- "Leukotriene B4 Metabolome"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("PG", spmNames)], "group"] <- "Prostaglandins"
+  predictionsForSPMPlot[predictionsForSPMPlot$spm %in% spmNames[grep("Tx", spmNames)], "group"] <- "Thromboxane B2"
+
+  fwrite(predictionsForSPMPlot, paste0("data/lipidomics/Results/pcaAnalysis/",columnName, "Visit", visit,
+                                       if(resolvinsOnly) {"Resolvins"} else {"Spms"},
+                                       "LdRegressionCoefficientsResults.csv"))
+
+  numberOfColumns <- ncol(ld_corr$rwg) + 1
+
+  predictionsForSPMPlot <- ld_corr$rwg %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("spm") %>%
+    rename(LD1Cor = numberOfColumns-1, LD2Cor = numberOfColumns) %>%
+    dplyr::select(spm, LD1Cor, LD2Cor) %>%
+    merge(predictionsForSPMPlot, by = "spm")
+
+  predictionsForSPMPlot$label <- NA
+  predictionsForSPMPlot$color <- "NA"
+
+  numberOfSpms <- nrow(predictionsForSPMPlot)
+
+  for (ldColumn in c("LD1", "LD2")) {
+    predictionsForSPMPlot <- predictionsForSPMPlot[order(predictionsForSPMPlot[, ldColumn]), ]
+
+    topThreeSequence <- seq(1,3)
+
+    predictionsForSPMPlot[topThreeSequence, "label"] <- predictionsForSPMPlot[topThreeSequence, "spm"]
+    predictionsForSPMPlot[topThreeSequence, "color"] <- if(ldColumn == "LD1"){
+      "Negative (LD1)"} else {
+        "Negative (LD2)"
+      }
+
+    bottomThreeSequence <- seq(numberOfSpms-2, numberOfSpms)
+
+    predictionsForSPMPlot[bottomThreeSequence, "label"] <- predictionsForSPMPlot[bottomThreeSequence, "spm"]
+    predictionsForSPMPlot[bottomThreeSequence, "color"] <- if(ldColumn == "LD1"){
+      "Positive (LD1)"} else {
+        "Positive (LD2)"
+      }
+  }
+
+  predictionsForSPMPlot$color <- factor(predictionsForSPMPlot$color,
+                                        levels =
+                                          c("Positive (LD1)",
+                                            "Positive (LD2)",
+                                            "NA",
+                                            "Negative (LD1)",
+                                            "Negative (LD2)")
+  )
+
+
+  print({ggplot(predictionsForSPMPlot, aes(x=LD1, y=LD2, label = label, color = color)) +
+      geom_point(size = 3) +
+      xlab("LD1 Coefficient") +
+      ylab("LD2 Coefficient") +
+      geom_label_repel(show.legend = FALSE) +
+      scale_color_manual(values = c("Positive (LD1)" = "#F8766D",
+                                    "Positive (LD2)" = "#7CAE00",
+                                    "NA" = "black",
+                                    "Negative (LD1)" = "#00BFC4",
+                                    "Negative (LD2)" = "#C77CFF")) +
+      guides(
+        color = guide_legend(
+          title = "Top Three\nCoefficients")) +
+      theme(legend.justification = "top")
+  })
+
+  predictionsForSPMPlot <- predictionsForSPMPlot %>%
+    na.omit() %>%
+    dplyr::select(spm, group, LD1Cor, LD2Cor) %>%
+    rename(LD1 = 3, LD2 = 4) %>%
+    melt(id.vars=c("spm", "group")) %>%
+    arrange(desc(spm)) %>%
+    arrange(desc(group)) %>%
+    mutate(across(c(spm),
+                  factor,
+                  levels = unique(predictionsForSPMPlot$spm[order(predictionsForSPMPlot$spm, decreasing = TRUE)])))
+
+  maxValue <-
+    round(max(abs(max(
+      predictionsForSPMPlot$value
+    )), abs(min(
+      predictionsForSPMPlot$value
+    ))), digits = 1) + 0.1
+
+  fig <-
+    ggplot(predictionsForSPMPlot, aes(x = spm, y = variable, fill = value)) +
+    geom_tile(color = "white",
+              lwd = 1.5,
+              linetype = 1) +
+    theme_bw() +
+    scale_fill_gradientn(
+      limits = c(0-maxValue, maxValue),
+      colours = c("#0000FF", "#2E2EFF", "#5C5CFF", "#8A8AFF", "#ffffff",
+                  "#FF8A8A", "#FF5C5C", "#FF2E2E", "#FF0000")
+    ) +
+    xlab("SPMs") +
+    xlab("") +
+    guides(fill = guide_colourbar(title = "Correlation")) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+  # print(fig)
+
 }

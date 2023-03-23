@@ -133,29 +133,29 @@ clusterStabilityCutoff <- 0.85
 
 # ALS vs Controls
 alsAndSubGroupsVsControlsComparisons <- c(
-  "ALS vs HC" = 21,
-  "A-F vs HC"  = 22,
-  "A-S vs HC" = 23,
-  "A-B vs HC"  = 24,
-  "A-L vs HC" = 25
+  "Baseline ALS vs NNC" = 21,
+  "Baseline A-F vs NNC"  = 22,
+  "Baseline A-S vs NNC" = 23,
+  "Baseline A-B vs NNC"  = 24,
+  "Baseline A-L vs NNC" = 25
 )
 
 progressionSubGroupsVsControlsComparisons <- c(
-  "A-FB vs HC" = 21,
-  "A-FL vs HC"  = 22,
-  "A-SB vs HC" = 23,
-  "A-SL vs HC"  = 24
+  "Baseline A-FB vs NNC" = 21,
+  "Baseline A-FL vs NNC"  = 22,
+  "Baseline A-SB vs NNC" = 23,
+  "Baseline A-SL vs NNC"  = 24
   )
 
 progressionSubGroupsVsSubGroupsComparisons <- c(
-  "A-F vs A-S" = 21,
-  "A-B vs A-L"  = 22
+  "Baseline A-F vs Baseline A-S" = 21,
+  "Baseline A-B vs Baseline A-L"  = 22
 )
 
 londitudinalComparisons <- c(
-  "V2-ALS vs V1-ALS" = 21,
-  "V3-ALS vs V1-ALS"  = 22,
-  "V3-ALS vs V2-ALS" = 23
+  "V2 ALS vs Baseline ALS" = 21,
+  "V3 ALS vs Baseline ALS"  = 22,
+  "V3 ALS vs V2 ALS" = 23
 )
 
 bCellsOrder <- c(
